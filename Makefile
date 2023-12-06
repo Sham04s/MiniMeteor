@@ -1,5 +1,5 @@
 # Inputs
-RAYLIB_PATH 				?= ../../raylib
+RAYLIB_PATH 				?= ../raylib
 BUILD_MODE 					?= RELEASE
 HOT_RELOAD 					?= FALSE
 MAIN_SRC_FILES 				?= src/main.cpp
@@ -54,23 +54,19 @@ else
 	endif
 endif
 
-ifeq ($(PLATFORM), PLATFORM_DESKTOP)
 # for hot reloading on windows
-	ifeq ($(PLATFORM_OS), WINDOWS)
-		ifeq ($(HOT_RELOAD), TRUE)
+ifeq ($(HOT_RELOAD), TRUE)
+	ifeq ($(PLATFORM), PLATFORM_DESKTOP)
+		ifeq ($(PLATFORM_OS), WINDOWS)
 			CORE_LIB = $(PROJECT_BUILD_DIR)/core.dll
 			DFLAGS += -DWINDOWS_HOT_RELOAD
-# 			link raylib as a shared library
+# 		link raylib as a shared library
 			LDLIBS = -l:raylib.dll
-		else
-			MAIN_OBJS += $(CORE_OBJS)
-			LDLIBS = -lraylib
 		endif
 	endif
-	ifeq ($(PLATFORM_OS), LINUX)
-		MAIN_OBJS += $(CORE_OBJS)
-		LDLIBS += -lraylib
-	endif
+else
+	MAIN_OBJS += $(CORE_OBJS)
+	LDLIBS = -lraylib
 endif
 
 # Specific libraries for each platform
@@ -93,12 +89,6 @@ CXX := g++
 # if compiling for web, use emscripten
 ifeq ($(PLATFORM), PLATFORM_WEB)
 	CXX := emcc
-	EMSDK_PATH 			?= C:/emsdk
-	EMSCRIPTEN_PATH 	?= $(EMSDK_PATH)/upstream/emscripten
-	CLANG_PATH          ?= $(EMSDK_PATH)/upstream/bin
-    PYTHON_PATH         ?= $(EMSDK_PATH)/python/3.9.2-nuget_64bit
-    NODE_PATH           ?= $(EMSDK_PATH)/node/16.20.0_64bit/bin
-    export PATH         = $(EMSDK_PATH);$(EMSCRIPTEN_PATH);$(CLANG_PATH);$(NODE_PATH);$(PYTHON_PATH):$$(PATH)
 endif
 
 ifeq ($(PLATFORM),PLATFORM_WEB)

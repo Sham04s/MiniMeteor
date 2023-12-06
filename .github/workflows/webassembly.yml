@@ -1,0 +1,46 @@
+name: WebAssembly Build
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_NAME: ${{ github.event.repository.name }}
+      PROJECT_BUILD_DIR: ${{ github.event.repository.name }}/build
+      RAYLIB_PATH: ../raylib
+      EMSDK_PATH: $EMSDK
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.PROJECT_NAME }}
+
+        # use latest version of raylib
+      - name: Checkout raylib repo
+        uses: actions/checkout@v3
+        with:
+          repository: raysan5/raylib
+          path: raylib
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v13
+        with:
+          version: 3.1.50
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Build raylib
+        run: |
+          cd raylib/src
+          make PLATFORM=PLATFORM_WEB BUILD_MODE=RELEASE RAYLIB_LIBTYPE=STATIC
+    
+      - name: Build project
+        run: |
+            ls emsdk-cache
+            emcc -v
+            cd ${{ env.PROJECT_NAME }}
+            make PLATFORM=PLATFORM_WEB
