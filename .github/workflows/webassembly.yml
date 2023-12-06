@@ -40,7 +40,6 @@ jobs:
     
       - name: Build project
         run: |
-            ls D:/a/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/emsdk-cache
             ls emsdk-cache
             emcc -v
             cd ${{ env.PROJECT_NAME }}
