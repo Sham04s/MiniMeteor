@@ -12,7 +12,7 @@ jobs:
       PROJECT_NAME: ${{ github.event.repository.name }}
       PROJECT_BUILD_DIR: ${{ github.event.repository.name }}/build
       RAYLIB_PATH: ../raylib
-      EMSDK_PATH: ${{ env.PROJECT_NAME }}/emsdk-cache/emsdk-main
+      EMSDK_PATH: ${{ github.event.repository.name }}/emsdk-cache/emsdk-main
 
     steps:
       - name: Checkout repository
