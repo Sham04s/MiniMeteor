@@ -12,6 +12,7 @@ jobs:
       PROJECT_NAME: ${{ github.event.repository.name }}
       PROJECT_BUILD_DIR: ${{ github.event.repository.name }}/build
       RAYLIB_PATH: ../raylib
+      EMSDK_PATH: ${{ env.PROJECT_NAME }}/emsdk-cache/emsdk-main
 
     steps:
       - name: Checkout repository
@@ -35,7 +36,7 @@ jobs:
       - name: Build raylib
         run: |
           cd raylib/src
-          make PLATFORM=PLATFORM_WEB BUILD_MODE=RELEASE RAYLIB_LIBTYPE=STATIC EMSDK_PATH="D:/a/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/emsdk-cache/emsdk-main"
+          make PLATFORM=PLATFORM_WEB BUILD_MODE=RELEASE RAYLIB_LIBTYPE=STATIC ¿
     
       - name: Build project
         run: |
@@ -43,4 +44,4 @@ jobs:
             ls emsdk-cache
             emcc -v
             cd ${{ env.PROJECT_NAME }}
-            make PLATFORM=PLATFORM_WEB EMSDK_PATH="D:/a/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/emsdk-cache/emsdk-main"
+            make PLATFORM=PLATFORM_WEB
