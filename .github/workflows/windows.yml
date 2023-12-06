@@ -27,7 +27,7 @@ jobs:
           path: raylib
 
       - name: Setup MinGW-w64
-        uses: egor-tensin/setup-mingw@v2.2.0
+        uses: egor-tensin/setup-mingw@v2
         with:
           platform: x64
 
