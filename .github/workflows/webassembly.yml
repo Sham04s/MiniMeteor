@@ -36,7 +36,7 @@ jobs:
       - name: Build raylib
         run: |
           cd raylib/src
-          make PLATFORM=PLATFORM_WEB BUILD_MODE=RELEASE RAYLIB_LIBTYPE=STATIC ¿
+          make PLATFORM=PLATFORM_WEB BUILD_MODE=RELEASE RAYLIB_LIBTYPE=STATIC
     
       - name: Build project
         run: |
