@@ -11,7 +11,7 @@ jobs:
     env:
       PROJECT_NAME: ${{ github.event.repository.name }}
       PROJECT_BUILD_DIR: ${{ github.event.repository.name }}/build
-      RAYLIB_PATH: ${{ github.event.repository.name }}/raylib
+      RAYLIB_PATH: ../raylib
 
     steps:
       - name: Checkout repository
