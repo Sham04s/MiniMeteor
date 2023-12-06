@@ -57,7 +57,7 @@ endif
 # Specific libraries for each platform
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS), WINDOWS)
-		LDLIBS = -lopengl32 -lgdi32 -lwinmm
+		LDLIBS = -lopengl32 -lgdi32 -lwinmm -lcomdlg32 -lole32
 	endif
 	ifeq ($(PLATFORM_OS), LINUX)
 		LDLIBS = -lGL -lm -lpthread -ldl -lrt -lX11
