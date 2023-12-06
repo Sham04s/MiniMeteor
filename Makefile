@@ -54,20 +54,6 @@ else
 	endif
 endif
 
-# Specific libraries for each platform
-ifeq ($(PLATFORM),PLATFORM_DESKTOP)
-	ifeq ($(PLATFORM_OS), WINDOWS)
-		LDLIBS = -lopengl32 -lgdi32 -lwinmm
-	endif
-	ifeq ($(PLATFORM_OS), LINUX)
-		LDLIBS = -lGL -lm -lpthread -ldl -lrt -lX11
-	endif
-else
-	ifeq ($(PLATFORM),PLATFORM_WEB)
-		LDLIBS = $(RAYLIB_PATH)/src/libraylib.a
-	endif
-endif
-
 ifeq ($(PLATFORM), PLATFORM_DESKTOP)
 # for hot reloading on windows
 	ifeq ($(PLATFORM_OS), WINDOWS)
@@ -75,15 +61,29 @@ ifeq ($(PLATFORM), PLATFORM_DESKTOP)
 			CORE_LIB = $(PROJECT_BUILD_DIR)/core.dll
 			DFLAGS += -DWINDOWS_HOT_RELOAD
 # 			link raylib as a shared library
-			LDLIBS += -l:raylib.dll
+			LDLIBS = -l:raylib.dll
 		else
 			MAIN_OBJS += $(CORE_OBJS)
-			LDLIBS += -lraylib
+			LDLIBS = -lraylib
 		endif
 	endif
 	ifeq ($(PLATFORM_OS), LINUX)
 		MAIN_OBJS += $(CORE_OBJS)
 		LDLIBS += -lraylib
+	endif
+endif
+
+# Specific libraries for each platform
+ifeq ($(PLATFORM),PLATFORM_DESKTOP)
+	ifeq ($(PLATFORM_OS), WINDOWS)
+		LDLIBS += -lopengl32 -lgdi32 -lwinmm -lcomdlg32 -lole32
+	endif
+	ifeq ($(PLATFORM_OS), LINUX)
+		LDLIBS += -lGL -lm -lpthread -ldl -lrt -lX11
+	endif
+else
+	ifeq ($(PLATFORM),PLATFORM_WEB)
+		LDLIBS = $(RAYLIB_PATH)/src/libraylib.a
 	endif
 endif
 
