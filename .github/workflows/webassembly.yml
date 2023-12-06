@@ -11,6 +11,7 @@ jobs:
     env:
       PROJECT_NAME: ${{ github.event.repository.name }}
       PROJECT_BUILD_DIR: ${{ github.event.repository.name }}/build
+      EMSDK_PATH: "D:/a/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/emsdk-cache/emsdk-main"
       RAYLIB_PATH: ../raylib
 
     steps:
@@ -30,6 +31,7 @@ jobs:
         uses: mymindstorm/setup-emsdk@v13
         with:
           version: 3.1.50
+          actions-cache-folder: 'emsdk-cache'
 
       - name: Build raylib
         run: |
@@ -38,5 +40,8 @@ jobs:
     
       - name: Build project
         run: |
+            ls D:/a/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/emsdk-cache
+            ls emsdk-cache
+            emcc -v
             cd ${{ env.PROJECT_NAME }}
             make PLATFORM=PLATFORM_WEB
