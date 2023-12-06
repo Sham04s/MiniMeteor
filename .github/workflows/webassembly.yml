@@ -11,7 +11,7 @@ jobs:
     env:
       PROJECT_NAME: ${{ github.event.repository.name }}
       PROJECT_BUILD_DIR: ${{ github.event.repository.name }}/build
-      EMSDK_PATH: "D:/a/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/emsdk-cache/emsdk-main"
+      EMSDK_PATH: D:/a/${{ env.PROJECT_NAME }}/${{ env.PROJECT_NAME }}/emsdk-cache/emsdk-main
       RAYLIB_PATH: ../raylib
 
     steps:
