@@ -41,6 +41,11 @@ long lastModTime = 0;
 void createTempDLL()
 {
     std::ifstream src(dllName, std::ios::binary);
+    if (!src.is_open())
+    {
+        printf("Failed to open original DLL, are you in the same folder as the executable?\n");
+        return;
+    }
     std::ofstream dst(tempDllName, std::ios::binary);
     dst << src.rdbuf();
     src.close();

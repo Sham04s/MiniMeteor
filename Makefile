@@ -22,6 +22,9 @@ ifeq ($(OS),Windows_NT)
 	PLATFORM_OS := WINDOWS
 else
 	PLATFORM_OS := $(shell uname -s)
+	ifeq ($(PLATFORM_OS),Linux)
+		PLATFORM_OS := LINUX
+	endif
 endif
 
 # Defines
@@ -51,23 +54,37 @@ else
 	endif
 endif
 
+# Specific libraries for each platform
+ifeq ($(PLATFORM),PLATFORM_DESKTOP)
+	ifeq ($(PLATFORM_OS), WINDOWS)
+		LDLIBS = -lopengl32 -lgdi32 -lwinmm
+	endif
+	ifeq ($(PLATFORM_OS), LINUX)
+		LDLIBS = -lGL -lm -lpthread -ldl -lrt -lX11
+	endif
+else
+	ifeq ($(PLATFORM),PLATFORM_WEB)
+		LDLIBS = $(RAYLIB_PATH)/src/libraylib.a
+	endif
+endif
+
+ifeq ($(PLATFORM), PLATFORM_DESKTOP)
 # for hot reloading on windows
-ifeq ($(HOT_RELOAD), TRUE)
-	ifeq ($(PLATFORM),PLATFORM_DESKTOP)
-		ifeq ($(PLATFORM_OS), WINDOWS)
+	ifeq ($(PLATFORM_OS), WINDOWS)
+		ifeq ($(HOT_RELOAD), TRUE)
 			CORE_LIB = $(PROJECT_BUILD_DIR)/core.dll
 			DFLAGS += -DWINDOWS_HOT_RELOAD
 # 			link raylib as a shared library
-			LDLIBS = -l:raylib.dll -lopengl32 -lgdi32 -lwinmm
+			LDLIBS += -l:raylib.dll
+		else
+			MAIN_OBJS += $(CORE_OBJS)
+			LDLIBS += -lraylib
 		endif
 	endif
-else
-	MAIN_OBJS += $(CORE_OBJS)
-# 	link raylib as a static library
-	LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm
-endif
-ifeq ($(PLATFORM), PLATFORM_WEB)
-	LDLIBS = $(RAYLIB_PATH)/src/libraylib.a
+	ifeq ($(PLATFORM_OS), LINUX)
+		MAIN_OBJS += $(CORE_OBJS)
+		LDLIBS += -lraylib
+	endif
 endif
 
 # C++ Compiler
@@ -118,7 +135,7 @@ ifeq ($(PLATFORM),PLATFORM_WEB)
 
     # Define a custom shell .html and output extension
     LDFLAGS += --shell-file $(BUILD_WEB_SHELL)
-    EXT = html
+    EXT = .html
 endif
 
 # -Wl,--subsystem,windows hides the console window
@@ -132,7 +149,7 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 endif
 
 # Executable name
-EXECUTABLE = $(PROJECT_BUILD_DIR)/$(PROJECT_NAME).$(EXT)
+EXECUTABLE = $(PROJECT_BUILD_DIR)/$(PROJECT_NAME)$(EXT)
 
 vpath %.cpp src
 
