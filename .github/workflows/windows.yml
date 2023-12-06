@@ -11,7 +11,7 @@ jobs:
     env:
       PROJECT_NAME: ${{ github.event.repository.name }}
       PROJECT_BUILD_DIR: ${{ github.event.repository.name }}/build
-      RAYLIB_PATH: ${{ github.event.repository.name }}/raylib
+      RAYLIB_PATH: ../raylib
 
     steps:
       - name: Checkout repository
@@ -27,9 +27,10 @@ jobs:
           path: raylib
 
       - name: Setup MinGW-w64
-        uses: egor-tensin/setup-mingw@v2.2.0
+        uses: egor-tensin/setup-mingw@v2
         with:
           platform: x64
+          version: 12.2.0
 
       - name: Build raylib
         run: |
