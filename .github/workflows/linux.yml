@@ -1,0 +1,40 @@
+name: Linux Build
+
+on:
+  workflow_dispatch:  
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_NAME: ${{ github.event.repository.name }}
+      PROJECT_BUILD_DIR: ${{ github.event.repository.name }}/build
+
+    steps:
+    - name: Checkout this repo
+      uses: actions/checkout@v3
+
+    # use latest version of raylib
+    - name: Checkout raylib repo
+      uses: actions/checkout@v3
+      with:
+        repository: raysan5/raylib
+        path: raylib
+
+    - name: Setup Environment
+      run: |
+        sudo apt update -qq
+        sudo apt-get install -y --no-install-recommends libglfw3 libglfw3-dev libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libxext-dev libxfixes-dev
+
+    - name: Build raylib
+      run: |
+        cd raylib/src
+        make PLATFORM=PLATFORM_DESKTOP BUILD_MODE=RELEASE RAYLIB_LIBTYPE=STATIC
+
+    - name: Build Project
+      run: |
+        cd ${{ env.PROJECT_NAME }}
+        make PLATFORM=PLATFORM_DESKTOP
