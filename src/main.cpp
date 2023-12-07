@@ -26,7 +26,7 @@ HINSTANCE GameDLL = nullptr;
 CoreFunc InitGame = nullptr;
 CoreFunc DrawFrame = nullptr;
 CoreFunc DrawDebug = nullptr;
-CoreFunc HandleInput = nullptr;
+CoreFunc Update = nullptr;
 CoreFunc ExitGame = nullptr;
 
 // for notifiying that the dll has been reloaded
@@ -98,10 +98,10 @@ void LoadGame()
         printf("Failed to load DrawDebug\n");
         return;
     }
-    HandleInput = (CoreFunc)GetProcAddress(GameDLL, "HandleInput");
-    if (!HandleInput)
+    Update = (CoreFunc)GetProcAddress(GameDLL, "Update");
+    if (!Update)
     {
-        printf("Failed to load HandleInput\n");
+        printf("Failed to load Update\n");
         return;
     }
     ExitGame = (CoreFunc)GetProcAddress(GameDLL, "ExitGame");
@@ -136,7 +136,7 @@ void ExitRaylib()
 
 void ExecuteGameLoop()
 {
-    HandleInput();
+    Update();
     DrawFrame();
     DrawDebug();
 }
@@ -145,6 +145,7 @@ int main()
 {
     InitRaylib();
     LoadGame();
+    lastCoreCompileTime = GetFileModTime(dllName);
 #ifdef PLATFORM_WEB
     emscripten_set_main_loop(ExecuteGameLoop, 60, 1);
 #else
@@ -171,12 +172,13 @@ int main()
         if (elapsedTimeSinceLastCheck > 1.0f)
         {
             elapsedTimeSinceLastCheck = 0;
-            const long newLastCopileTime = GetFileModTime(dllName);
-            if (newLastCopileTime > lastCoreCompileTime)
+            const long newLastCompileTime = GetFileModTime(dllName);
+            if (newLastCompileTime > lastCoreCompileTime)
             {
+                WaitTime(0.2f); // wait for the dll to be written to disk
                 UnloadGame();
                 LoadGame();
-                lastCoreCompileTime = newLastCopileTime;
+                lastCoreCompileTime = newLastCompileTime;
             }
         }
         if (IsKeyPressed(KEY_F5))

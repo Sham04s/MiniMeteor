@@ -37,7 +37,7 @@ INCLUDES := -I./include -I$(RAYLIB_PATH)/src
 LDFLAGS := -L$(RAYLIB_PATH)/src
 
 # Compiler flags
-CXXFLAGS := -Wall -Werror -Wextra -std=c++20
+CXXFLAGS := -Wall -Werror -Wextra -std=c++20 -Wno-missing-field-initializers
 
 ifeq ($(BUILD_MODE), DEBUG)
 	CXXFLAGS += -g -O0

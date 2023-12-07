@@ -10,7 +10,7 @@
 CORE_API void InitGame();
 CORE_API void DrawFrame();
 CORE_API void DrawDebug();
-CORE_API void HandleInput();
+CORE_API void Update();
 CORE_API void ExitGame();
 
 #endif // __GAME_H__
