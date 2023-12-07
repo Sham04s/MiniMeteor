@@ -33,10 +33,11 @@ CoreFunc ExitGame = nullptr;
 float notifyShowTime = 0; // in seconds
 
 bool lastLoadSuccess = false;
+long lastCoreCompileTime = 0;
+float elapsedTimeSinceLastCheck = 0;
 
 const char *dllName = "core.dll";
 const char *tempDllName = "temp_core.dll";
-long lastModTime = 0;
 
 void createTempDLL()
 {
@@ -143,11 +144,10 @@ void ExecuteGameLoop()
 int main()
 {
     InitRaylib();
-#ifdef PLATFORM_WEB
     LoadGame();
+#ifdef PLATFORM_WEB
     emscripten_set_main_loop(ExecuteGameLoop, 60, 1);
 #else
-    LoadGame();
 #ifdef WINDOWS_HOT_RELOAD
     if (!lastLoadSuccess)
     {
@@ -166,17 +166,31 @@ int main()
             DrawText("Reloaded!", (DEFAULT_WIDTH - textWidth) / 2, 20, 20, ColorAlpha(WHITE, fminf(1.0f, notifyShowTime)));
             notifyShowTime -= GetFrameTime();
         }
+
+        elapsedTimeSinceLastCheck += GetFrameTime();
+        if (elapsedTimeSinceLastCheck > 1.0f)
+        {
+            elapsedTimeSinceLastCheck = 0;
+            const long newLastCopileTime = GetFileModTime(dllName);
+            if (newLastCopileTime > lastCoreCompileTime)
+            {
+                UnloadGame();
+                LoadGame();
+                lastCoreCompileTime = newLastCopileTime;
+            }
+        }
         if (IsKeyPressed(KEY_F5))
         {
             UnloadGame();
             LoadGame();
-            if (!lastLoadSuccess)
-            {
-                printf("Failed to reload game\n");
-                ExitRaylib();
-                return 1;
-            }
         }
+        if (!lastLoadSuccess)
+        {
+            printf("Failed to reload game\n");
+            ExitRaylib();
+            return 1;
+        }
+
 #endif // WINDOWS_HOT_RELOAD
     }
 #endif // PLATFORM_WEB
