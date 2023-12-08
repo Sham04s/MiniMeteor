@@ -8,12 +8,12 @@
 
 enum GameObjectType
 {
-    PLAYER = PLAYER_SPRITE,
-    ENEMY = ENEMY_SPRITE,
-    BULLET = BULLET_SPRITE,
-    ASTEROID = ASTEROID_SPRITE,
-    EXPLOSION = EXPLOSION_SPRITE,
-    NUM_GAME_OBJECT_TYPES = NUM_SPRITE_TEXTURES,
+    PLAYER,
+    ENEMY,
+    BULLET,
+    ASTEROID,
+    EXPLOSION,
+    NUM_GAME_OBJECT_TYPES,
     NONE
 };
 
@@ -25,18 +25,22 @@ protected:
     float rotation; // TODO: maybe this is not needed
     Vector2 forwardDir;
     int zIndex;
-    std::vector<Vector2> hitbox; // relative to center
+    std::vector<Vector2> hitbox;
     GameObjectType type;
     Texture2D texture;
 
 public:
-    GameObject(): bounds({0, 0, 0, 0}), center({0, 0}), rotation(0), forwardDir({0, 0}), zIndex(0), hitbox({}), type(NONE){}; // TODO: change this!
+    GameObject() : bounds({0, 0, 0, 0}), center({0, 0}), rotation(0), forwardDir({0, 0}), zIndex(0), hitbox({}), type(NONE){}; // TODO: change this!
     GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, int zIndex, std::vector<Vector2> hitbox, GameObjectType type);
     ~GameObject();
 
     void Update();
     void Draw();
     void DrawDebug();
+
+    bool CheckCollision(GameObject *other, Vector2 *collisionPoint);
+    void Translate(Vector2 translation);
+    void Rotate(float angle);
 
     Rectangle GetBounds() { return bounds; }
     Vector2 GetCenter() { return center; }
@@ -55,7 +59,6 @@ public:
     void SetHitbox(std::vector<Vector2> hitbox) { this->hitbox = hitbox; }
     void SetType(GameObjectType type) { this->type = type; }
     void SetTexture(Texture2D texture) { this->texture = texture; }
-    
 };
 
 #endif // __GAME_OBJECT_H__

@@ -138,7 +138,6 @@ void ExecuteGameLoop()
 {
     Update();
     DrawFrame();
-    DrawDebug();
 }
 
 int main()

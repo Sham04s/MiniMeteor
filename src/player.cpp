@@ -11,8 +11,14 @@ Player::Player(Vector2 center, int zIndex) : GameObject({center.x - 32, center.y
     this->playerState = IDLE;
     this->powerups = {};
     this->shots = {};
-    this->hitbox = {{0.0f * 64, -0.4f * 64}, {0.4f * 64, 0.35f * 64}, {-0.4f * 64, 0.35f * 64}}; // up, right-down, left-down
-    SetTexture(ResourceManager::GetSpriteTexture(PLAYER_SPRITE));
+    this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
+
+    for (size_t i = 0; i < hitbox.size(); i++)
+    {
+        this->hitbox[i] = Vector2Add(Vector2Scale(this->hitbox[i], 64), GetCenter());
+    }
+
+    this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITE);
 }
 
 Player::~Player()
@@ -48,24 +54,34 @@ void Player::Update()
     }
     if (IsKeyDown(KEY_A))
     {
-        Rotate(-180); // 180 degrees per second
+        Rotate(-180 * GetFrameTime()); // 180 degrees per second
     }
     if (IsKeyDown(KEY_D))
     {
-        Rotate(180);
+        Rotate(180 * GetFrameTime());
     }
     if (IsKeyPressed(KEY_SPACE))
     {
         Shoot();
     }
 
-    // apply velocity
-    SetCenter(Vector2Add(GetCenter(), Vector2Scale(GetVelocity(), GetFrameTime())));
-
-    // for wrapping around the screen
-    SetCenter({fmodf(GetCenter().x + GetScreenWidth(), GetScreenWidth()), fmodf(GetCenter().y + GetScreenHeight(), GetScreenHeight())});
-
-    SetBounds({GetCenter().x - 32, GetCenter().y - 32, 64, 92});
+    Translate(Vector2Scale(GetVelocity(), GetFrameTime()));
+    if (GetCenter().x > GetScreenWidth() + 32)
+    {
+        Translate({(float)-GetScreenWidth() - 64, 0});
+    }
+    if (GetCenter().x < -32)
+    {
+        Translate({(float)GetScreenWidth() + 64, 0});
+    }
+    if (GetCenter().y > GetScreenHeight() + 32)
+    {
+        Translate({0, (float)-GetScreenHeight() - 64});
+    }
+    if (GetCenter().y < -32)
+    {
+        Translate({0, (float)GetScreenHeight() + 64});
+    }
 }
 
 void Player::AddLive()
@@ -86,8 +102,6 @@ void Player::Draw()
 void Player::DrawDebug()
 {
     GameObject::DrawDebug();
-
-    DrawText(TextFormat("Velocity: (%.2f, %.2f)", GetVelocity().x, GetVelocity().y), 10, 30, 20, GREEN);
 }
 void Player::Kill()
 {
@@ -97,23 +111,18 @@ void Player::Kill()
 void Player::Reset()
 {
     this->center = this->originalCenter;
+    this->bounds = {center.x - 32, center.y - 32, 64, 92};
     this->rotation = 0;
     this->forwardDir = {0, -1};
     this->velocity = {0, 0};
     this->playerState = IDLE;
     this->powerups = {};
     this->shots = {}; // maybe not?
-    this->hitbox = {{0.0f, -0.4f}, {0.4, 0.4}, {-0.4, 0.4}};
-}
+    this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
 
-void Player::Rotate(float angle) // in degrees
-{
-    angle = angle * GetFrameTime();
-    SetRotation(GetRotation() + angle);
-    SetForwardDir(Vector2Rotate(GetForwardDir(), angle * DEG2RAD));
-    for (size_t i = 0; i < GetHitbox().size(); i++)
+    for (size_t i = 0; i < hitbox.size(); i++)
     {
-        this->hitbox[i] = Vector2Rotate(this->hitbox[i], angle * DEG2RAD);
+        this->hitbox[i] = Vector2Add(Vector2Scale(this->hitbox[i], 64), GetCenter());
     }
 }
 

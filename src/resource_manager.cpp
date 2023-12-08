@@ -6,6 +6,14 @@ const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
     // "resources/characters/bullet.png",
     // "resources/characters/asteroid.png",
     // "resources/characters/explosion.png",
+    "resources/environment/asteroid_detailed_large.png",
+    "resources/environment/asteroid_detailed_small.png",
+    "resources/environment/asteroid_large.png",
+    "resources/environment/asteroid_small.png",
+    "resources/environment/asteroid_squared_detailed_large.png",
+    "resources/environment/asteroid_squared_detailed_small.png",
+    "resources/environment/asteroid_squared_large.png",
+    "resources/environment/asteroid_squared_small.png",
 };
 
 std::vector<Texture2D> ResourceManager::spriteTextures;

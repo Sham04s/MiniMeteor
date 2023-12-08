@@ -49,7 +49,6 @@ public:
     void SetShots(std::vector<int> shots) { this->shots = shots; }
 
 private:
-    void Rotate(float angle);
     void Accelerate(float acceleration);
     void Decelerate(float deceleration);
     void Shoot();
