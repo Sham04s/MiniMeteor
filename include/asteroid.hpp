@@ -7,7 +7,7 @@ private:
     float angularVelocity;
     
 public:
-    Asteroid(Vector2 center, int zIndex);
+    Asteroid(Vector2 origin, int zIndex);
     ~Asteroid();
 
     void Update();

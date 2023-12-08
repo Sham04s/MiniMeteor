@@ -38,6 +38,7 @@ enum GameState
     GAME_OVER,
 };
 
+GameState gameState = GAME; // TODO: Change to MENU
 
 ResourceManager resourceManager;
 Player player;
@@ -45,7 +46,7 @@ std::vector<Asteroid> asteroids;
 
 void InitGame()
 {
-    
+
     SetTargetFPS(60);
 
     if (!resourceManager.LoadResources())
@@ -54,7 +55,7 @@ void InitGame()
     }
 
     player = Player((Vector2){GetScreenWidth() / (float)2, GetScreenHeight() / (float)2}, 0);
-    for (size_t i = 0; i < 1; i++)
+    for (size_t i = 0; i < 2; i++)
     {
         asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}, 0));
     }
@@ -73,7 +74,7 @@ void DrawFrame()
             asteroids[i].Draw();
         }
     }
-    if(SHOW_DEBUG)
+    if (SHOW_DEBUG)
     {
         DrawDebug();
     }
@@ -89,22 +90,15 @@ void DrawDebug()
         asteroids[i].DrawDebug();
     }
 
+    DrawText(TextFormat("Player lives: %d", player.GetLives()), 10, 30, 20, WHITE);
+
     DrawFPS(10, 10);
     const char *mousePos = TextFormat("Mouse position: (%d, %d)", GetMouseX(), GetMouseY());
     DrawText(mousePos, GetRenderWidth() - MeasureText(mousePos, 20) - 10, 10, 20, WHITE);
 }
 
-std::vector<double> allCheckCollisionTimes(20);
-double averageCheckCollisionTime = 0;
-
-void Update()
+void HandleInput()
 {
-    player.Update();
-    for (size_t i = 0; i < asteroids.size(); i++)
-    {
-        asteroids[i].Update();
-    }
-
     if (IsKeyDown(KEY_LEFT_CONTROL))
     {
         if (IsKeyPressed(KEY_R))
@@ -118,6 +112,7 @@ void Update()
         if (IsKeyPressed(KEY_R))
         {
             player.Reset();
+            player.SetLives(3);
             asteroids.clear();
             for (size_t i = 0; i < 1; i++)
             {
@@ -125,42 +120,6 @@ void Update()
             }
         }
     }
-
-    double startTime = GetTime();
-    Vector2 collisionPoint = {0}; 
-    for (size_t i = 0; i < asteroids.size(); i++)
-    {
-        if (player.CheckCollision(&asteroids[i], &collisionPoint))
-        {
-            DrawText("Player Collision!", 10, 10, 20, WHITE);
-        }
-        for (size_t j = i; j < asteroids.size(); j++)
-        {
-            if (i < j)
-            {
-                if (asteroids[i].CheckCollision(&asteroids[j], &collisionPoint))
-                {
-                    DrawText("Collision!", 10, 10, 20, WHITE);
-                }
-            }
-        }
-    }
-    double endTime = GetTime();
-    allCheckCollisionTimes.push_back(endTime - startTime);
-    if (allCheckCollisionTimes.size() > 20)
-    {
-        allCheckCollisionTimes.erase(allCheckCollisionTimes.begin());
-    }
-    if (fmod(GetTime(), 1) < 0.01)
-    {
-        averageCheckCollisionTime = 0;
-        for (size_t i = 0; i < allCheckCollisionTimes.size(); i++)
-        {
-            averageCheckCollisionTime += allCheckCollisionTimes[i];
-        }
-        averageCheckCollisionTime /= allCheckCollisionTimes.size();
-    }
-    DrawText(TextFormat("Average collision time: %f ms", averageCheckCollisionTime * 1000), 10, 30, 20, WHITE);
 
 #ifdef _DEBUG
     if (IsKeyPressed(KEY_F3))
@@ -226,6 +185,58 @@ void Update()
         }
     }
 #endif // _DEBUG
+}
+
+void UpdatePhysics()
+{
+    if (player.IsFirstCollision() && player.GetLastCollisionObject()->GetType() == ASTEROID)
+    {
+        Asteroid *asteroid = (Asteroid *)player.GetLastCollisionObject();
+
+        float u = Vector2Length(Vector2Subtract(player.GetVelocity(), asteroid->GetVelocity()));
+        float e = 0.7f;
+        float mA = 50;
+        float mp = 80;
+        float angle = Vector2Angle(Vector2Subtract(asteroid->GetOrigin(), player.GetLastCollisionPoint()), player.GetVelocity());
+        float q = (mA / mp);
+        float f = (1 + e) / (2 * q + 1 + pow(sin(angle), 2));
+
+        float va = f * u;
+        float vp = (1 - 2 * q * f) * u;
+
+        float w = (f * sin(angle) * u) / Vector2Length(Vector2Subtract(asteroid->GetOrigin(), player.GetLastCollisionPoint()));
+
+        asteroid->SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(asteroid->GetOrigin(), player.GetLastCollisionPoint())), va));
+        asteroid->SetAngularVelocity(w * RAD2DEG);
+
+        player.SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(player.GetOrigin(), player.GetLastCollisionPoint())), vp));
+        player.ResetCollisionChecks();
+    }
+}
+
+void handleLogic()
+{
+    if (player.IsFirstCollision())
+    {
+        player.Kill();
+    }
+}
+
+void Update()
+{
+    HandleInput();
+    handleLogic();
+    UpdatePhysics();
+
+    player.Update();
+    for (size_t i = 0; i < asteroids.size(); i++)
+    {
+        asteroids[i].Update();
+        if (!player.IsFirstCollision())
+        {
+            player.CheckCollision(&asteroids[i]);
+        }
+    }
 }
 
 void ExitGame()

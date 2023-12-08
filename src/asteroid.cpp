@@ -3,7 +3,7 @@
 #include "raymath.h"
 #include <math.h>
 
-Asteroid::Asteroid(Vector2 center, int zIndex) : GameObject({center.x - 32, center.y - 32, 64, 64}, 0, {0, -1}, zIndex, {}, ASTEROID)
+Asteroid::Asteroid(Vector2 origin, int zIndex) : GameObject({origin.x - 32, origin.y - 32, 64, 64}, 0, {0, -1}, zIndex, {}, ASTEROID)
 {
     this->velocity = {(float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100)};
     this->rotation = GetRandomValue(0, 360);
@@ -14,7 +14,7 @@ Asteroid::Asteroid(Vector2 center, int zIndex) : GameObject({center.x - 32, cent
     this->texture = ResourceManager::GetSpriteTexture(randomAsteroid);
     if (extraBig)
     {
-        this->bounds = {center.x - 48, center.y - 48, 96, 96};
+        this->bounds = {origin.x - 48, origin.y - 48, 96, 96};
     }
 
     const int sides = 8;
@@ -26,7 +26,7 @@ Asteroid::Asteroid(Vector2 center, int zIndex) : GameObject({center.x - 32, cent
         float angle = i * angleIncrement;
         float x = radius * cos(angle);
         float y = radius * sin(angle);
-        this->hitbox.push_back(Vector2Add(center, {x, y}));
+        this->hitbox.push_back(Vector2Add(origin, {x, y}));
     }
 }
 
@@ -36,38 +36,38 @@ Asteroid::~Asteroid()
 
 void Asteroid::Update()
 {
-    if (center.x > GetScreenWidth() + 32)
+    if (origin.x > GetScreenWidth() + 32)
     {
-        center.x = -32;
+        origin.x = -32;
     }
-    if (center.x < -32)
+    if (origin.x < -32)
     {
-        center.x = GetScreenWidth();
+        origin.x = GetScreenWidth();
     }
-    if (center.y > GetScreenHeight() + 32)
+    if (origin.y > GetScreenHeight() + 32)
     {
-        center.y = -32;
+        origin.y = -32;
     }
-    if (center.y < -32)
+    if (origin.y < -32)
     {
-        center.y = GetScreenHeight();
+        origin.y = GetScreenHeight();
     }
     Rotate(angularVelocity * GetFrameTime());
     Translate(Vector2Scale(velocity, GetFrameTime()));
 
-    if (GetCenter().x > GetScreenWidth() + 32)
+    if (GetOrigin().x > GetScreenWidth() + 32)
     {
         Translate({(float)-GetScreenWidth() - 64, 0});
     }
-    if (GetCenter().x < -32)
+    if (GetOrigin().x < -32)
     {
         Translate({(float)GetScreenWidth() + 64, 0});
     }
-    if (GetCenter().y > GetScreenHeight() + 32)
+    if (GetOrigin().y > GetScreenHeight() + 32)
     {
         Translate({0, (float)-GetScreenHeight() - 64});
     }
-    if (GetCenter().y < -32)
+    if (GetOrigin().y < -32)
     {
         Translate({0, (float)GetScreenHeight() + 64});
     }
