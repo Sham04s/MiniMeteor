@@ -25,7 +25,7 @@ protected:
     float rotation; // TODO: maybe this is not needed
     Vector2 forwardDir;
     int zIndex;
-    std::vector<Vector2> hitbox; // relative to center and to size
+    std::vector<Vector2> hitbox; // relative to center
     GameObjectType type;
     Texture2D texture;
 

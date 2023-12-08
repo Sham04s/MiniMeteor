@@ -3,14 +3,15 @@
 
 #include <math.h>
 
-Player::Player(Vector2 center, int zIndex) : GameObject({center.x - 16, center.y - 16, 32, 32}, 0, {0, -1}, zIndex, {}, PLAYER)
+Player::Player(Vector2 center, int zIndex) : GameObject({center.x - 32, center.y - 32, 64, 92}, 0, {0, -1}, zIndex, {}, PLAYER)
 {
     this->originalCenter = center;
     this->lives = 4;
     this->velocity = {0, 0};
+    this->playerState = IDLE;
     this->powerups = {};
     this->shots = {};
-    this->hitbox = {{0.0f, -0.4f}, {0.4, 0.4}, {-0.4, 0.4}};
+    this->hitbox = {{0.0f * 64, -0.4f * 64}, {0.4f * 64, 0.35f * 64}, {-0.4f * 64, 0.35f * 64}}; // up, right-down, left-down
     SetTexture(ResourceManager::GetSpriteTexture(PLAYER_SPRITE));
 }
 
@@ -22,26 +23,26 @@ void Player::Update()
 {
     if (IsKeyPressed(KEY_W))
     {
-        this->isAccelerating = true;
+        this->playerState = ACCELERATING;
     }
     if (IsKeyReleased(KEY_W))
     {
-        this->isAccelerating = false;
+        this->playerState = IDLE;
     }
     if (IsKeyPressed(KEY_S))
     {
-        this->isBraking = true;
+        this->playerState = BRAKING;
     }
     if (IsKeyReleased(KEY_S))
     {
-        this->isBraking = false;
+        this->playerState = IDLE;
     }
-    
-    if (this->isAccelerating)
+
+    if (playerState == ACCELERATING)
     {
         Accelerate(200);
     }
-    if (this->isBraking)
+    if (playerState == BRAKING)
     {
         Decelerate(200);
     }
@@ -64,7 +65,7 @@ void Player::Update()
     // for wrapping around the screen
     SetCenter({fmodf(GetCenter().x + GetScreenWidth(), GetScreenWidth()), fmodf(GetCenter().y + GetScreenHeight(), GetScreenHeight())});
 
-    SetBounds({GetCenter().x - 16, GetCenter().y - 16, 32, 32});
+    SetBounds({GetCenter().x - 32, GetCenter().y - 32, 64, 92});
 }
 
 void Player::AddLive()
@@ -74,6 +75,12 @@ void Player::AddLive()
 
 void Player::AddPowerUp(/*PowerUp powerup*/)
 {
+}
+
+void Player::Draw()
+{
+    Rectangle srcRect = ResourceManager::GetSpriteSrcRect(PLAYER_SPRITE, playerState);
+    DrawTexturePro(GetTexture(), srcRect, {center.x, center.y, bounds.width, bounds.height}, {GetBounds().width / 2, GetBounds().height / 3}, GetRotation(), WHITE);
 }
 
 void Player::DrawDebug()
@@ -93,6 +100,7 @@ void Player::Reset()
     this->rotation = 0;
     this->forwardDir = {0, -1};
     this->velocity = {0, 0};
+    this->playerState = IDLE;
     this->powerups = {};
     this->shots = {}; // maybe not?
     this->hitbox = {{0.0f, -0.4f}, {0.4, 0.4}, {-0.4, 0.4}};

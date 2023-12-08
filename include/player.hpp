@@ -1,5 +1,16 @@
 #include "game_object.hpp"
 
+enum PlayerState
+{
+    IDLE,
+    ACCELERATING,
+    BRAKING,
+    TURNING_LEFT,
+    TURNING_RIGHT,
+    SHOOTING,
+    DYING
+};
+
 class Player : public GameObject
 {
 private:
@@ -8,8 +19,7 @@ private:
     Vector2 originalCenter;
     int lives;
     Vector2 velocity;
-    bool isAccelerating;
-    bool isBraking;
+    PlayerState playerState;
     std::vector<int> powerups;
     std::vector<int> shots;
 
@@ -19,6 +29,7 @@ public:
     ~Player();
 
     void Update();
+    void Draw();
     void DrawDebug();
     void AddLive();
     void AddPowerUp(/*PowerUp powerup*/);

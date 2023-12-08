@@ -1,5 +1,13 @@
 #include "resource_manager.hpp"
 
+const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
+    "resources/characters/player.png",
+    // "resources/characters/enemy.png",
+    // "resources/characters/bullet.png",
+    // "resources/characters/asteroid.png",
+    // "resources/characters/explosion.png",
+};
+
 std::vector<Texture2D> ResourceManager::spriteTextures;
 std::vector<Texture2D> ResourceManager::uiTextures;
 std::vector<Sound> ResourceManager::sounds;
@@ -8,15 +16,13 @@ Font ResourceManager::font;
 
 bool ResourceManager::LoadResources()
 {
-    if(!IsWindowReady())
+    if (!IsWindowReady())
     {
         return false;
     }
-    Texture2D texture = LoadTexture("resources/characters/player.png");
-    spriteTextures.push_back(texture);
-    if (texture.id == 0)
+    for (size_t i = 0; i < NUM_SPRITE_TEXTURES; i++)
     {
-        return false;
+        spriteTextures.push_back(LoadTexture(spriteTexturesPaths[i]));
     }
     return true;
 }
@@ -32,11 +38,21 @@ void ResourceManager::UnloadResources()
     {
         UnloadTexture(spriteTextures[i]);
     }
+    spriteTextures.clear();
 }
 
 Texture2D ResourceManager::GetSpriteTexture(SpriteTextureID id)
 {
     return spriteTextures[id];
+}
+
+Rectangle ResourceManager::GetSpriteSrcRect(SpriteTextureID id, unsigned int frame)
+{
+    if (id == PLAYER_SPRITE)
+    {
+        return {static_cast<float>(128 * frame), 0, 128, 192};
+    }
+    return {0, 0, 0, 0}; // TODO: change this!
 }
 
 Texture2D ResourceManager::GetUITexture(UITextureID id)

@@ -39,7 +39,8 @@ enum FontID
     NUM_FONTS
 };
 
-class ResourceManager {
+class ResourceManager
+{
 private:
     static std::vector<Texture2D> spriteTextures;
     static std::vector<Texture2D> uiTextures;
@@ -48,12 +49,12 @@ private:
     static Font font;
 
 public:
-
     static bool LoadResources();
     static bool ReloadResouces();
     static void UnloadResources();
 
     static Texture2D GetSpriteTexture(SpriteTextureID id);
+    static Rectangle GetSpriteSrcRect(SpriteTextureID id, unsigned int frame);
     static Texture2D GetUITexture(UITextureID id);
     static Sound GetSoundEffect(SoundID id);
     static Music GetMusicTrack(MusicID id);

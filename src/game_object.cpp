@@ -34,11 +34,11 @@ void GameObject::DrawDebug()
     DrawRectangleLinesEx(bounds, 1, RED);
     for (size_t i = 0; i < hitbox.size(); i++)
     {
-        Vector2 point = {center.x + hitbox[i].x * bounds.width, center.y + hitbox[i].y * bounds.height};
-        Vector2 nextPoint = {center.x + hitbox[(i + 1) % hitbox.size()].x * bounds.width, center.y + hitbox[(i + 1) % hitbox.size()].y * bounds.height};
+        Vector2 point = {center.x + hitbox[i].x, center.y + hitbox[i].y};
+        Vector2 nextPoint = {center.x + hitbox[(i + 1) % hitbox.size()].x, center.y + hitbox[(i + 1) % hitbox.size()].y};
         DrawCircleV(point, 2, GREEN);
         DrawLineV(point, nextPoint, GREEN);
     }
-    Vector2 forwardEndPoint = {center.x + forwardDir.x * bounds.width, center.y + forwardDir.y * bounds.height};
+    Vector2 forwardEndPoint = {center.x + forwardDir.x, center.y + forwardDir.y};
     DrawLineEx(center, forwardEndPoint, 2, BLUE);
 }

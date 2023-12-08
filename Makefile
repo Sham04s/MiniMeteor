@@ -159,7 +159,7 @@ endif
 # Rule to build core as a shared library (dll)
 $(PROJECT_BUILD_DIR)/core.dll: $(CORE_OBJS)
 	$(CXX) -shared -o $(PROJECT_BUILD_DIR)/core.dll $^ $(LDFLAGS) $(LDLIBS)
-	
+
 # Rule to build object files
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(DFLAGS) -c $< -o $@
