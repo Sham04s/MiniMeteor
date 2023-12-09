@@ -1,5 +1,7 @@
 #include "resource_manager.hpp"
 
+using namespace std;
+
 const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
     "resources/characters/player.png",
     // "resources/characters/enemy.png",
