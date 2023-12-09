@@ -17,5 +17,4 @@ public:
     void DrawDebug();
 
     bool isOutOfBounds();
-    bool isColliding(GameObject *other);
 };

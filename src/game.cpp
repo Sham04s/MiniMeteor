@@ -5,8 +5,8 @@
 #include <math.h>
 
 #include "resource_manager.hpp"
-#include "player.hpp"
 #include "asteroid.hpp"
+#include "player.hpp"
 
 #ifdef _DEBUG
 bool SHOW_DEBUG = true;
@@ -91,6 +91,7 @@ void DrawDebug()
     }
 
     DrawText(TextFormat("Player lives: %d", player.GetLives()), 10, 30, 20, WHITE);
+    DrawText(TextFormat("Asteroids: %d", asteroids.size()), 10, 50, 20, WHITE);
 
     DrawFPS(10, 10);
     const char *mousePos = TextFormat("Mouse position: (%d, %d)", GetMouseX(), GetMouseY());
@@ -118,6 +119,17 @@ void HandleInput()
             {
                 asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}, 0));
             }
+        }
+    }
+    if (IsKeyPressed(KEY_P))
+    {
+        if (gameState == GAME)
+        {
+            gameState = PAUSE;
+        }
+        else if (gameState == PAUSE)
+        {
+            gameState = GAME;
         }
     }
 
@@ -220,11 +232,26 @@ void HandleLogic()
     {
         player.Kill();
     }
+    for (size_t i = 0; i < player.GetBullets().size(); i++)
+    {
+        if (player.GetBullets()[i].IsFirstCollision())
+        {
+            DrawText(TextFormat("Bullet collision!"), 10, 50, 20, WHITE);
+            player.GetBullets().erase(player.GetBullets().begin() + i);
+        }
+    }
+    for (size_t i = 0; i < asteroids.size(); i++)
+    {
+        if (asteroids[i].isDestroyed())
+        {
+            asteroids.erase(asteroids.begin() + i);
+            asteroids.shrink_to_fit();
+        }
+    }
 }
 
-void Update()
+void UpdateGame()
 {
-    HandleInput();
     HandleLogic();
     UpdatePhysics();
 
@@ -236,7 +263,24 @@ void Update()
         {
             player.CheckCollision(&asteroids[i]);
         }
+        for (size_t j = 0; j < asteroids.size(); j++)
+        {
+            if (i < j)
+            {
+                asteroids[i].CheckCollision(&asteroids[j]);
+            }
+        }
     }
+}
+
+void GameLoop()
+{
+    if (gameState == GAME)
+    {
+        UpdateGame();
+    }
+    DrawFrame();
+    HandleInput();
 }
 
 void ExitGame()

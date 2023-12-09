@@ -24,9 +24,7 @@ typedef void (*CoreFunc)(void);
 
 HINSTANCE GameDLL = nullptr;
 CoreFunc InitGame = nullptr;
-CoreFunc DrawFrame = nullptr;
-CoreFunc DrawDebug = nullptr;
-CoreFunc Update = nullptr;
+CoreFunc GameLoop = nullptr;
 CoreFunc ExitGame = nullptr;
 
 // for notifiying that the dll has been reloaded
@@ -86,22 +84,10 @@ void LoadGame()
         printf("Failed to load InitGame\n");
         return;
     }
-    DrawFrame = (CoreFunc)GetProcAddress(GameDLL, "DrawFrame");
-    if (!DrawFrame)
+    GameLoop = (CoreFunc)GetProcAddress(GameDLL, "GameLoop");
+    if (!GameLoop)
     {
-        printf("Failed to load DrawFrame\n");
-        return;
-    }
-    DrawDebug = (CoreFunc)GetProcAddress(GameDLL, "DrawDebug");
-    if (!DrawDebug)
-    {
-        printf("Failed to load DrawDebug\n");
-        return;
-    }
-    Update = (CoreFunc)GetProcAddress(GameDLL, "Update");
-    if (!Update)
-    {
-        printf("Failed to load Update\n");
+        printf("Failed to load GameLoop\n");
         return;
     }
     ExitGame = (CoreFunc)GetProcAddress(GameDLL, "ExitGame");
@@ -136,8 +122,7 @@ void ExitRaylib()
 
 void ExecuteGameLoop()
 {
-    Update();
-    DrawFrame();
+    GameLoop();
 }
 
 int main()

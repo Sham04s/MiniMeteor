@@ -8,17 +8,27 @@ Asteroid::Asteroid(Vector2 origin, int zIndex) : GameObject({origin.x - 32, orig
     this->velocity = {(float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100)};
     this->rotation = GetRandomValue(0, 360);
     this->angularVelocity = GetRandomValue(-10, 10) * 12;
+    this->variant = (AsteroidVariant)GetRandomValue(0, 2);
+    this->state = FLOATING;
 
-    SpriteTextureID randomAsteroid = (SpriteTextureID)GetRandomValue(1, 8);
-    bool extraBig = GetRandomValue(0, 1);
-    this->texture = ResourceManager::GetSpriteTexture(randomAsteroid);
-    if (extraBig)
+    // (2x + 1) -> [1, 3, 5, 7] -> large variants
+    // (2x + 2) -> [2, 4, 6, 8] -> small variants
+    // TODO: cosider adding sprites for medium asteroids
+    float size = (variant == LARGE) ? ASTEROID_SIZE_LARGE : ASTEROID_SIZE_MEDIUM;
+    SpriteTextureID randomAsteroidTexture = (SpriteTextureID)(2 * GetRandomValue(0, 3) + 1); // load large variants
+    if (variant == SMALL)
     {
-        this->bounds = {origin.x - 48, origin.y - 48, 96, 96};
+        randomAsteroidTexture = (SpriteTextureID)(randomAsteroidTexture + 1); // load small variants
+        size = ASTEROID_SIZE_SMALL;
     }
 
+    this->texture = ResourceManager::GetSpriteTexture(randomAsteroidTexture);
+    this->bounds = {origin.x - size / 2, origin.y - size / 2, size, size};
+
+    // create hitbox as a regular polygon with 8 sides
     const int sides = 8;
-    const float radius = randomAsteroid % 2 == 1 ? extraBig ? (32) : (24) : 18;
+    // const float radius = (randomAsteroidTexture % 2 == 1) ? ((variant == LARGE) ? 32 : 24) : 18;
+    const float radius = size / 3;
     const float angleIncrement = 2 * PI / sides;
 
     for (int i = 0; i < sides; i++)
@@ -36,6 +46,15 @@ Asteroid::~Asteroid()
 
 void Asteroid::Update()
 {
+    if (state == EXPLODING && GetTime() - lastExplosionTime > ASTEROID_EXPLOSION_TIME)
+    {
+        state = DESTROYED;
+    }
+    if (state == DESTROYED)
+    {
+        return;
+    }
+
     if (origin.x > GetScreenWidth() + 32)
     {
         origin.x = -32;
@@ -75,12 +94,45 @@ void Asteroid::Update()
 
 void Asteroid::Draw()
 {
+    if (state == EXPLODING)
+    {
+        float explosionTime = GetTime() - lastExplosionTime;
+        float explosionProgress = explosionTime / ASTEROID_EXPLOSION_TIME;
+        float explosionScale = 1 + explosionProgress * 2;
+        float explosionAlpha = 1 - explosionProgress;
+        float size = (variant == LARGE) ? ASTEROID_SIZE_LARGE : ((variant == MEDIUM) ? ASTEROID_SIZE_MEDIUM : ASTEROID_SIZE_SMALL);
+        size /= 10;
+        this->bounds.x -= (explosionScale - 1) * size / 2;
+        this->bounds.y -= (explosionScale - 1) * size / 2;
+        this->bounds.width += (explosionScale - 1) * size;
+        this->bounds.height += (explosionScale - 1) * size;
+
+        DrawTexturePro(texture, {0, 0, (float)texture.width, (float)texture.height},
+                       {origin.x, origin.y, bounds.width, bounds.height},
+                       {bounds.width / 2, bounds.height / 2}, rotation, Fade(WHITE, explosionAlpha));
+
+        return;
+    }
+    if (state == DESTROYED)
+    {
+        return;
+    }
     GameObject::Draw();
 }
 
 void Asteroid::DrawDebug()
 {
     GameObject::DrawDebug();
+}
+
+void Asteroid::Destroy()
+{
+    if (state == FLOATING)
+    {
+        this->state = EXPLODING;
+        this->hitbox = {};
+        this->lastExplosionTime = GetTime(); // TODO: consider implementing custom timer to be able to pause the game
+    }
 }
 
 void Asteroid::SetVelocity(Vector2 velocity)

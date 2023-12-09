@@ -1,5 +1,9 @@
+#ifndef __PLAYER_H__
+#define __PLAYER_H__
+
 #include "game_object.hpp"
 #include "bullet.hpp"
+#include "asteroid.hpp"
 
 #define PLAYER_SIZE 40 // pixels
 #define PLAYER_ACCELERATION 200 // pixels per second
@@ -51,6 +55,8 @@ public:
     void Kill();
     void Reset();
 
+    bool CheckCollision(GameObject *other);
+
     Vector2 GetOriginalCenter() { return initialOrigin; }
     int GetLives() { return lives; }
     Vector2 GetVelocity() { return velocity; }
@@ -69,3 +75,5 @@ private:
     void Shoot();
     void PurgeBullets();
 };
+
+#endif // __PLAYER_H__

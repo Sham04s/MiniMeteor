@@ -130,6 +130,10 @@ void Player::Draw()
 void Player::DrawDebug()
 {
     GameObject::DrawDebug();
+    for (size_t i = 0; i < bullets.size(); i++)
+    {
+        bullets[i].DrawDebug();
+    }
 }
 void Player::Kill()
 {
@@ -154,6 +158,20 @@ void Player::Reset() // TODO: consider separating into Reset() and Respaw() meth
     ResetCollisionChecks();
     // leave bullets alone
     SetDefaultHitBox();
+}
+
+bool Player::CheckCollision(GameObject *other)
+{
+    for (size_t i = 0; i < bullets.size(); i++)
+    {
+        if (bullets[i].CheckCollision(other) && other->GetType() == ASTEROID)
+        {
+            bullets.erase(bullets.begin() + i);
+            bullets.shrink_to_fit();
+            ((Asteroid *)other)->Destroy();
+        }
+    }
+    return GameObject::CheckCollision(other);
 }
 
 void Player::Accelerate(float acceleration)

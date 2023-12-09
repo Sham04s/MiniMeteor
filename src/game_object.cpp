@@ -14,7 +14,7 @@ GameObject::GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, int
     this->firstCollision = false;
     this->lastCollisionPoint = {0, 0};
     this->lastCollisionObject = nullptr;
-    
+
     if (type != NONE)
     {
         this->texture = {0, 0, 0, 0, 0};
@@ -52,27 +52,41 @@ void GameObject::DrawDebug()
 bool GameObject::CheckCollision(GameObject *other)
 {
     bool collision = false;
-    for (size_t i = 0; i < hitbox.size() && !collision; i++)
-    {
-        Vector2 point = {hitbox[i].x, hitbox[i].y};
-        // TODO: only check on spawn or prevent asteroid to spawn on top of the player
-        // if (CheckCollisionPointPoly(point, other->hitbox.data(), other->hitbox.size()))
-        // {
-        //     collision = true;
-        //     *collisionPoint = point;
-        //     break;
-        // }
 
-        Vector2 nextPoint = {hitbox[(i + 1) % hitbox.size()].x, hitbox[(i + 1) % hitbox.size()].y};
-        for (size_t j = 0; j < other->GetHitbox().size() && !collision; j++)
+    if (hitbox.size() < 2)
+    {
+        collision = CheckCollisionPointPoly({hitbox[0].x, hitbox[0].y}, other->GetHitbox().data(), other->GetHitbox().size());
+        if (collision)
         {
-            Vector2 otherPoint = {other->GetHitbox()[j].x, other->GetHitbox()[j].y};
-            Vector2 otherNextPoint = {other->GetHitbox()[(j + 1) % other->GetHitbox().size()].x, other->GetHitbox()[(j + 1) % other->GetHitbox().size()].y};
-            if (CheckCollisionLines(point, nextPoint, otherPoint, otherNextPoint, &this->lastCollisionPoint))
+            this->lastCollisionPoint = {hitbox[0].x, hitbox[0].y};
+            this->lastCollisionObject = other;
+        }
+    }
+    else
+    {
+
+        for (size_t i = 0; i < hitbox.size() && !collision; i++)
+        {
+            Vector2 point = {hitbox[i].x, hitbox[i].y};
+            // TODO: only check on spawn or prevent asteroid to spawn on top of the player
+            // if (CheckCollisionPointPoly(point, other->hitbox.data(), other->hitbox.size()))
+            // {
+            //     collision = true;
+            //     *collisionPoint = point;
+            //     break;
+            // }
+
+            Vector2 nextPoint = {hitbox[(i + 1) % hitbox.size()].x, hitbox[(i + 1) % hitbox.size()].y};
+            for (size_t j = 0; j < other->GetHitbox().size() && !collision; j++)
             {
-                this->lastCollisionObject = other;
-                collision = true;
-                break;
+                Vector2 otherPoint = {other->GetHitbox()[j].x, other->GetHitbox()[j].y};
+                Vector2 otherNextPoint = {other->GetHitbox()[(j + 1) % other->GetHitbox().size()].x, other->GetHitbox()[(j + 1) % other->GetHitbox().size()].y};
+                if (CheckCollisionLines(point, nextPoint, otherPoint, otherNextPoint, &this->lastCollisionPoint))
+                {
+                    this->lastCollisionObject = other;
+                    collision = true;
+                    break;
+                }
             }
         }
     }
