@@ -144,7 +144,6 @@ int main()
 {
     InitRaylib();
     LoadGame();
-    lastCoreCompileTime = GetFileModTime(dllName);
 #ifdef PLATFORM_WEB
     emscripten_set_main_loop(ExecuteGameLoop, 60, 1);
 #else
@@ -155,6 +154,7 @@ int main()
         ExitRaylib();
         return 1;
     }
+    lastCoreCompileTime = GetFileModTime(dllName);
 #endif // DEBUG
     while (!WindowShouldClose())
     {

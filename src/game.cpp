@@ -214,7 +214,7 @@ void UpdatePhysics()
     }
 }
 
-void handleLogic()
+void HandleLogic()
 {
     if (player.IsFirstCollision())
     {
@@ -225,7 +225,7 @@ void handleLogic()
 void Update()
 {
     HandleInput();
-    handleLogic();
+    HandleLogic();
     UpdatePhysics();
 
     player.Update();
