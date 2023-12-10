@@ -1,16 +1,16 @@
 #include "player.hpp"
 
-Player::Player(Vector2 origin, int zIndex) : GameObject({origin.x - PLAYER_SIZE / 2, origin.y - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE * 1.5f}, 0, {0, -1}, zIndex, {}, PLAYER)
+Player::Player(Vector2 origin) : GameObject({origin.x - PLAYER_SIZE / 2, origin.y - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE}, 0, {0, -1}, {}, PLAYER)
 {
-    this->initialOrigin = origin;
     this->lives = PLAYER_MAX_LIVES;
-    this->velocity = {0, 0};
+    this->initialOrigin = origin;
     this->playerState = IDLE;
     this->powerups = {};
     this->bullets = {};
     this->lastShotTime = 0;
     this->lastDeathTime = 0;
-    this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITE);
+    this->mass = 64 * 64;
+    this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
 
     SetDefaultHitBox();
 }
@@ -21,7 +21,7 @@ Player::~Player()
 
 void Player::Update()
 {
-    if (playerState != DYING)
+    if (playerState != DYING && playerState != DEAD)
     {
         HandleInput();
     }
@@ -30,38 +30,77 @@ void Player::Update()
     {
         Accelerate(PLAYER_ACCELERATION);
     }
-    if (playerState == BRAKING)
+    if (playerState == EXTRA_ACCELERATING)
     {
-        Decelerate(PLAYER_DECELERATION);
+        Accelerate(PLAYER_ACCELERATION * 2);
     }
     if (playerState == DYING && GetTime() - lastDeathTime > PLAYER_DYING_TIME)
     {
-        Reset();
+        playerState = DEAD;
+    }
+    if (playerState == DEAD && GetTime() - lastDeathTime > PLAYER_RESPAWN_TIME)
+    {
+        Respawn();
     }
 
+    // move player
     Translate(Vector2Scale(this->velocity, GetFrameTime()));
+
+    // decelerate player if above max speed
+    if (Vector2Length(this->velocity) > PLAYER_MAX_SPEED * (playerState == EXTRA_ACCELERATING ? 2 : 1))
+    {
+        // decelerate
+        this->velocity = Vector2Subtract(this->velocity, Vector2Scale(Vector2Normalize(this->velocity), PLAYER_ACCELERATION * 3 * GetFrameTime()));
+    }
+
     // wrap around screen
-    if (GetOrigin().x > GetScreenWidth() + 32)
+    if (GetOrigin().x > GetScreenWidth() + PLAYER_SIZE / 4)
     {
-        Translate({(float)-GetScreenWidth() - 64, 0});
+        Translate({(float)-GetScreenWidth() - PLAYER_SIZE / 2, 0});
     }
-    if (GetOrigin().x < -32)
+    if (GetOrigin().x < -PLAYER_SIZE / 2)
     {
-        Translate({(float)GetScreenWidth() + 64, 0});
+        Translate({(float)GetScreenWidth() + PLAYER_SIZE / 2, 0});
     }
-    if (GetOrigin().y > GetScreenHeight() + 32)
+    if (GetOrigin().y > GetScreenHeight() + PLAYER_SIZE / 2)
     {
-        Translate({0, (float)-GetScreenHeight() - 64});
+        Translate({0, (float)-GetScreenHeight() - PLAYER_SIZE / 2});
     }
-    if (GetOrigin().y < -32)
+    if (GetOrigin().y < -PLAYER_SIZE / 2)
     {
-        Translate({0, (float)GetScreenHeight() + 64});
+        Translate({0, (float)GetScreenHeight() + PLAYER_SIZE / 2});
     }
 
     for (size_t i = 0; i < bullets.size(); i++)
     {
         bullets[i].Update();
     }
+
+    // apply collision response
+    // if (this->enteredCollision && this->lastCollisionObject->GetType() == ASTEROID)
+    // {
+    //     Asteroid *asteroid = (Asteroid *)this->lastCollisionObject;
+
+    //     float u = Vector2Length(Vector2Subtract(this->velocity, asteroid->GetVelocity()));                            // relative velocity
+    //     float e = 0.7f;                                                                                               // coefficient of restitution
+    //     float mA = 50;                                                                                                // mass of asteroid
+    //     float mP = 80;                                                                                                // mass of player
+    //     float angle = Vector2Angle(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint), this->velocity); // angle between asteroid and player
+    //     float q = (mA / mP);                                                                                          // mass ratio
+
+    //     float f = (1 + e) / (2 * q + 1 + pow(sin(angle), 2));
+
+    //     float va = f * u;               // velocity of asteroid after collision
+    //     float vp = (1 - 2 * q * f) * u; // velocity of player after collision
+
+    //     float w = (f * sin(angle) * u) / Vector2Length(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint)); // angular velocity of asteroid after collision
+
+    //     asteroid->SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint)), va));
+    //     asteroid->SetAngularVelocity(w * RAD2DEG);
+
+    //     this->velocity = Vector2Scale(Vector2Normalize(Vector2Subtract(this->origin, this->lastCollisionPoint)), vp);
+    //     this->ResetCollisionChecks();
+    // }
 }
 
 void Player::HandleInput()
@@ -74,13 +113,13 @@ void Player::HandleInput()
     {
         this->playerState = IDLE;
     }
-    if (IsKeyPressed(KEY_S))
+    if (IsKeyPressed(KEY_LEFT_SHIFT) && this->playerState == ACCELERATING)
     {
-        this->playerState = BRAKING; // TODO: add propper braking animation
+        this->playerState = EXTRA_ACCELERATING;
     }
-    if (IsKeyReleased(KEY_S))
+    if (IsKeyReleased(KEY_LEFT_SHIFT) && this->playerState == EXTRA_ACCELERATING)
     {
-        this->playerState = IDLE;
+        this->playerState = ACCELERATING;
     }
 
     if (IsKeyDown(KEY_A))
@@ -117,14 +156,35 @@ void Player::Draw()
     }
 
     // then draw player
-    Rectangle srcRect = ResourceManager::GetSpriteSrcRect(PLAYER_SPRITE, playerState);
-    if (playerState == DYING)
+    int frame = 0;
+
+    switch (playerState)
     {
-        // srcRect = ResourceManager::GetSpriteSrcRect(PLAYER_SPRITE, DYING); // TODO: make sprite for all player states
-        srcRect = ResourceManager::GetSpriteSrcRect(PLAYER_SPRITE, IDLE);
-        DrawTexturePro(GetTexture(), srcRect, {origin.x, origin.y, bounds.width, bounds.height}, {GetBounds().width / 2, GetBounds().height / 3}, GetRotation(), RED);
+    case ACCELERATING:
+        frame = 1;
+        break;
+
+    case EXTRA_ACCELERATING:
+        frame = 2;
+        break;
+
+    case DYING:
+        frame = (int)((GetTime() - lastDeathTime) / PLAYER_DYING_TIME * 4) + 3;
+        break;
+
+    case DEAD:
+        return;
+
+    default:
+        frame = 0;
+        break;
     }
-    DrawTexturePro(GetTexture(), srcRect, {origin.x, origin.y, bounds.width, bounds.height}, {GetBounds().width / 2, GetBounds().height / 3}, GetRotation(), WHITE);
+
+    // TODO: maybe make sprite for all player states
+    Rectangle srcRect = ResourceManager::GetSpriteSrcRect(PLAYER_SPRITES, frame);
+
+    DrawTexturePro(this->texture, srcRect, {origin.x, origin.y, bounds.width, bounds.height},
+                   {GetBounds().width / 2, GetBounds().height / 2}, GetRotation(), WHITE);
 }
 
 void Player::DrawDebug()
@@ -137,7 +197,7 @@ void Player::DrawDebug()
 }
 void Player::Kill()
 {
-    if (playerState == DYING || this->lives <= 0)
+    if (playerState == DYING || playerState == DEAD || this->lives <= 0)
     {
         return;
     }
@@ -146,51 +206,28 @@ void Player::Kill()
     this->lastDeathTime = GetTime();
 }
 
-void Player::Reset() // TODO: consider separating into Reset() and Respaw() methods
+void Player::Respawn() // TODO: consider separating into Respawn() and Respaw() methods
 {
     this->origin = this->initialOrigin;
-    this->bounds = {origin.x - PLAYER_SIZE / 2, origin.y - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE * 1.5f};
+    this->bounds = {origin.x - PLAYER_SIZE / 2, origin.y - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE};
     this->rotation = 0;
     this->forwardDir = {0, -1};
     this->velocity = {0, 0};
     this->playerState = IDLE;
     this->powerups = {};
-    ResetCollisionChecks();
+    // ResetCollisionChecks();
     // leave bullets alone
     SetDefaultHitBox();
 }
 
-bool Player::CheckCollision(GameObject *other)
+bool Player::CheckCollision(GameObject *other, Vector2 *collisionPoint)
 {
-    for (size_t i = 0; i < bullets.size(); i++)
-    {
-        if (bullets[i].CheckCollision(other) && other->GetType() == ASTEROID)
-        {
-            bullets.erase(bullets.begin() + i);
-            bullets.shrink_to_fit();
-            ((Asteroid *)other)->Destroy();
-        }
-    }
-    return GameObject::CheckCollision(other);
+    return GameObject::CheckCollision(other, collisionPoint);
 }
 
 void Player::Accelerate(float acceleration)
 {
     this->velocity = Vector2Add(this->velocity, Vector2Scale(this->forwardDir, acceleration * GetFrameTime()));
-    if (Vector2Length(this->velocity) > PLAYER_MAX_SPEED)
-    {
-        this->velocity = Vector2Scale(Vector2Normalize(this->velocity), PLAYER_MAX_SPEED);
-    }
-}
-
-void Player::Decelerate(float deceleration)
-{
-    Vector2 newVelocity = Vector2Subtract(this->velocity, Vector2Scale(this->forwardDir, deceleration * GetFrameTime()));
-    if (Vector2DotProduct(this->velocity, this->forwardDir) < 0 && Vector2Length(newVelocity) > 80)
-    {
-        return;
-    }
-    this->velocity = newVelocity;
 }
 
 void Player::Shoot()
@@ -221,6 +258,6 @@ void Player::SetDefaultHitBox()
 
     for (size_t i = 0; i < hitbox.size(); i++)
     {
-        this->hitbox[i] = Vector2Add(Vector2Scale(this->hitbox[i], PLAYER_SIZE), GetOrigin());
+        this->hitbox[i] = Vector2Add(Vector2Scale(this->hitbox[i], PLAYER_SIZE / 2), GetOrigin());
     }
 }

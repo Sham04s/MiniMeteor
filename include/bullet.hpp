@@ -6,7 +6,6 @@
 class Bullet : public GameObject
 {
 private:
-    Vector2 velocity;
 
 public:
     Bullet(Vector2 origin, Vector2 forwardDir);

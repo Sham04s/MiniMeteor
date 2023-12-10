@@ -1,6 +1,6 @@
 #include "bullet.hpp"
 
-Bullet::Bullet(Vector2 origin, Vector2 forwardDir) : GameObject({origin.x - BULLET_SIZE / 2, origin.y - BULLET_SIZE / 2, BULLET_SIZE, BULLET_SIZE}, 0, forwardDir, 0, {}, BULLET)
+Bullet::Bullet(Vector2 origin, Vector2 forwardDir) : GameObject({origin.x - BULLET_SIZE / 2, origin.y - BULLET_SIZE / 2, BULLET_SIZE, BULLET_SIZE}, 0, forwardDir, {}, BULLET)
 {
     this->velocity = Vector2Scale(forwardDir, BULLET_SPEED);
     this->rotation = atan2(forwardDir.y, forwardDir.x) * RAD2DEG + 90;

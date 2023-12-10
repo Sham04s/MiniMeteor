@@ -54,10 +54,10 @@ void InitGame()
         printf("Failed to load resources!\n");
     }
 
-    player = Player((Vector2){GetScreenWidth() / (float)2, GetScreenHeight() / (float)2}, 0);
+    player = Player((Vector2){GetScreenWidth() / (float)2, GetScreenHeight() / (float)2});
     for (size_t i = 0; i < 2; i++)
     {
-        asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}, 0));
+        asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
     }
 }
 
@@ -82,12 +82,31 @@ void DrawFrame()
     EndDrawing();
 }
 
+int asteroidCheckings = 0;
+
 void DrawDebug()
 {
     player.DrawDebug();
+    Vector2 collisionPoint = {0, 0};
     for (size_t i = 0; i < asteroids.size(); i++)
     {
         asteroids[i].DrawDebug();
+        float xDraw = asteroids[i].GetBounds().x;
+        float yDraw = asteroids[i].GetBounds().y + asteroids[i].GetBounds().height + 10;
+        DrawText(TextFormat("Asteroid %d", i), xDraw, yDraw, 20, WHITE);
+        yDraw += 20;
+        for (size_t j = 0; j < asteroids.size(); j++)
+        {
+            if (i != j)
+            {
+                if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &collisionPoint))
+                {
+                    DrawLineV(asteroids[i].GetOrigin(), asteroids[j].GetOrigin(), RED);
+                    DrawText(TextFormat("Collision with asteroid %d", j), xDraw, yDraw, 20, WHITE);
+                }
+                yDraw += 20;
+            }
+        }
     }
 
     DrawText(TextFormat("Player lives: %d", player.GetLives()), 10, 30, 20, WHITE);
@@ -96,6 +115,7 @@ void DrawDebug()
     DrawFPS(10, 10);
     const char *mousePos = TextFormat("Mouse position: (%d, %d)", GetMouseX(), GetMouseY());
     DrawText(mousePos, GetRenderWidth() - MeasureText(mousePos, 20) - 10, 10, 20, WHITE);
+    DrawText(TextFormat("Asteroid checkings: %d", asteroidCheckings), 10, 70, 20, WHITE);
 }
 
 void HandleInput()
@@ -112,12 +132,12 @@ void HandleInput()
     {
         if (IsKeyPressed(KEY_R))
         {
-            player.Reset();
+            player.Respawn();
             player.SetLives(3);
             asteroids.clear();
             for (size_t i = 0; i < 1; i++)
             {
-                asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}, 0));
+                asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
             }
         }
     }
@@ -140,6 +160,10 @@ void HandleInput()
     }
     if (IsKeyDown(KEY_LEFT_SHIFT))
     {
+        if (IsKeyPressed(KEY_ZERO))
+        {
+            SetTargetFPS(5);
+        }
         if (IsKeyPressed(KEY_ONE))
         {
             SetTargetFPS(15);
@@ -160,14 +184,14 @@ void HandleInput()
         {
             SetTargetFPS(0);
         }
-        if (IsKeyPressed(KEY_N))
-        {
-            asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}, 0));
-        }
         if (IsKeyPressed(KEY_H))
         {
             HIDE_SPRITES = !HIDE_SPRITES;
         }
+    }
+    if (IsKeyPressed(KEY_X))
+    {
+        asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
     }
 
     if (CheckCollisionPointRec(GetMousePosition(), player.GetBounds()))
@@ -191,7 +215,8 @@ void HandleInput()
             }
             if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
             {
-                asteroids[i].SetVelocity({(float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100)});
+                Vector2 velocity = Vector2Subtract(GetMousePosition(), asteroids[i].GetOrigin());
+                asteroids[i].SetVelocity(Vector2Scale(velocity, 3));
                 asteroids[i].SetAngularVelocity(GetRandomValue(-100, 100));
             }
         }
@@ -201,75 +226,61 @@ void HandleInput()
 
 void UpdatePhysics()
 {
-    if (player.IsFirstCollision() && player.GetLastCollisionObject()->GetType() == ASTEROID)
+    Vector2 collisionPoint = {0, 0};
+    asteroidCheckings = 0;
+    auto bullets = player.GetBullets();
+    for (size_t i = 0; i < asteroids.size(); i++)
     {
-        Asteroid *asteroid = (Asteroid *)player.GetLastCollisionObject();
-
-        float u = Vector2Length(Vector2Subtract(player.GetVelocity(), asteroid->GetVelocity()));
-        float e = 0.7f;
-        float mA = 50;
-        float mp = 80;
-        float angle = Vector2Angle(Vector2Subtract(asteroid->GetOrigin(), player.GetLastCollisionPoint()), player.GetVelocity());
-        float q = (mA / mp);
-        float f = (1 + e) / (2 * q + 1 + pow(sin(angle), 2));
-
-        float va = f * u;
-        float vp = (1 - 2 * q * f) * u;
-
-        float w = (f * sin(angle) * u) / Vector2Length(Vector2Subtract(asteroid->GetOrigin(), player.GetLastCollisionPoint()));
-
-        asteroid->SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(asteroid->GetOrigin(), player.GetLastCollisionPoint())), va));
-        asteroid->SetAngularVelocity(w * RAD2DEG);
-
-        player.SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(player.GetOrigin(), player.GetLastCollisionPoint())), vp));
-        player.ResetCollisionChecks();
+        if (player.CheckCollision(&asteroids[i], &collisionPoint))
+        {
+            player.ApplyPhysics(&asteroids[i], collisionPoint); // apply to both objects
+            player.Kill();
+        }
+        for (size_t j = 0; j < asteroids.size(); j++)
+        {
+            if (i < j) // check for every different asteroid
+            {
+                asteroidCheckings++;
+                if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &collisionPoint))
+                {
+                    asteroids[i].ApplyPhysics(&asteroids[j], collisionPoint); // apply to both objects
+                }
+            }
+        }
+        for (size_t b = 0; b < bullets->size(); b++)
+        {
+            if ((*bullets)[b].CheckCollision(&asteroids[i], &collisionPoint))
+            {
+                bullets->erase(bullets->begin() + b);
+                asteroids[i].Destroy();
+            }
+        }
+        bullets->shrink_to_fit();
     }
 }
 
 void HandleLogic()
 {
-    if (player.IsFirstCollision())
-    {
-        player.Kill();
-    }
-    for (size_t i = 0; i < player.GetBullets().size(); i++)
-    {
-        if (player.GetBullets()[i].IsFirstCollision())
-        {
-            DrawText(TextFormat("Bullet collision!"), 10, 50, 20, WHITE);
-            player.GetBullets().erase(player.GetBullets().begin() + i);
-        }
-    }
+    // if (player.GetState() == DEAD && player.GetLives() > 0)
+    // {
+    //     player.Respawn();
+    // }
     for (size_t i = 0; i < asteroids.size(); i++)
     {
-        if (asteroids[i].isDestroyed())
+        if (asteroids[i].IsDestroyed())
         {
             asteroids.erase(asteroids.begin() + i);
-            asteroids.shrink_to_fit();
         }
     }
+    asteroids.shrink_to_fit();
 }
 
 void UpdateGame()
 {
-    HandleLogic();
-    UpdatePhysics();
-
     player.Update();
     for (size_t i = 0; i < asteroids.size(); i++)
     {
         asteroids[i].Update();
-        if (!player.IsFirstCollision())
-        {
-            player.CheckCollision(&asteroids[i]);
-        }
-        for (size_t j = 0; j < asteroids.size(); j++)
-        {
-            if (i < j)
-            {
-                asteroids[i].CheckCollision(&asteroids[j]);
-            }
-        }
     }
 }
 
@@ -277,6 +288,14 @@ void GameLoop()
 {
     if (gameState == GAME)
     {
+        HandleLogic();
+        UpdatePhysics();
+        UpdateGame();
+    }
+    if (gameState == PAUSE && IsKeyPressed(KEY_N))
+    {
+        HandleLogic();
+        UpdatePhysics();
         UpdateGame();
     }
     DrawFrame();

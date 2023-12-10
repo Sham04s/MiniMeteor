@@ -25,14 +25,12 @@ enum AsteroidState
 class Asteroid : public GameObject
 {
 private:
-    Vector2 velocity;
-    float angularVelocity;
     AsteroidVariant variant;
     AsteroidState state;
     float lastExplosionTime;
     
 public:
-    Asteroid(Vector2 origin, int zIndex);
+    Asteroid(Vector2 origin);
     ~Asteroid();
 
     void Update();
@@ -48,7 +46,9 @@ public:
     float GetRotation();
     float GetAngularVelocity();
 
-    bool isDestroyed() { return state == DESTROYED; }
+    bool IsFloating() { return state == FLOATING; }
+    bool IsExploding() { return state == EXPLODING; }
+    bool IsDestroyed() { return state == DESTROYED; }
 };
 
 

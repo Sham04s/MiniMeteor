@@ -3,7 +3,7 @@
 using namespace std;
 
 const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
-    "resources/characters/player.png",
+    "resources/characters/player/player.png",
     // "resources/characters/enemy.png",
     // "resources/characters/bullet.png",
     // "resources/characters/asteroid.png",
@@ -16,7 +16,7 @@ const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
     "resources/environment/asteroid_squared_detailed_small.png",
     "resources/environment/asteroid_squared_large.png",
     "resources/environment/asteroid_squared_small.png",
-    "resources/other/bullet.png",
+    "resources/characters/player/bullet.png",
 };
 
 std::vector<Texture2D> ResourceManager::spriteTextures;
@@ -40,7 +40,8 @@ bool ResourceManager::LoadResources()
 
 bool ResourceManager::ReloadResouces()
 {
-    return true;
+    UnloadResources();
+    return LoadResources();
 }
 
 void ResourceManager::UnloadResources()
@@ -50,6 +51,7 @@ void ResourceManager::UnloadResources()
         UnloadTexture(spriteTextures[i]);
     }
     spriteTextures.clear();
+    UnloadFont(font);
 }
 
 Texture2D ResourceManager::GetSpriteTexture(SpriteTextureID id)
@@ -59,9 +61,9 @@ Texture2D ResourceManager::GetSpriteTexture(SpriteTextureID id)
 
 Rectangle ResourceManager::GetSpriteSrcRect(SpriteTextureID id, unsigned int frame)
 {
-    if (id == PLAYER_SPRITE)
+    if (id == PLAYER_SPRITES)
     {
-        return {static_cast<float>(128 * frame), 0, 128, 192};
+        return {(float)(256 * frame), 0, 256, 256};
     }
     return {0, 0, 0, 0}; // TODO: change this!
 }

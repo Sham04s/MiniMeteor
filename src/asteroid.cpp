@@ -3,7 +3,7 @@
 #include "raymath.h"
 #include <math.h>
 
-Asteroid::Asteroid(Vector2 origin, int zIndex) : GameObject({origin.x - 32, origin.y - 32, 64, 64}, 0, {0, -1}, zIndex, {}, ASTEROID)
+Asteroid::Asteroid(Vector2 origin) : GameObject({origin.x - 32, origin.y - 32, 64, 64}, 0, {0, -1}, {}, ASTEROID)
 {
     this->velocity = {(float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100)};
     this->rotation = GetRandomValue(0, 360);
@@ -15,6 +15,7 @@ Asteroid::Asteroid(Vector2 origin, int zIndex) : GameObject({origin.x - 32, orig
     // (2x + 2) -> [2, 4, 6, 8] -> small variants
     // TODO: cosider adding sprites for medium asteroids
     float size = (variant == LARGE) ? ASTEROID_SIZE_LARGE : ASTEROID_SIZE_MEDIUM;
+    this->mass = size * size;
     SpriteTextureID randomAsteroidTexture = (SpriteTextureID)(2 * GetRandomValue(0, 3) + 1); // load large variants
     if (variant == SMALL)
     {
@@ -25,6 +26,7 @@ Asteroid::Asteroid(Vector2 origin, int zIndex) : GameObject({origin.x - 32, orig
     this->texture = ResourceManager::GetSpriteTexture(randomAsteroidTexture);
     this->bounds = {origin.x - size / 2, origin.y - size / 2, size, size};
 
+    // TODO: maybe use a predefined hitbox for each variant?
     // create hitbox as a regular polygon with 8 sides
     const int sides = 8;
     // const float radius = (randomAsteroidTexture % 2 == 1) ? ((variant == LARGE) ? 32 : 24) : 18;
@@ -90,26 +92,51 @@ void Asteroid::Update()
     {
         Translate({0, (float)GetScreenHeight() + 64});
     }
+
+    // apply collision response
+    // if (this->enteredCollision && this->lastCollisionObject->GetType() == ASTEROID)
+    // {
+    //     Asteroid *asteroid = (Asteroid *)this->lastCollisionObject;
+
+    //     float u = Vector2Length(Vector2Subtract(this->velocity, asteroid->GetVelocity()));                            // relative velocity
+    //     float e = 0.7f;                                                                                               // coefficient of restitution
+    //     float mA = 50;                                                                                                // mass of this asteroid
+    //     float mP = 50;                                                                                                // mass of other asteroid
+    //     float angle = Vector2Angle(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint), this->velocity); // angle between this asteroid and other asteroid
+    //     float q = (mA / mP);                                                                                          // mass ratio
+
+    //     float f = (1 + e) / (2 * q + 1 + pow(sin(angle), 2));
+
+    //     float va = f * u;               // velocity of asteroid after collision
+    //     float vp = (1 - 2 * q * f) * u; // velocity of other asteroid after collision
+
+    //     float w = (f * sin(angle) * u) / Vector2Length(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint)); // angular velocity of asteroid after collision
+
+    //     asteroid->SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint)), va));
+    //     asteroid->SetAngularVelocity(w * RAD2DEG);
+
+    //     this->velocity = Vector2Scale(Vector2Normalize(Vector2Subtract(this->origin, this->lastCollisionPoint)), vp);
+    //     this->ResetCollisionChecks();
+    // }
 }
 
 void Asteroid::Draw()
 {
     if (state == EXPLODING)
     {
-        float explosionTime = GetTime() - lastExplosionTime;
-        float explosionProgress = explosionTime / ASTEROID_EXPLOSION_TIME;
-        float explosionScale = 1 + explosionProgress * 2;
-        float explosionAlpha = 1 - explosionProgress;
-        float size = (variant == LARGE) ? ASTEROID_SIZE_LARGE : ((variant == MEDIUM) ? ASTEROID_SIZE_MEDIUM : ASTEROID_SIZE_SMALL);
-        size /= 10;
-        this->bounds.x -= (explosionScale - 1) * size / 2;
-        this->bounds.y -= (explosionScale - 1) * size / 2;
-        this->bounds.width += (explosionScale - 1) * size;
-        this->bounds.height += (explosionScale - 1) * size;
+        float explosionProgress = (GetTime() - lastExplosionTime) / ASTEROID_EXPLOSION_TIME;
+        float scale = 1 + explosionProgress;
+        float explosionFade = 1 - explosionProgress;
+        float size = (variant == LARGE)
+                         ? ASTEROID_SIZE_LARGE
+                         : ((variant == MEDIUM)
+                                ? ASTEROID_SIZE_MEDIUM
+                                : ASTEROID_SIZE_SMALL);
+
+        this->bounds = {origin.x - scale * size / 2, origin.y - scale * size / 2, scale * size, scale * size};
 
         DrawTexturePro(texture, {0, 0, (float)texture.width, (float)texture.height},
-                       {origin.x, origin.y, bounds.width, bounds.height},
-                       {bounds.width / 2, bounds.height / 2}, rotation, Fade(WHITE, explosionAlpha));
+                       {origin.x, origin.y, bounds.width, bounds.height}, {size * scale / 2, size * scale / 2}, rotation, Fade(WHITE, explosionFade));
 
         return;
     }
