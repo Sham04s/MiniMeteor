@@ -1,5 +1,7 @@
 #include "game_object.hpp"
 
+#include <math.h>
+
 GameObject::GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, std::vector<Vector2> hitbox, GameObjectType type)
 {
     this->bounds = bounds;
@@ -43,84 +45,211 @@ void GameObject::DrawDebug()
     DrawLineEx(origin, Vector2Add(origin, Vector2Scale(velocity, 0.25f)), 2, GREEN);
 }
 
-bool GameObject::CheckCollision(GameObject *other, Vector2 *collisionPoint)
+std::vector<Vector2> getAxes(std::vector<Vector2> hitbox)
 {
-    bool collision = false;
+    std::vector<Vector2> axes = {};
 
-    std::vector<Vector2> futureHitbox;
     for (size_t i = 0; i < hitbox.size(); i++)
     {
-        futureHitbox.push_back(Vector2Add(hitbox[i], Vector2Scale(velocity, GetFrameTime())));
+        // get the current vertex
+        Vector2 p1 = hitbox[i];
+        // get the next vertex
+        Vector2 p2 = hitbox[i + 1 == hitbox.size() ? 0 : i + 1];
+        // subtract the two to get the edge vector
+        Vector2 edge = Vector2Subtract(p1, p2);
+        // get either perpendicular vector
+        Vector2 normal = Vector2Normalize({-edge.y, edge.x});
+        // the perp method is just (x, y) =&gt; (-y, x) or (y, -x)
+        axes.push_back(normal);
     }
 
-    if (futureHitbox.size() < 2)
+    return axes;
+}
+
+Vector2 project(Vector2 axis, std::vector<Vector2> hitbox)
+{
+    float min = 0;
+    float max = 0;
+
+    for (size_t i = 0; i < hitbox.size(); i++)
     {
-        collision = CheckCollisionPointPoly({futureHitbox[0].x, futureHitbox[0].y}, other->GetHitbox().data(), other->GetHitbox().size());
-        if (collision)
+        float dotProduct = Vector2DotProduct(axis, hitbox[i]);
+        if (i == 0 || dotProduct < min)
         {
-            *collisionPoint = {futureHitbox[0].x, futureHitbox[0].y};
+            min = dotProduct;
         }
+        if (i == 0 || dotProduct > max)
+        {
+            max = dotProduct;
+        }
+    }
+
+    return {min, max};
+}
+
+float getOverlap(Vector2 a, Vector2 b, float *overlap)
+{
+    float minA = a.x;
+    float maxA = a.y;
+    float minB = b.x;
+    float maxB = b.y;
+
+    if (maxA >= minB && maxB >= minA)
+    {
+        *overlap = fmin(maxA, maxB) - fmax(minA, minB);
+        return true;
     }
     else
     {
-        for (size_t i = 0; i < futureHitbox.size() && !collision; i++)
-        {
-            Vector2 point = {futureHitbox[i].x, futureHitbox[i].y};
-            // TODO: only check on spawn or prevent asteroid to spawn on top of the player
-            // if (CheckCollisionPointPoly(point, other->hitbox.data(), other->hitbox.size()))
-            // {
-            //     collision = true;
-            //     *collisionPoint = point;
-            //     break;
-            // }
+        return false;
+    }
+}
 
-            Vector2 nextPoint = {futureHitbox[(i + 1) % futureHitbox.size()].x, futureHitbox[(i + 1) % futureHitbox.size()].y};
-            for (size_t j = 0; j < other->GetHitbox().size() && !collision; j++)
+bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
+{
+    // if the hitbox is a single point then just check if the point is inside the other hitbox
+    if (hitbox.size() == 1)
+    {
+        pushVector = {0};
+        return CheckCollisionPointPoly(hitbox[0], other->GetHitbox().data(), other->GetHitbox().size());
+    }
+    
+    // object are not colliding if their bounding boxes are not colliding
+    if (this->bounds.x + this->bounds.width < other->GetBounds().x || this->bounds.x > other->GetBounds().x + other->GetBounds().width || this->bounds.y + this->bounds.height < other->GetBounds().y || this->bounds.y > other->GetBounds().y + other->GetBounds().height)
+    {
+        return false;
+    }
+
+    // for (size_t i = 0; i < futureOtherHitbox.size(); i++)
+    // {
+    //     Vector2 point = futureOtherHitbox[i];
+    //     Vector2 nextPoint = futureOtherHitbox[(i + 1) % futureOtherHitbox.size()];
+    //     for (size_t j = 0; j < futureHitbox.size(); j++)
+    //     {
+    //         Vector2 hitboxPoint = futureHitbox[j];
+    //         Vector2 nextHitboxPoint = futureHitbox[(j + 1) % futureHitbox.size()];
+    //         if (CheckCollisionLines(point, nextPoint, hitboxPoint, nextHitboxPoint, collisionPoint))
+    //         {
+    //             return true;
+    //         }
+    //     }
+    // }
+
+    // for (size_t i = 0; i < futureHitbox.size(); i++)
+    // {
+    //     Vector2 point = futureHitbox[i];
+    //     if (CheckCollisionPointPoly(point, futureOtherHitbox.data(), futureOtherHitbox.size()))
+    //     {
+    //         *collisionPoint = point;
+    //         return true;
+    //     }
+    // }
+
+    // return false;
+
+    // SAT adapted from https://dyn4j.org/2010/01/sat/#sat-mtv
+    float overlap = INFINITY;
+    float o = overlap;
+    Vector2 smallest = {0, 0};
+    std::vector<Vector2> axes1 = getAxes(hitbox);
+    std::vector<Vector2> axes2 = getAxes(other->GetHitbox());
+    // loop over the axes1
+    for (size_t i = 0; i < axes1.size(); i++)
+    {
+        Vector2 axis = axes1[i];
+        // project both shapes onto the axis
+        Vector2 p1 = project(axis, hitbox);
+        Vector2 p2 = project(axis, other->GetHitbox());
+        // do the projections overlap?
+        if (!getOverlap(p1, p2, &o))
+        {
+            // then we can guarantee that the shapes do not overlap
+            return false;
+        }
+        else
+        {
+            // get the overlap
+            getOverlap(p1, p2, &o);
+            // check for minimum
+            if (o < overlap)
             {
-                Vector2 otherPoint = {other->GetHitbox()[j].x, other->GetHitbox()[j].y};
-                Vector2 otherNextPoint = {other->GetHitbox()[(j + 1) % other->GetHitbox().size()].x, other->GetHitbox()[(j + 1) % other->GetHitbox().size()].y};
-                if (CheckCollisionLines(point, nextPoint, otherPoint, otherNextPoint, collisionPoint))
-                {
-                    collision = true;
-                    break;
-                }
+                // then set this one as the smallest
+                overlap = o;
+                smallest = axis;
             }
         }
     }
-    return collision;
+    // loop over the axes2
+    for (size_t i = 0; i < axes2.size(); i++)
+    {
+        Vector2 axis = axes2[i];
+        // project both shapes onto the axis
+        Vector2 p1 = project(axis, hitbox);
+        Vector2 p2 = project(axis, other->GetHitbox());
+        // do the projections overlap?
+        if (!getOverlap(p1, p2, &o))
+        {
+            // then we can guarantee that the shapes do not overlap
+            return false;
+        }
+        else
+        {
+            // get the overlap
+            getOverlap(p1, p2, &o);
+            // check for minimum
+            if (o < overlap)
+            {
+                // then set this one as the smallest
+                overlap = o;
+                smallest = axis;
+            }
+        }
+    }
+    Vector2 mtv = Vector2Scale(smallest, overlap);
+
+    Vector2 c1c2 = Vector2Subtract(this->origin, other->GetOrigin());
+    // check if the normal is in the direction of the center to center vector
+    if (Vector2DotProduct(c1c2, mtv) < 0)
+    {
+        // if its in the opposite direction then flip it
+        mtv = Vector2Negate(mtv);
+    }
+    *pushVector = mtv;
+    return true;
 }
 
-void GameObject::ApplyPhysics(GameObject *other, Vector2 collisionPoint)
+void GameObject::Push(GameObject *other, Vector2 pushVector)
 {
-    // apply collision response to both objects
-    float u = Vector2Length(Vector2Subtract(this->GetVelocity(), other->GetVelocity()));                  // relative velocity
-    float e = 0.2f;                                                                                  // coefficient of restitution
-    float angle = Vector2Angle(Vector2Subtract(other->GetOrigin(), collisionPoint), this->velocity); // angle between other and player
-    float q = (other->mass / this->mass);                                                                             // mass ratio
+    float e = 0.85f;
 
-    float f = (1 + e) / (2 * q + 1 + pow(sin(angle), 2));
+    Vector2 thisVelocity = this->velocity;
+    this->velocity = Vector2Scale(Vector2Normalize(pushVector), e * Vector2Length(other->GetVelocity()));
+    other->SetVelocity(Vector2Scale(Vector2Normalize(pushVector), -e * Vector2Length(thisVelocity)));
 
-    float va = f * u;               // velocity of other after collision
-    float vp = (1 - 2 * q * f) * u; // velocity of player after collision
+    float thisAngularVelocity = this->angularVelocity;
+    this->angularVelocity = e * other->GetAngularVelocity();
+    other->SetAngularVelocity(-e * thisAngularVelocity);
 
-    float w = (f * sin(angle) * u) / Vector2Length(Vector2Subtract(other->GetOrigin(), collisionPoint)); // angular velocity of other after collision
+    // Vector2 normal = Vector2Normalize(Vector2Subtract(this->origin, collisionPoint));
 
-    other->SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(other->GetOrigin(), collisionPoint)), va));
-    other->SetAngularVelocity(w * RAD2DEG);
+    // float u = Vector2Length(Vector2Subtract(other->GetVelocity(), this->velocity)); // relative velocity
+    // float e = 0.7f; // coefficient of restitution
+    // float angle = Vector2Angle(normal, this->forwardDir);
+    // float f = (1 + e) / (other->GetMass() / this->mass + 1 + pow(sin(angle), 2));
 
-    this->velocity = Vector2Scale(Vector2Normalize(Vector2Subtract(this->origin, collisionPoint)), vp);
+    // float va = f * u;                        // velocity of this object after collision
+    // float vp = (1 - 2 * f) * u;              // velocity of other object after collision
+    // float w = (f * sin(angle) * u);          // angular velocity of this object after collision
+    // float wp = (1 - 2 * f) * sin(angle) * u; // angular velocity of other object after collision
 
-    this->Translate(Vector2Scale(this->velocity, GetFrameTime()));
+    // // this->velocity = Vector2Scale(Vector2Normalize(Vector2Subtract(this->origin, collisionPoint)), va);
+    // // other->SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(other->GetOrigin(), collisionPoint)), vp));
+    // this->angularVelocity = w;
+    // other->SetAngularVelocity(wp);
+
+    Translate(Vector2Scale(this->velocity, GetFrameTime()));
     other->Translate(Vector2Scale(other->GetVelocity(), GetFrameTime()));
 }
-
-// void GameObject::ResetCollisionChecks()
-// {
-//     this->wasColliding = this->isColliding;
-//     this->enteredCollision = false;
-//     // this->lastCollisionPoint = {0, 0};
-//     // this->lastCollisionObject = nullptr;
-// }
 
 void GameObject::Translate(Vector2 translation)
 {

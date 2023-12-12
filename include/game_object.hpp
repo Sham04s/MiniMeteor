@@ -45,7 +45,7 @@ public:
     void DrawDebug();
 
     bool CheckCollision(GameObject *other, Vector2 *collisionPoint);
-    void ApplyPhysics(GameObject *other, Vector2 collisionPoint);
+    void Push(GameObject *other, Vector2 collisionPoint);
     void Translate(Vector2 translation);
     void Rotate(float angle);
     void Scale(float scale);
@@ -55,6 +55,7 @@ public:
     float GetRotation() { return rotation; }
     Vector2 GetVelocity() { return velocity; }
     float GetAngularVelocity() { return angularVelocity; }
+    float GetMass() { return mass; }
     Vector2 GetForwardDir() { return forwardDir; }
     std::vector<Vector2> GetHitbox() { return hitbox; }
     GameObjectType GetType() { return type; }

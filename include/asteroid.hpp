@@ -3,15 +3,13 @@
 
 #include "game_object.hpp"
 
-#define ASTEROID_SIZE_SMALL 32
-#define ASTEROID_SIZE_MEDIUM 64
+#define ASTEROID_SIZE_SMALL 64
 #define ASTEROID_SIZE_LARGE 96
 #define ASTEROID_EXPLOSION_TIME 0.2f
 
 enum AsteroidVariant
 {
     SMALL,
-    MEDIUM,
     LARGE
 };
 
@@ -27,6 +25,7 @@ class Asteroid : public GameObject
 private:
     AsteroidVariant variant;
     AsteroidState state;
+    float size;
     float lastExplosionTime;
     
 public:

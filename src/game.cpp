@@ -82,12 +82,14 @@ void DrawFrame()
     EndDrawing();
 }
 
-int asteroidCheckings = 0;
+double asteroidCheckingsTime = 0;
+std::vector<double> asteroidCheckingsTimes = {};
 
 void DrawDebug()
 {
     player.DrawDebug();
-    Vector2 collisionPoint = {0, 0};
+    Vector2 pushVector = {0, 0};
+    double start = GetTime();
     for (size_t i = 0; i < asteroids.size(); i++)
     {
         asteroids[i].DrawDebug();
@@ -99,15 +101,28 @@ void DrawDebug()
         {
             if (i != j)
             {
-                if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &collisionPoint))
+                if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &pushVector))
                 {
-                    DrawLineV(asteroids[i].GetOrigin(), asteroids[j].GetOrigin(), RED);
-                    DrawText(TextFormat("Collision with asteroid %d", j), xDraw, yDraw, 20, WHITE);
+                    DrawLineV(asteroids[i].GetOrigin(), Vector2Add(asteroids[i].GetOrigin(), Vector2Scale(pushVector, 10)), PURPLE);
                 }
                 yDraw += 20;
             }
         }
     }
+    double end = GetTime();
+    asteroidCheckingsTime = end - start;
+    asteroidCheckingsTimes.push_back(asteroidCheckingsTime);
+    if (asteroidCheckingsTimes.size() > 100)
+    {
+        asteroidCheckingsTimes.erase(asteroidCheckingsTimes.begin());
+    }
+    double average = 0;
+    for (size_t i = 0; i < asteroidCheckingsTimes.size(); i++)
+    {
+        average += asteroidCheckingsTimes[i];
+    }
+    average /= asteroidCheckingsTimes.size();
+    DrawText(TextFormat("Average asteroid checkings time: %.5f ms", average * 1000), 10, 90, 20, WHITE);
 
     DrawText(TextFormat("Player lives: %d", player.GetLives()), 10, 30, 20, WHITE);
     DrawText(TextFormat("Asteroids: %d", asteroids.size()), 10, 50, 20, WHITE);
@@ -115,7 +130,6 @@ void DrawDebug()
     DrawFPS(10, 10);
     const char *mousePos = TextFormat("Mouse position: (%d, %d)", GetMouseX(), GetMouseY());
     DrawText(mousePos, GetRenderWidth() - MeasureText(mousePos, 20) - 10, 10, 20, WHITE);
-    DrawText(TextFormat("Asteroid checkings: %d", asteroidCheckings), 10, 70, 20, WHITE);
 }
 
 void HandleInput()
@@ -227,23 +241,22 @@ void HandleInput()
 void UpdatePhysics()
 {
     Vector2 collisionPoint = {0, 0};
-    asteroidCheckings = 0;
     auto bullets = player.GetBullets();
     for (size_t i = 0; i < asteroids.size(); i++)
     {
         if (player.CheckCollision(&asteroids[i], &collisionPoint))
         {
-            player.ApplyPhysics(&asteroids[i], collisionPoint); // apply to both objects
+            player.Push(&asteroids[i], collisionPoint); // apply to player
+            asteroids[i].Push(&player, Vector2Scale(collisionPoint, -1)); // apply to asteroid 
             player.Kill();
         }
         for (size_t j = 0; j < asteroids.size(); j++)
         {
             if (i < j) // check for every different asteroid
             {
-                asteroidCheckings++;
                 if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &collisionPoint))
                 {
-                    asteroids[i].ApplyPhysics(&asteroids[j], collisionPoint); // apply to both objects
+                    asteroids[i].Push(&asteroids[j], collisionPoint);
                 }
             }
         }

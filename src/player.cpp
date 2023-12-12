@@ -54,21 +54,21 @@ void Player::Update()
     }
 
     // wrap around screen
-    if (GetOrigin().x > GetScreenWidth() + PLAYER_SIZE / 4)
+    if (GetOrigin().x > GetScreenWidth() + PLAYER_SIZE / 2)
     {
-        Translate({(float)-GetScreenWidth() - PLAYER_SIZE / 2, 0});
+        Translate({-(float)GetScreenWidth() - PLAYER_SIZE, 0});
     }
-    if (GetOrigin().x < -PLAYER_SIZE / 2)
+    else if (GetOrigin().x < -PLAYER_SIZE / 2)
     {
-        Translate({(float)GetScreenWidth() + PLAYER_SIZE / 2, 0});
+        Translate({(float)GetScreenWidth() + PLAYER_SIZE, 0});
     }
     if (GetOrigin().y > GetScreenHeight() + PLAYER_SIZE / 2)
     {
-        Translate({0, (float)-GetScreenHeight() - PLAYER_SIZE / 2});
+        Translate({0, -(float)GetScreenHeight() - PLAYER_SIZE});
     }
-    if (GetOrigin().y < -PLAYER_SIZE / 2)
+    else if (GetOrigin().y < -PLAYER_SIZE / 2)
     {
-        Translate({0, (float)GetScreenHeight() + PLAYER_SIZE / 2});
+        Translate({0, (float)GetScreenHeight() + PLAYER_SIZE});
     }
 
     for (size_t i = 0; i < bullets.size(); i++)
@@ -157,6 +157,9 @@ void Player::Draw()
 
     // then draw player
     int frame = 0;
+    float deathProgress = (GetTime() - lastDeathTime) / PLAYER_DYING_TIME;
+    float scale = 1 + deathProgress;
+    float deathFade = 1 - deathProgress;
 
     switch (playerState)
     {
@@ -169,7 +172,9 @@ void Player::Draw()
         break;
 
     case DYING:
-        frame = (int)((GetTime() - lastDeathTime) / PLAYER_DYING_TIME * 4) + 3;
+        // frame = (int)((GetTime() - lastDeathTime) / PLAYER_DYING_TIME * 4) + 3; // for sprites
+        frame = 0; // idle
+
         break;
 
     case DEAD:
@@ -180,8 +185,18 @@ void Player::Draw()
         break;
     }
 
-    // TODO: maybe make sprite for all player states
+    // TODO: maybe make sprite for all player states, or maybe just use effects?
     Rectangle srcRect = ResourceManager::GetSpriteSrcRect(PLAYER_SPRITES, frame);
+
+    if (playerState == DYING)
+    {
+        this->bounds = {origin.x - scale * PLAYER_SIZE / 2, origin.y - scale * PLAYER_SIZE / 2,
+                        scale * PLAYER_SIZE, scale * PLAYER_SIZE};
+
+        DrawTexturePro(texture, srcRect, {origin.x, origin.y, bounds.width, bounds.height},
+                       {PLAYER_SIZE * scale / 2, PLAYER_SIZE * scale / 2}, rotation, Fade(WHITE, deathFade));
+        return;
+    }
 
     DrawTexturePro(this->texture, srcRect, {origin.x, origin.y, bounds.width, bounds.height},
                    {GetBounds().width / 2, GetBounds().height / 2}, GetRotation(), WHITE);
