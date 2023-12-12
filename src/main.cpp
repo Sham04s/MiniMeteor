@@ -130,7 +130,7 @@ int main()
     InitRaylib();
     LoadGame();
 #ifdef PLATFORM_WEB
-    emscripten_set_main_loop(ExecuteGameLoop, 60, 1);
+    emscripten_set_main_loop(ExecuteGameLoop, 0, 1);
 #else
 #ifdef WINDOWS_HOT_RELOAD
     if (!lastLoadSuccess)

@@ -246,8 +246,8 @@ void UpdatePhysics()
     {
         if (player.CheckCollision(&asteroids[i], &collisionPoint))
         {
-            player.Push(&asteroids[i], collisionPoint); // apply to player
-            asteroids[i].Push(&player, Vector2Scale(collisionPoint, -1)); // apply to asteroid 
+            player.Push(&asteroids[i], collisionPoint);                   // apply to player
+            asteroids[i].Push(&player, Vector2Scale(collisionPoint, -1)); // apply to asteroid
             player.Kill();
         }
         for (size_t j = 0; j < asteroids.size(); j++)
@@ -299,6 +299,7 @@ void UpdateGame()
 
 void GameLoop()
 {
+    HandleInput();
     if (gameState == GAME)
     {
         HandleLogic();
@@ -311,8 +312,8 @@ void GameLoop()
         UpdatePhysics();
         UpdateGame();
     }
+
     DrawFrame();
-    HandleInput();
 }
 
 void ExitGame()
