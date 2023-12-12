@@ -120,33 +120,6 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         return false;
     }
 
-    // for (size_t i = 0; i < futureOtherHitbox.size(); i++)
-    // {
-    //     Vector2 point = futureOtherHitbox[i];
-    //     Vector2 nextPoint = futureOtherHitbox[(i + 1) % futureOtherHitbox.size()];
-    //     for (size_t j = 0; j < futureHitbox.size(); j++)
-    //     {
-    //         Vector2 hitboxPoint = futureHitbox[j];
-    //         Vector2 nextHitboxPoint = futureHitbox[(j + 1) % futureHitbox.size()];
-    //         if (CheckCollisionLines(point, nextPoint, hitboxPoint, nextHitboxPoint, collisionPoint))
-    //         {
-    //             return true;
-    //         }
-    //     }
-    // }
-
-    // for (size_t i = 0; i < futureHitbox.size(); i++)
-    // {
-    //     Vector2 point = futureHitbox[i];
-    //     if (CheckCollisionPointPoly(point, futureOtherHitbox.data(), futureOtherHitbox.size()))
-    //     {
-    //         *collisionPoint = point;
-    //         return true;
-    //     }
-    // }
-
-    // return false;
-
     // SAT adapted from https://dyn4j.org/2010/01/sat/#sat-mtv
     float overlap = INFINITY;
     float o = overlap;
@@ -229,23 +202,6 @@ void GameObject::Push(GameObject *other, Vector2 pushVector)
     float thisAngularVelocity = this->angularVelocity;
     this->angularVelocity = e * other->GetAngularVelocity();
     other->SetAngularVelocity(-e * thisAngularVelocity);
-
-    // Vector2 normal = Vector2Normalize(Vector2Subtract(this->origin, collisionPoint));
-
-    // float u = Vector2Length(Vector2Subtract(other->GetVelocity(), this->velocity)); // relative velocity
-    // float e = 0.7f; // coefficient of restitution
-    // float angle = Vector2Angle(normal, this->forwardDir);
-    // float f = (1 + e) / (other->GetMass() / this->mass + 1 + pow(sin(angle), 2));
-
-    // float va = f * u;                        // velocity of this object after collision
-    // float vp = (1 - 2 * f) * u;              // velocity of other object after collision
-    // float w = (f * sin(angle) * u);          // angular velocity of this object after collision
-    // float wp = (1 - 2 * f) * sin(angle) * u; // angular velocity of other object after collision
-
-    // // this->velocity = Vector2Scale(Vector2Normalize(Vector2Subtract(this->origin, collisionPoint)), va);
-    // // other->SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(other->GetOrigin(), collisionPoint)), vp));
-    // this->angularVelocity = w;
-    // other->SetAngularVelocity(wp);
 
     Translate(Vector2Scale(this->velocity, GetFrameTime()));
     other->Translate(Vector2Scale(other->GetVelocity(), GetFrameTime()));

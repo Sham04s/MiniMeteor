@@ -26,9 +26,9 @@ Asteroid::Asteroid(Vector2 origin) : GameObject({origin.x - 32, origin.y - 32, 6
     this->bounds = {origin.x - size / 2, origin.y - size / 2, size, size};
 
     // TODO: maybe use a predefined hitbox for each variant?
+    
     // create hitbox as a regular polygon with 8 sides
     const int sides = 8;
-    // const float radius = (randomAsteroidTexture % 2 == 1) ? ((variant == LARGE) ? 32 : 24) : 18;
     const float radius = size / 3;
     const float angleIncrement = 2 * PI / sides;
 

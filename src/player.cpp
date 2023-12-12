@@ -139,7 +139,7 @@ void Player::HandleInput()
 
 void Player::AddLive()
 {
-    this->lives++; // TODO: cosider checking if lives < PLAYER_MAX_LIVES or not adding lives at all
+    this->lives++; // TODO: cosider checking if lives < PLAYER_MAX_LIVES or not adding lives at all in the game loop
 }
 
 void Player::AddPowerUp(/*PowerUp powerup*/)
@@ -221,7 +221,7 @@ void Player::Kill()
     this->lastDeathTime = GetTime();
 }
 
-void Player::Respawn() // TODO: consider separating into Respawn() and Respaw() methods
+void Player::Respawn()
 {
     this->origin = this->initialOrigin;
     this->bounds = {origin.x - PLAYER_SIZE / 2, origin.y - PLAYER_SIZE / 2, PLAYER_SIZE, PLAYER_SIZE};
@@ -230,7 +230,6 @@ void Player::Respawn() // TODO: consider separating into Respawn() and Respaw() 
     this->velocity = {0, 0};
     this->playerState = IDLE;
     this->powerups = {};
-    // ResetCollisionChecks();
     // leave bullets alone
     SetDefaultHitBox();
 }
