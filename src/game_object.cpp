@@ -124,6 +124,13 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         return CheckCollisionPointPoly(hitbox[0], other->GetHitbox().data(), other->GetHitbox().size());
     }
 
+    // same as above but for the other object
+    if (other->GetHitbox().size() == 1)
+    {
+        pushVector = {0};
+        return CheckCollisionPointPoly(other->GetHitbox()[0], hitbox.data(), hitbox.size());
+    }
+
     // object are not colliding if their bounding boxes are not colliding
     if (this->bounds.x + this->bounds.width < other->GetBounds().x || this->bounds.x > other->GetBounds().x + other->GetBounds().width || this->bounds.y + this->bounds.height < other->GetBounds().y || this->bounds.y > other->GetBounds().y + other->GetBounds().height)
     {
@@ -188,6 +195,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
             }
         }
     }
+    // minimum translation vector
     Vector2 mtv = Vector2Scale(smallest, overlap);
 
     Vector2 c1c2 = Vector2Subtract(this->origin, other->GetOrigin());

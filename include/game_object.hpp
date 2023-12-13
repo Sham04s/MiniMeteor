@@ -44,8 +44,8 @@ public:
     void Draw();
     void DrawDebug();
 
-    bool CheckCollision(GameObject *other, Vector2 *collisionPoint);
-    void Push(GameObject *other, Vector2 collisionPoint);
+    bool CheckCollision(GameObject *other, Vector2 *pushVector);
+    void Push(GameObject *other, Vector2 pushVector);
     void Translate(Vector2 translation);
     void Rotate(float angle);
     void Scale(float scale);

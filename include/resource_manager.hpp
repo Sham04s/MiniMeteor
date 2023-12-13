@@ -24,7 +24,8 @@ enum SpriteTextureID
 
 enum UITextureID
 {
-    BUTTON_TEXTURE,
+    BUTTON_PRIMARY_TEXTURE,
+    BUTTON_SECONDARY_TEXTURE,
     LIFE_TEXTURE,
     NUM_UI_TEXTURES
 };
@@ -68,6 +69,7 @@ public:
     static Texture2D* GetSpriteTexture(SpriteTextureID id);
     static Rectangle GetSpriteSrcRect(SpriteTextureID id, unsigned int frame);
     static Texture2D* GetUITexture(UITextureID id);
+    static Rectangle GetUISrcRect(UITextureID id, unsigned int frame);
     static Sound* GetSoundEffect(SoundID id);
     static Music* GetMusicTrack(MusicID id);
     static Font* GetFont();

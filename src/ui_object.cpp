@@ -63,3 +63,20 @@ void UIObject::DrawDebug()
         children[i]->DrawDebug();
     }
 }
+
+void UIObject::AddChild(UIObject *child)
+{
+    child->SetParent(this);
+    children.push_back(child);
+}
+
+void UIObject::RemoveChild(UIObject *child)
+{
+    children.erase(std::remove(children.begin(), children.end(), child), children.end());
+}
+
+void UIObject::SetParent(UIObject *parent)
+{
+    this->parent = parent;
+    this->bounds = {parent->GetBounds().x + relBounds.x, parent->GetBounds().y + relBounds.y, relBounds.width, relBounds.height};
+}

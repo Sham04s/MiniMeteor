@@ -2,26 +2,46 @@
 #include "resource_manager.hpp"
 #include <stdio.h>
 
-Button::Button(Rectangle relBounds, UIObject *parent, const char *text) : UIObject(relBounds, parent, nullptr)
+Button::Button(Rectangle relBounds, UIObject *parent, const char *text, ButtonVariant variant, ButtonSize size)
+    : UIObject(relBounds, parent, nullptr)
 {
     this->pressed = false;
     this->hovered = false;
     this->clicked = false;
-    this->disabled = false;
     this->text = text;
     this->onClickFunc = nullptr;
-    this->texture = ResourceManager::GetUITexture(BUTTON_TEXTURE);
+    this->variant = variant;
+    this->size = size;
+    if (variant == BUTTON_SECONDARY)
+    {
+        this->texture = ResourceManager::GetUITexture(BUTTON_SECONDARY_TEXTURE);
+    }
+    else
+    {
+        this->texture = ResourceManager::GetUITexture(BUTTON_PRIMARY_TEXTURE);
+    }
+    this->textBounds = {bounds.x + BUTTON_PADDING, bounds.y + BUTTON_PADDING, bounds.width - BUTTON_PADDING * 2, bounds.height - BUTTON_PADDING * 2};
 }
 
-Button::Button(Vector2 relPos, UIObject *parent, const char *text, void (*onClick)()) : UIObject(Rectangle{relPos.x, relPos.y, BUTTON_WIDTH, BUTTON_HEIGHT}, parent, nullptr)
+Button::Button(Vector2 relPos, UIObject *parent, const char *text, ButtonVariant variant, ButtonSize size, std::function<void()> onClick)
+    : UIObject(Rectangle{relPos.x, relPos.y, BUTTON_WIDTH, BUTTON_HEIGHT}, parent, nullptr)
 {
     this->pressed = false;
     this->hovered = false;
     this->clicked = false;
-    this->disabled = false;
     this->text = text;
     this->onClickFunc = onClick;
-    this->texture = ResourceManager::GetUITexture(BUTTON_TEXTURE);
+    this->variant = variant;
+    this->size = size;
+    if (variant == BUTTON_SECONDARY)
+    {
+        this->texture = ResourceManager::GetUITexture(BUTTON_SECONDARY_TEXTURE);
+    }
+    else
+    {
+        this->texture = ResourceManager::GetUITexture(BUTTON_PRIMARY_TEXTURE);
+    }
+    this->textBounds = {bounds.x + BUTTON_PADDING, bounds.y + BUTTON_PADDING, bounds.width - BUTTON_PADDING * 2, bounds.height - BUTTON_PADDING * 2};
 }
 
 Button::~Button()
@@ -32,10 +52,6 @@ Button::~Button()
 void Button::Update()
 {
     UIObject::Update();
-    if (disabled)
-    {
-        return;
-    }
     hovered = CheckCollisionPointRec(GetMousePosition(), bounds);
     if (hovered)
     {
@@ -55,7 +71,9 @@ void Button::Update()
                 }
             }
             pressed = false;
-        } else {
+        }
+        else
+        {
             clicked = false;
         }
     }
@@ -67,27 +85,35 @@ void Button::Update()
 
 void Button::Draw()
 {
-    UIObject::Draw();
-    if (disabled)
+    unsigned int frame = 0;
+    if (hovered)
     {
-        DrawText(text, bounds.x + BUTTON_TEXT_PADDING, bounds.y + BUTTON_TEXT_PADDING, BUTTON_FONT_SIZE, BUTTON_FONT_COLOR_DISABLED);
+        frame += 2;
     }
-    else
+    if (pressed)
     {
-        DrawText(text, bounds.x + BUTTON_TEXT_PADDING, bounds.y + BUTTON_TEXT_PADDING, BUTTON_FONT_SIZE, BUTTON_TEXT_COLOR);
+        frame += 1;
     }
+    Rectangle srcRect = ResourceManager::GetUISrcRect(variant == BUTTON_SECONDARY ? BUTTON_SECONDARY_TEXTURE : BUTTON_PRIMARY_TEXTURE, frame);
+    DrawTexturePro(*texture, srcRect, bounds, {0}, 0, WHITE);
+
+    Vector2 textDst = {textBounds.x + textBounds.width / 2 - MeasureText(text, BUTTON_TEXT_SIZE) / 2, textBounds.y + textBounds.height / 2 - BUTTON_TEXT_SIZE / 2};
+    if (pressed)
+    {
+        textDst.y += BUTTON_PRESSED_OFFSET;
+    }
+    DrawText(text, textDst.x, textDst.y, BUTTON_TEXT_SIZE, BUTTON_TEXT_COLOR);
 }
 
 void Button::DrawDebug()
 {
     UIObject::DrawDebug();
-    DrawText(TextFormat("pressed: %s", pressed ? "true" : "false"), bounds.x + bounds.width + BUTTON_PADDING, bounds.y, 20, WHITE);
-    DrawText(TextFormat("hovered: %s", hovered ? "true" : "false"), bounds.x + bounds.width + BUTTON_PADDING, bounds.y + 20, 20, WHITE);
-    DrawText(TextFormat("clicked: %s", clicked ? "true" : "false"), bounds.x + bounds.width + BUTTON_PADDING, bounds.y + 40, 20, WHITE);
-    DrawText(TextFormat("disabled: %s", disabled ? "true" : "false"), bounds.x + bounds.width + BUTTON_PADDING, bounds.y + 80, 20, WHITE);
+    DrawRectangleLinesEx(bounds, 1, RED);
+    DrawRectangleLinesEx(textBounds, 1, RED);
 }
 
-void Button::OnClick(void (*onClick)())
+void Button::SetParent(UIObject *parent)
 {
-    this->onClickFunc = onClick;
+    UIObject::SetParent(parent);
+    this->textBounds = {bounds.x + BUTTON_PADDING, bounds.y + BUTTON_PADDING, bounds.width - BUTTON_PADDING * 2, bounds.height - BUTTON_PADDING * 2};
 }

@@ -12,6 +12,7 @@ CORE_API bool GameLoop();
 CORE_API void ExitGame();
 
 void CreateNewGame();
+void CreateUIElements();
 void DrawFrame();
 void DrawDebug();
 void UpdateGame();

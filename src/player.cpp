@@ -208,11 +208,6 @@ void Player::Respawn()
     SetDefaultHitBox();
 }
 
-bool Player::CheckCollision(GameObject *other, Vector2 *collisionPoint)
-{
-    return GameObject::CheckCollision(other, collisionPoint);
-}
-
 void Player::Accelerate(float acceleration)
 {
     this->velocity = Vector2Add(this->velocity, Vector2Scale(this->forwardDir, acceleration * GetFrameTime()));

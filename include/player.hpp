@@ -48,7 +48,6 @@ public:
     ~Player();
 
     void Update();
-    bool CheckCollision(GameObject *other, Vector2 *collisionPoint);
     void HandleInput();
     void Draw();
     void DrawDebug();
@@ -60,6 +59,9 @@ public:
     int GetLives() { return lives; }
     Vector2 GetOriginalCenter() { return initialOrigin; }
     PlayerState GetState() { return playerState; }
+    bool IsDead() { return playerState == DEAD; }
+    bool IsDying() { return playerState == DYING; }
+    bool isAlive() { return playerState != DEAD && playerState != DYING; }
     Vector2 GetVelocity() { return velocity; }
     std::vector<int> GetPowerups() { return powerups; }
     std::vector<Bullet> *GetBullets() { return &bullets; }

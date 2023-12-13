@@ -8,6 +8,8 @@
 #include "asteroid.hpp"
 #include "player.hpp"
 #include "button.hpp"
+#include "lives_bar.hpp"
+#include "utils.hpp"
 
 #ifdef _DEBUG
 bool SHOW_DEBUG = true;
@@ -33,8 +35,10 @@ bool HIDE_SPRITES = false;
 
 enum ScreenID
 {
-    MAIN_MENU,
     GAME,
+    GAME_OVER,
+    MAIN_MENU,
+    PAUSE_MENU,
     OPTIONS,
     EXITING,
     NUM_SCREENS
@@ -43,6 +47,7 @@ enum ScreenID
 struct GameState
 {
     ScreenID currentScreen;
+    ScreenID previousScreen;
     UIObject *screens[NUM_SCREENS];
 } gameState;
 
@@ -59,30 +64,18 @@ void InitGame()
         printf("Failed to load resources!\n");
     }
 
-    gameState.currentScreen = GAME;
-    CreateNewGame();
+    gameState.previousScreen = gameState.currentScreen;
+    gameState.currentScreen = MAIN_MENU;
 
-    UIObject *mainMenu = new UIObject(Rectangle{(float)GetScreenWidth() / 2 - BUTTON_WIDTH / 2, (float)GetScreenHeight() / 2 - BUTTON_HEIGHT * 3 / 2 + BUTTON_PADDING,
-                                                BUTTON_WIDTH, BUTTON_HEIGHT * 3 + BUTTON_PADDING * 2},
-                                      nullptr, ResourceManager::GetDefaultTexture());
-
-    mainMenu->AddChild(new Button(Vector2{0, 0}, mainMenu, "Play", []()
-                                  { gameState.currentScreen = GAME; }));
-    mainMenu->AddChild(new Button(Vector2{0, 100}, mainMenu, "Options", []()
-                                  { gameState.currentScreen = OPTIONS; }));
-    mainMenu->AddChild(new Button(Vector2{0, 200}, mainMenu, "Quit", []()
-                                  { gameState.currentScreen = EXITING; }));
-
-    UIObject *game = new UIObject(Rectangle{0, 0, 0, 0}, nullptr, ResourceManager::GetDefaultTexture());
-
-    game->AddChild(new UIObject(Rectangle{0, 0, 0, 0}, game, ResourceManager::GetUITexture(LIFE_TEXTURE)));
-
-    gameState.screens[MAIN_MENU] = mainMenu;
+    CreateUIElements();
 }
 
 void CreateNewGame()
 {
+    gameState.previousScreen = gameState.currentScreen;
+    gameState.currentScreen = GAME;
     player = Player(Vector2{(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2});
+    player.SetLives(1);
     asteroids.clear();
     for (size_t i = 0; i < 1; i++)
     {
@@ -90,11 +83,93 @@ void CreateNewGame()
     }
 }
 
+void CreateUIElements()
+{
+    // main menu buttons
+    int mainMenuButtonCount = 3;
+    Button *mainMenuButtons[mainMenuButtonCount] = {
+        new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { CreateNewGame(); }),
+        new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = OPTIONS; }),
+        new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = EXITING; }),
+    };
+
+    // main menu
+    UIObject *mainMenu = new UIObject(createCenteredButtonRec(mainMenuButtons, mainMenuButtonCount),
+                                      nullptr, ResourceManager::GetDefaultTexture());
+
+    // game ui
+    UIObject *game = new UIObject(Rectangle{0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()}, nullptr, ResourceManager::GetDefaultTexture());
+
+    game->AddChild(new LivesBar(Rectangle{(float)GetScreenWidth() / 2 + 100, 10, (float)GetScreenWidth() / 2 - 100, 50}, &player));
+
+    // pause menu buttons
+    int pauseButtonCount = 5;
+    Button *pauseButtons[pauseButtonCount] = {
+        new Button(Vector2{0, 0}, nullptr, "Resume", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = GAME; }),
+        new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { CreateNewGame(); }),
+        new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = MAIN_MENU; }),
+        new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = OPTIONS; }),
+        new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = EXITING; }),
+    };
+
+    // pause menu
+    UIObject *pauseMenu = new UIObject(createCenteredButtonRec(pauseButtons, pauseButtonCount), nullptr, ResourceManager::GetDefaultTexture());
+
+    // game over buttons
+    int gameOverButtonCount = 2;
+    Button *gameOverButtons[gameOverButtonCount] = {
+        new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { CreateNewGame(); }),
+        new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = MAIN_MENU; }),
+    };
+
+    // game over
+    UIObject *gameOver = new UIObject(createCenteredButtonRec(gameOverButtons, gameOverButtonCount), nullptr, ResourceManager::GetDefaultTexture());
+
+    Button *b;
+    for (int i = 0; i < mainMenuButtonCount; i++)
+    {
+        b = mainMenuButtons[i];
+        b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
+        mainMenu->AddChild(b);
+    }
+
+    for (int i = 0; i < pauseButtonCount; i++)
+    {
+        b = pauseButtons[i];
+        b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
+        pauseMenu->AddChild(b);
+    }
+
+    for (int i = 0; i < gameOverButtonCount; i++)
+    {
+        b = gameOverButtons[i];
+        b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
+        gameOver->AddChild(b);
+    }
+
+    gameState.screens[GAME] = game;
+    gameState.screens[GAME_OVER] = gameOver;
+    gameState.screens[MAIN_MENU] = mainMenu;
+    gameState.screens[PAUSE_MENU] = pauseMenu;
+    gameState.screens[OPTIONS] = nullptr;
+    gameState.screens[EXITING] = nullptr;
+}
+
 void DrawFrame()
 {
     BeginDrawing();
 
-    if (gameState.currentScreen == GAME)
+    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
         ClearBackground(BACKGROUND_COLOR);
 
@@ -104,7 +179,7 @@ void DrawFrame()
             asteroids[i].Draw();
         }
     }
-    if (gameState.currentScreen != GAME)
+    if (gameState.currentScreen != GAME && gameState.currentScreen != GAME_OVER)
     {
         ClearBackground(DARKGRAY);
     }
@@ -122,7 +197,7 @@ void DrawFrame()
 
 void DrawDebug()
 {
-    if (gameState.currentScreen == GAME)
+    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
         player.DrawDebug();
 
@@ -160,6 +235,8 @@ void HandleInput()
     {
         if (IsKeyPressed(KEY_R))
         {
+            gameState.previousScreen = gameState.currentScreen;
+            gameState.currentScreen = GAME;
             player.Respawn();
             player.SetLives(3);
             asteroids.clear();
@@ -174,19 +251,40 @@ void HandleInput()
     {
         if (gameState.currentScreen == GAME)
         {
-            gameState.currentScreen = MAIN_MENU; // TODO: pause menu
+            gameState.previousScreen = GAME;
+            gameState.currentScreen = PAUSE_MENU;
         }
-        else if (gameState.currentScreen == MAIN_MENU)
+        else if (gameState.currentScreen == PAUSE_MENU)
         {
+            gameState.previousScreen = PAUSE_MENU;
             gameState.currentScreen = GAME;
+        }
+        else if (gameState.currentScreen == OPTIONS)
+        {
+            if (gameState.previousScreen == PAUSE_MENU)
+            {
+                gameState.currentScreen = PAUSE_MENU;
+            }
+            else if (gameState.previousScreen == MAIN_MENU)
+            {
+                gameState.currentScreen = MAIN_MENU;
+            }
+            gameState.previousScreen = OPTIONS;
         }
     }
 
 #ifdef _DEBUG
+#ifdef PLATFORM_DESKTOP
     if (IsKeyPressed(KEY_F3))
     {
         SHOW_DEBUG = !SHOW_DEBUG;
     }
+#else
+    if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_B))
+    {
+        SHOW_DEBUG = !SHOW_DEBUG;
+    }
+#endif // PLATFORM_DESKTOP
     if (IsKeyDown(KEY_LEFT_SHIFT))
     {
         if (IsKeyPressed(KEY_ZERO))
@@ -222,6 +320,14 @@ void HandleInput()
     {
         asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
     }
+    if (IsKeyPressed(KEY_KP_ADD))
+    {
+        player.AddLive();
+    }
+    if (IsKeyPressed(KEY_KP_SUBTRACT))
+    {
+        player.Kill();
+    }
 
     if (CheckCollisionPointRec(GetMousePosition(), player.GetBounds()))
     {
@@ -250,6 +356,7 @@ void HandleInput()
             }
         }
     }
+
 #endif // _DEBUG
 }
 
@@ -257,9 +364,18 @@ void UpdateGame()
 {
     if (gameState.currentScreen == GAME)
     {
-        player.Update();
+        // if player is dead and has 0 lives left, game over
+        if (player.IsDead() && player.GetLives() <= 0)
+        {
+            gameState.previousScreen = gameState.currentScreen;
+            gameState.currentScreen = GAME_OVER;
+        }
+        else
+        {
+            player.Update();
+        }
 
-        Vector2 collisionPoint = {0, 0};
+        Vector2 pushVector = {0, 0};
         auto bullets = player.GetBullets();
 
         for (size_t i = 0; i < asteroids.size(); i++)
@@ -267,9 +383,9 @@ void UpdateGame()
             asteroids[i].Update();
 
             // check for collisions between player and asteroids
-            if (player.CheckCollision(&asteroids[i], &collisionPoint))
+            if (player.CheckCollision(&asteroids[i], &pushVector))
             {
-                player.Push(&asteroids[i], collisionPoint);
+                player.Push(&asteroids[i], pushVector); // push both player and asteroid away from each other
                 player.Kill();
             }
 
@@ -278,10 +394,10 @@ void UpdateGame()
             {
                 if (i < j) // check each pair only once
                 {
-                    if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &collisionPoint))
+                    if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &pushVector))
                     {
                         // push asteroids away from each other with the SAT push vector
-                        asteroids[i].Push(&asteroids[j], collisionPoint);
+                        asteroids[i].Push(&asteroids[j], pushVector);
                     }
                 }
             }
@@ -289,7 +405,7 @@ void UpdateGame()
             // check for collisions between bullets and asteroids
             for (size_t b = 0; b < bullets->size(); b++)
             {
-                if ((*bullets)[b].CheckCollision(&asteroids[i], &collisionPoint))
+                if ((*bullets)[b].CheckCollision(&asteroids[i], &pushVector))
                 {
                     // destroy bullet and asteroid
                     bullets->erase(bullets->begin() + b);
@@ -317,7 +433,7 @@ void UpdateGame()
 bool GameLoop()
 {
     HandleInput();
-    
+
     DrawFrame();
 
     UpdateGame();

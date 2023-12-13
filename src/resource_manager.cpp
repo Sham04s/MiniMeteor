@@ -17,7 +17,8 @@ const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
 };
 
 const char *uiTexturesPaths[NUM_UI_TEXTURES] = {
-    "resources/ui/blue_button02.png",
+    "resources/ui/primary_button.png",
+    "resources/ui/blue_button03.png",
     "resources/ui/life.png",
 };
 
@@ -92,7 +93,10 @@ Rectangle ResourceManager::GetSpriteSrcRect(SpriteTextureID id, unsigned int fra
 {
     if (id == PLAYER_SPRITES)
     {
-        return {(float)(256 * frame), 0, 256, 256};
+        int totalFrames = 8; // horizontal spritesheet
+        int frameWidth = spriteTextures[id].width / totalFrames;
+        int frameHeight = spriteTextures[id].height;
+        return {(float)(frameWidth * frame), 0, (float)frameWidth, (float)frameHeight};
     }
     return {0, 0, 0, 0}; // TODO: change this!
 }
@@ -100,6 +104,18 @@ Rectangle ResourceManager::GetSpriteSrcRect(SpriteTextureID id, unsigned int fra
 Texture2D *ResourceManager::GetUITexture(UITextureID id)
 {
     return &uiTextures[id];
+}
+
+Rectangle ResourceManager::GetUISrcRect(UITextureID id, unsigned int frame)
+{
+    if (id == BUTTON_PRIMARY_TEXTURE || id == BUTTON_SECONDARY_TEXTURE)
+    {
+        int totalFrames = 4; // vertical spritesheet
+        int frameWidth = uiTextures[id].width;
+        int frameHeight = uiTextures[id].height / totalFrames;
+        return {0, (float)(frameHeight * frame), (float)frameWidth, (float)frameHeight};
+    }
+    return {0, 0, 0, 0}; // TODO: change this!
 }
 
 Sound *ResourceManager::GetSoundEffect(SoundID id)
