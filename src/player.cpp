@@ -54,53 +54,27 @@ void Player::Update()
     }
 
     // wrap around screen
-    if (GetOrigin().x > GetScreenWidth() + PLAYER_SIZE / 2)
+    if (GetOrigin().x > GetScreenWidth() + PLAYER_SIZE / 4)
     {
-        Translate({-(float)GetScreenWidth() - PLAYER_SIZE, 0});
+        Translate({-(float)GetScreenWidth() - PLAYER_SIZE / 2, 0});
     }
-    else if (GetOrigin().x < -PLAYER_SIZE / 2)
+    else if (GetOrigin().x < -PLAYER_SIZE / 4)
     {
-        Translate({(float)GetScreenWidth() + PLAYER_SIZE, 0});
+        Translate({(float)GetScreenWidth() + PLAYER_SIZE / 2, 0});
     }
-    if (GetOrigin().y > GetScreenHeight() + PLAYER_SIZE / 2)
+    if (GetOrigin().y > GetScreenHeight() + PLAYER_SIZE / 4)
     {
-        Translate({0, -(float)GetScreenHeight() - PLAYER_SIZE});
+        Translate({0, -(float)GetScreenHeight() - PLAYER_SIZE / 2});
     }
-    else if (GetOrigin().y < -PLAYER_SIZE / 2)
+    else if (GetOrigin().y < -PLAYER_SIZE / 4)
     {
-        Translate({0, (float)GetScreenHeight() + PLAYER_SIZE});
+        Translate({0, (float)GetScreenHeight() + PLAYER_SIZE / 2});
     }
 
     for (size_t i = 0; i < bullets.size(); i++)
     {
         bullets[i].Update();
     }
-
-    // apply collision response
-    // if (this->enteredCollision && this->lastCollisionObject->GetType() == ASTEROID)
-    // {
-    //     Asteroid *asteroid = (Asteroid *)this->lastCollisionObject;
-
-    //     float u = Vector2Length(Vector2Subtract(this->velocity, asteroid->GetVelocity()));                            // relative velocity
-    //     float e = 0.7f;                                                                                               // coefficient of restitution
-    //     float mA = 50;                                                                                                // mass of asteroid
-    //     float mP = 80;                                                                                                // mass of player
-    //     float angle = Vector2Angle(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint), this->velocity); // angle between asteroid and player
-    //     float q = (mA / mP);                                                                                          // mass ratio
-
-    //     float f = (1 + e) / (2 * q + 1 + pow(sin(angle), 2));
-
-    //     float va = f * u;               // velocity of asteroid after collision
-    //     float vp = (1 - 2 * q * f) * u; // velocity of player after collision
-
-    //     float w = (f * sin(angle) * u) / Vector2Length(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint)); // angular velocity of asteroid after collision
-
-    //     asteroid->SetVelocity(Vector2Scale(Vector2Normalize(Vector2Subtract(asteroid->GetOrigin(), this->lastCollisionPoint)), va));
-    //     asteroid->SetAngularVelocity(w * RAD2DEG);
-
-    //     this->velocity = Vector2Scale(Vector2Normalize(Vector2Subtract(this->origin, this->lastCollisionPoint)), vp);
-    //     this->ResetCollisionChecks();
-    // }
 }
 
 void Player::HandleInput()
@@ -193,12 +167,12 @@ void Player::Draw()
         this->bounds = {origin.x - scale * PLAYER_SIZE / 2, origin.y - scale * PLAYER_SIZE / 2,
                         scale * PLAYER_SIZE, scale * PLAYER_SIZE};
 
-        DrawTexturePro(texture, srcRect, {origin.x, origin.y, bounds.width, bounds.height},
+        DrawTexturePro(*texture, srcRect, {origin.x, origin.y, bounds.width, bounds.height},
                        {PLAYER_SIZE * scale / 2, PLAYER_SIZE * scale / 2}, rotation, Fade(WHITE, deathFade));
         return;
     }
 
-    DrawTexturePro(this->texture, srcRect, {origin.x, origin.y, bounds.width, bounds.height},
+    DrawTexturePro(*texture, srcRect, {origin.x, origin.y, bounds.width, bounds.height},
                    {GetBounds().width / 2, GetBounds().height / 2}, GetRotation(), WHITE);
 }
 
@@ -230,7 +204,7 @@ void Player::Respawn()
     this->velocity = {0, 0};
     this->playerState = IDLE;
     this->powerups = {};
-    // leave bullets alone
+    // leave bullets live
     SetDefaultHitBox();
 }
 

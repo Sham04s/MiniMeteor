@@ -32,7 +32,7 @@ protected:
     float angularVelocity; // in degrees per second
     float mass;
     GameObjectType type;
-    Texture2D texture;
+    Texture2D *texture;
     
 
 public:
@@ -67,8 +67,6 @@ public:
     void SetAngularVelocity(float angularVelocity) { this->angularVelocity = angularVelocity; }
     void SetForwardDir(Vector2 forwardDir) { this->forwardDir = forwardDir; }
     void SetHitbox(std::vector<Vector2> hitbox) { this->hitbox = hitbox; }
-    void SetType(GameObjectType type) { this->type = type; }
-    void SetTexture(Texture2D texture) { this->texture = texture; }
 };
 
 #endif // __GAME_OBJECT_H__

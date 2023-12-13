@@ -13,7 +13,7 @@ GameObject::GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, std
     this->angularVelocity = 0;
     this->mass = 1;
     this->type = type;
-    this->texture = {0};
+    this->texture = nullptr;
 }
 
 GameObject::~GameObject()
@@ -26,8 +26,18 @@ void GameObject::Update() // for overriding
 
 void GameObject::Draw()
 {
+    if (texture == nullptr)
+    {
+        Rectangle dst = {bounds.x, bounds.y, bounds.width / 2, bounds.height / 2};
+        DrawRectanglePro(dst, {dst.width / 2, dst.height / 2}, rotation, WHITE);
+        DrawRectanglePro({dst.x + dst.width / 2, dst.y + dst.height / 2, dst.width, dst.height}, {dst.width / 2, dst.height / 2}, rotation, WHITE);
+        dst.y += dst.height;
+        DrawRectanglePro(dst, {dst.width / 2, dst.height / 2}, rotation, PURPLE);
+        DrawRectanglePro({dst.x + dst.width / 2, dst.y - dst.height / 2, dst.width, dst.height}, {dst.width / 2, dst.height / 2}, rotation, PURPLE);
+        return;
+    }
     Rectangle dst = {origin.x, origin.y, bounds.width, bounds.height};
-    DrawTexturePro(texture, {0, 0, (float)texture.width, (float)texture.height}, dst, {bounds.width / 2, bounds.height / 2}, rotation, WHITE);
+    DrawTexturePro(*texture, {0, 0, (float)texture->width, (float)texture->height}, dst, {bounds.width / 2, bounds.height / 2}, rotation, WHITE);
 }
 
 void GameObject::DrawDebug()
@@ -113,7 +123,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         pushVector = {0};
         return CheckCollisionPointPoly(hitbox[0], other->GetHitbox().data(), other->GetHitbox().size());
     }
-    
+
     // object are not colliding if their bounding boxes are not colliding
     if (this->bounds.x + this->bounds.width < other->GetBounds().x || this->bounds.x > other->GetBounds().x + other->GetBounds().width || this->bounds.y + this->bounds.height < other->GetBounds().y || this->bounds.y > other->GetBounds().y + other->GetBounds().height)
     {

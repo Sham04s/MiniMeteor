@@ -88,7 +88,7 @@ void Asteroid::Draw()
 
         this->bounds = {origin.x - scale * size / 2, origin.y - scale * size / 2, scale * size, scale * size};
 
-        DrawTexturePro(texture, {0, 0, (float)texture.width, (float)texture.height},
+        DrawTexturePro(*texture, {0, 0, (float)texture->width, (float)texture->height},
                        {origin.x, origin.y, bounds.width, bounds.height}, {size * scale / 2, size * scale / 2}, rotation, Fade(WHITE, explosionFade));
 
         return;

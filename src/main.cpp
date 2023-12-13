@@ -1,3 +1,5 @@
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+
 #include "raylib.h"
 #include <fstream>
 
@@ -21,10 +23,11 @@
     }
 
 typedef void (*CoreFunc)(void);
+typedef bool (*CoreFuncBool)(void);
 
 HINSTANCE GameDLL = nullptr;
 CoreFunc InitGame = nullptr;
-CoreFunc GameLoop = nullptr;
+CoreFuncBool GameLoop = nullptr;
 CoreFunc ExitGame = nullptr;
 
 // for notifiying that the dll has been reloaded
@@ -84,7 +87,7 @@ void LoadGame()
         printf("Failed to load InitGame\n");
         return;
     }
-    GameLoop = (CoreFunc)GetProcAddress(GameDLL, "GameLoop");
+    GameLoop = reinterpret_cast<CoreFuncBool>(GetProcAddress(GameDLL, "GameLoop"));
     if (!GameLoop)
     {
         printf("Failed to load GameLoop\n");
@@ -143,14 +146,17 @@ int main()
 #endif // DEBUG
     while (!WindowShouldClose())
     {
-        ExecuteGameLoop();
-#ifdef WINDOWS_HOT_RELOAD
-        if (notifyShowTime > 0)
+        if (!GameLoop())
         {
-            int textWidth = MeasureText("Reloaded!", 20);
-            DrawText("Reloaded!", (DEFAULT_WIDTH - textWidth) / 2, 20, 20, ColorAlpha(WHITE, fminf(1.0f, notifyShowTime)));
-            notifyShowTime -= GetFrameTime();
+            break;
         }
+#ifdef WINDOWS_HOT_RELOAD
+            if (notifyShowTime > 0)
+            {
+                int textWidth = MeasureText("Reloaded!", 20);
+                DrawText("Reloaded!", (DEFAULT_WIDTH - textWidth) / 2, 20, 20, ColorAlpha(WHITE, fminf(1.0f, notifyShowTime)));
+                notifyShowTime -= GetFrameTime();
+            }
 
         elapsedTimeSinceLastCheck += GetFrameTime();
         if (elapsedTimeSinceLastCheck > 1.0f)

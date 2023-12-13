@@ -16,7 +16,8 @@ enum SpriteTextureID
     ASTEROID_SQUARED_LARGE_SPRITE,
     ASTEROID_SQUARED_SMALL_SPRITE,
     BULLET_SPRITE,
-    ENEMY_SPRITE,
+    ENEMY_BASIC_SPRITE,
+    ENEMY_BOMBER_SPRITE,
     EXPLOSION_SPRITE,
     NUM_SPRITE_TEXTURES
 };
@@ -55,17 +56,24 @@ private:
     static std::vector<Music> music;
     static Font font;
 
+    static Texture2D defaultTexture;
+    static Texture2D transparentTexture;
+
 public:
     static bool LoadResources();
     static bool ReloadResouces();
     static void UnloadResources();
 
-    static Texture2D GetSpriteTexture(SpriteTextureID id);
+    static Texture2D* GetSpriteTexture(SpriteTextureID id);
     static Rectangle GetSpriteSrcRect(SpriteTextureID id, unsigned int frame);
-    static Texture2D GetUITexture(UITextureID id);
-    static Sound GetSoundEffect(SoundID id);
-    static Music GetMusicTrack(MusicID id);
-    static Font GetFont();
+    static Texture2D* GetUITexture(UITextureID id);
+    static Sound* GetSoundEffect(SoundID id);
+    static Music* GetMusicTrack(MusicID id);
+    static Font* GetFont();
+
+    static Texture* GetDefaultTexture();
+    static Texture* GetTransparentTexture();
+
 };
 
 #endif // __RESOURCE_MANAGER_H__

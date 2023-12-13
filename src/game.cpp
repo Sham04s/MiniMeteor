@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "resource_manager.hpp"
+#include "ui_manager.hpp"
 #include "asteroid.hpp"
 #include "player.hpp"
 
@@ -30,28 +31,21 @@ bool HIDE_SPRITES = false;
 #define SECONDARY_COLOR_2_DARKER GetColor(0x00893bff)
 #define BACKGROUND_COLOR GetColor(0x242424ff)
 
-enum GameState
-{
-    MENU,
-    GAME,
-    PAUSE,
-    GAME_OVER,
-};
-
-GameState gameState = GAME; // TODO: Change to MENU
-
-ResourceManager resourceManager;
 Player player;
 std::vector<Asteroid> asteroids;
 
 void InitGame()
 {
-
+    SetExitKey(KEY_NULL);
     SetTargetFPS(60);
 
-    if (!resourceManager.LoadResources())
+    if (!ResourceManager::LoadResources())
     {
         printf("Failed to load resources!\n");
+    }
+    if (!UIManager::LoadUI())
+    {
+        printf("Failed to load UI!\n");
     }
 
     player = Player((Vector2){GetScreenWidth() / (float)2, GetScreenHeight() / (float)2});
@@ -63,73 +57,31 @@ void InitGame()
 
 void DrawFrame()
 {
-    BeginDrawing();
-
     ClearBackground(BACKGROUND_COLOR);
-    if (!HIDE_SPRITES)
+
+    player.Draw();
+    for (size_t i = 0; i < asteroids.size(); i++)
     {
-        player.Draw();
-        for (size_t i = 0; i < asteroids.size(); i++)
-        {
-            asteroids[i].Draw();
-        }
+        asteroids[i].Draw();
     }
     if (SHOW_DEBUG)
     {
         DrawDebug();
     }
-
-    EndDrawing();
 }
-
-double asteroidCheckingsTime = 0;
-std::vector<double> asteroidCheckingsTimes = {};
 
 void DrawDebug()
 {
     player.DrawDebug();
-    Vector2 pushVector = {0, 0};
-    double start = GetTime();
+
     for (size_t i = 0; i < asteroids.size(); i++)
     {
         asteroids[i].DrawDebug();
-        float xDraw = asteroids[i].GetBounds().x;
-        float yDraw = asteroids[i].GetBounds().y + asteroids[i].GetBounds().height + 10;
-        DrawText(TextFormat("Asteroid %d", i), xDraw, yDraw, 20, WHITE);
-        yDraw += 20;
-        for (size_t j = 0; j < asteroids.size(); j++)
-        {
-            if (i != j)
-            {
-                if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &pushVector))
-                {
-                    DrawLineV(asteroids[i].GetOrigin(), Vector2Add(asteroids[i].GetOrigin(), Vector2Scale(pushVector, 10)), PURPLE);
-                }
-                yDraw += 20;
-            }
-        }
     }
-    double end = GetTime();
-    asteroidCheckingsTime = end - start;
-    asteroidCheckingsTimes.push_back(asteroidCheckingsTime);
-    if (asteroidCheckingsTimes.size() > 100)
-    {
-        asteroidCheckingsTimes.erase(asteroidCheckingsTimes.begin());
-    }
-    double average = 0;
-    for (size_t i = 0; i < asteroidCheckingsTimes.size(); i++)
-    {
-        average += asteroidCheckingsTimes[i];
-    }
-    average /= asteroidCheckingsTimes.size();
-    DrawText(TextFormat("Average asteroid checkings time: %.5f ms", average * 1000), 10, 90, 20, WHITE);
 
     DrawText(TextFormat("Player lives: %d", player.GetLives()), 10, 30, 20, WHITE);
-    DrawText(TextFormat("Asteroids: %d", asteroids.size()), 10, 50, 20, WHITE);
 
     DrawFPS(10, 10);
-    const char *mousePos = TextFormat("Mouse position: (%d, %d)", GetMouseX(), GetMouseY());
-    DrawText(mousePos, GetRenderWidth() - MeasureText(mousePos, 20) - 10, 10, 20, WHITE);
 }
 
 void HandleInput()
@@ -153,17 +105,6 @@ void HandleInput()
             {
                 asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
             }
-        }
-    }
-    if (IsKeyPressed(KEY_P))
-    {
-        if (gameState == GAME)
-        {
-            gameState = PAUSE;
-        }
-        else if (gameState == PAUSE)
-        {
-            gameState = GAME;
         }
     }
 
@@ -238,48 +179,50 @@ void HandleInput()
 #endif // _DEBUG
 }
 
-void UpdatePhysics()
+void UpdateGame()
 {
+    player.Update();
+
     Vector2 collisionPoint = {0, 0};
     auto bullets = player.GetBullets();
+
     for (size_t i = 0; i < asteroids.size(); i++)
     {
+        asteroids[i].Update();
+
+        // check for collisions between player and asteroids
         if (player.CheckCollision(&asteroids[i], &collisionPoint))
         {
-            player.Push(&asteroids[i], collisionPoint);                   // apply to player
-            asteroids[i].Push(&player, Vector2Scale(collisionPoint, -1)); // apply to asteroid
+            player.Push(&asteroids[i], collisionPoint);
             player.Kill();
         }
+
+        // check for collisions between asteroids
         for (size_t j = 0; j < asteroids.size(); j++)
         {
-            if (i < j) // check for every different asteroid
+            if (i < j) // check each pair only once
             {
                 if (asteroids[i].IsFloating() && asteroids[i].CheckCollision(&asteroids[j], &collisionPoint))
                 {
+                    // push asteroids away from each other with the SAT push vector
                     asteroids[i].Push(&asteroids[j], collisionPoint);
                 }
             }
         }
+
+        // check for collisions between bullets and asteroids
         for (size_t b = 0; b < bullets->size(); b++)
         {
             if ((*bullets)[b].CheckCollision(&asteroids[i], &collisionPoint))
             {
+                // destroy bullet and asteroid
                 bullets->erase(bullets->begin() + b);
                 asteroids[i].Destroy();
             }
         }
         bullets->shrink_to_fit();
-    }
-}
 
-void HandleLogic()
-{
-    // if (player.GetState() == DEAD && player.GetLives() > 0)
-    // {
-    //     player.Respawn();
-    // }
-    for (size_t i = 0; i < asteroids.size(); i++)
-    {
+        // erase destroyed asteroids
         if (asteroids[i].IsDestroyed())
         {
             asteroids.erase(asteroids.begin() + i);
@@ -288,35 +231,38 @@ void HandleLogic()
     asteroids.shrink_to_fit();
 }
 
-void UpdateGame()
-{
-    player.Update();
-    for (size_t i = 0; i < asteroids.size(); i++)
-    {
-        asteroids[i].Update();
-    }
-}
-
-void GameLoop()
+bool GameLoop()
 {
     HandleInput();
-    if (gameState == GAME)
+    UIManager::HandleUIInput();
+
+    BeginDrawing();
+
+    if (UIManager::GetCurrentScreen() == GAME)
     {
-        HandleLogic();
-        UpdatePhysics();
-        UpdateGame();
-    }
-    if (gameState == PAUSE && IsKeyPressed(KEY_N))
-    {
-        HandleLogic();
-        UpdatePhysics();
-        UpdateGame();
+        DrawFrame();
     }
 
-    DrawFrame();
+    UIManager::DrawUI();
+
+    EndDrawing();
+
+    if (UIManager::GetCurrentScreen() == GAME)
+    {
+        UpdateGame();
+    }
+    UIManager::UpdateUI();
+
+    if (UIManager::GetCurrentScreen() == EXITING)
+    {
+        return false;
+    }
+
+    return true;
 }
 
 void ExitGame()
 {
-    resourceManager.UnloadResources();
+    UIManager::UnloadUI();
+    ResourceManager::UnloadResources();
 }
