@@ -8,10 +8,12 @@
 #endif // WINDOWS_HOT_RELOAD
 
 CORE_API void InitGame();
-CORE_API void DrawFrame();
-CORE_API void DrawDebug();
 CORE_API bool GameLoop();
-CORE_API void UpdateGame();
 CORE_API void ExitGame();
+
+void CreateNewGame();
+void DrawFrame();
+void DrawDebug();
+void UpdateGame();
 
 #endif // __GAME_H__

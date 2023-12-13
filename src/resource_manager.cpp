@@ -18,6 +18,7 @@ const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
 
 const char *uiTexturesPaths[NUM_UI_TEXTURES] = {
     "resources/ui/blue_button02.png",
+    "resources/ui/life.png",
 };
 
 std::vector<Texture2D> ResourceManager::spriteTextures;

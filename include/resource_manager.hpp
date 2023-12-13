@@ -25,6 +25,7 @@ enum SpriteTextureID
 enum UITextureID
 {
     BUTTON_TEXTURE,
+    LIFE_TEXTURE,
     NUM_UI_TEXTURES
 };
 
