@@ -86,7 +86,7 @@ void CreateNewGame()
 void CreateUIElements()
 {
     // main menu buttons
-    int mainMenuButtonCount = 3;
+    const int mainMenuButtonCount = 3;
     Button *mainMenuButtons[mainMenuButtonCount] = {
         new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { CreateNewGame(); }),
@@ -106,7 +106,7 @@ void CreateUIElements()
     game->AddChild(new LivesBar(Rectangle{(float)GetScreenWidth() / 2 + 100, 10, (float)GetScreenWidth() / 2 - 100, 50}, &player));
 
     // pause menu buttons
-    int pauseButtonCount = 5;
+    const int pauseButtonCount = 5;
     Button *pauseButtons[pauseButtonCount] = {
         new Button(Vector2{0, 0}, nullptr, "Resume", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = GAME; }),
@@ -124,7 +124,7 @@ void CreateUIElements()
     UIObject *pauseMenu = new UIObject(createCenteredButtonRec(pauseButtons, pauseButtonCount), nullptr, ResourceManager::GetDefaultTexture());
 
     // game over buttons
-    int gameOverButtonCount = 2;
+    const int gameOverButtonCount = 2;
     Button *gameOverButtons[gameOverButtonCount] = {
         new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { CreateNewGame(); }),
@@ -434,9 +434,9 @@ bool GameLoop()
 {
     HandleInput();
 
-    DrawFrame();
-
     UpdateGame();
+
+    DrawFrame();
 
     if (gameState.currentScreen == EXITING)
     {
