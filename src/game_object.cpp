@@ -11,7 +11,6 @@ GameObject::GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, std
     this->hitbox = hitbox;
     this->velocity = {0, 0};
     this->angularVelocity = 0;
-    this->mass = 1;
     this->type = type;
     this->texture = nullptr;
 }

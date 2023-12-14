@@ -15,7 +15,6 @@ Asteroid::Asteroid(Vector2 origin) : GameObject({origin.x - 32, origin.y - 32, 6
     // (2x + 2) -> [2, 4, 6, 8] -> small variants
     // TODO: cosider adding sprites for medium asteroids
     this->size = (variant == LARGE) ? ASTEROID_SIZE_LARGE : ASTEROID_SIZE_SMALL;
-    this->mass = size * (variant + 1) * 2;
     SpriteTextureID randomAsteroidTexture = (SpriteTextureID)(2 * GetRandomValue(0, 3) + 1); // load large variants
     if (variant == SMALL)
     {

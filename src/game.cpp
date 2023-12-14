@@ -5,8 +5,9 @@
 #include <math.h>
 
 #include "resource_manager.hpp"
-#include "asteroid.hpp"
 #include "player.hpp"
+#include "asteroid.hpp"
+#include "enemy.hpp"
 #include "button.hpp"
 #include "lives_bar.hpp"
 #include "utils.hpp"
@@ -53,6 +54,7 @@ struct GameState
 
 Player player;
 std::vector<Asteroid> asteroids;
+std::vector<BasicEnemy> enemies;
 
 void InitGame()
 {
@@ -64,7 +66,6 @@ void InitGame()
         printf("Failed to load resources!\n");
     }
 
-    gameState.previousScreen = gameState.currentScreen;
     gameState.currentScreen = MAIN_MENU;
 
     CreateUIElements();
@@ -76,10 +77,65 @@ void CreateNewGame()
     gameState.currentScreen = GAME;
     player = Player(Vector2{(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2});
     player.SetLives(1);
+
     asteroids.clear();
-    for (size_t i = 0; i < 1; i++)
+    for (size_t i = 0; i < 5; i++)
     {
-        asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
+        // generate random position exluding the player's position and other asteroids positions
+        Vector2 pos;
+        bool insidePlayer;
+        bool insideAsteroid;
+        do
+        {
+            pos = {(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())};
+            insidePlayer = Vector2Distance(pos, player.GetOrigin()) < 100;
+            insideAsteroid = false;
+            for (size_t j = 0; j < asteroids.size(); j++)
+            {
+                if (Vector2Distance(pos, asteroids[j].GetOrigin()) < 100)
+                {
+                    insideAsteroid = true;
+                    break;
+                }
+            }
+        } while (insidePlayer || insideAsteroid);
+
+        asteroids.push_back(Asteroid(pos));
+    }
+
+    enemies.clear();
+    for (size_t i = 0; i < 2; i++)
+    {
+        // generate random position exluding the player's position and other asteroids positions
+        Vector2 pos;
+        bool insidePlayer;
+        bool insideAsteroid;
+        bool insideEnemy;
+        do
+        {
+            pos = {(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())};
+            insidePlayer = Vector2Distance(pos, player.GetOrigin()) < 100;
+            insideAsteroid = false;
+            for (size_t j = 0; j < asteroids.size(); j++)
+            {
+                if (Vector2Distance(pos, asteroids[j].GetOrigin()) < 100)
+                {
+                    insideAsteroid = true;
+                    break;
+                }
+            }
+            insideEnemy = false;
+            for (size_t j = 0; j < enemies.size(); j++)
+            {
+                if (Vector2Distance(pos, enemies[j].GetOrigin()) < 100)
+                {
+                    insideEnemy = true;
+                    break;
+                }
+            }
+        } while (insidePlayer || insideAsteroid || insideEnemy);
+
+        enemies.push_back(BasicEnemy(pos));
     }
 }
 
@@ -168,20 +224,20 @@ void CreateUIElements()
 void DrawFrame()
 {
     BeginDrawing();
+    ClearBackground(BACKGROUND_COLOR);
 
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
-        ClearBackground(BACKGROUND_COLOR);
 
         player.Draw();
         for (size_t i = 0; i < asteroids.size(); i++)
         {
             asteroids[i].Draw();
         }
-    }
-    if (gameState.currentScreen != GAME && gameState.currentScreen != GAME_OVER)
-    {
-        ClearBackground(DARKGRAY);
+        for (size_t i = 0; i < enemies.size(); i++)
+        {
+            enemies[i].Draw();
+        }
     }
     if (gameState.screens[gameState.currentScreen] != nullptr)
     {
@@ -205,8 +261,10 @@ void DrawDebug()
         {
             asteroids[i].DrawDebug();
         }
-
-        DrawText(TextFormat("Player lives: %d", player.GetLives()), 10, 30, 20, WHITE);
+        for (size_t i = 0; i < enemies.size(); i++)
+        {
+            enemies[i].DrawDebug();
+        }
     }
 
     DrawFPS(10, 10);
@@ -235,15 +293,7 @@ void HandleInput()
     {
         if (IsKeyPressed(KEY_R))
         {
-            gameState.previousScreen = gameState.currentScreen;
-            gameState.currentScreen = GAME;
-            player.Respawn();
-            player.SetLives(3);
-            asteroids.clear();
-            for (size_t i = 0; i < 1; i++)
-            {
-                asteroids.push_back(Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
-            }
+            CreateNewGame();
         }
     }
 
@@ -322,7 +372,7 @@ void HandleInput()
     }
     if (IsKeyPressed(KEY_KP_ADD))
     {
-        player.AddLive();
+        player.AddLife();
     }
     if (IsKeyPressed(KEY_KP_SUBTRACT))
     {
@@ -356,13 +406,31 @@ void HandleInput()
             }
         }
     }
+    for (size_t i = 0; i < enemies.size(); i++)
+    {
+        if (CheckCollisionPointRec(GetMousePosition(), enemies[i].GetBounds()))
+        {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            {
+                enemies[i].SetVelocity({0});
+                enemies[i].SetAngularVelocity(0);
+                enemies[i].Translate(GetMouseDelta());
+            }
+            if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
+            {
+                Vector2 velocity = Vector2Subtract(GetMousePosition(), enemies[i].GetOrigin());
+                enemies[i].SetVelocity(Vector2Scale(velocity, 3));
+                enemies[i].SetAngularVelocity(GetRandomValue(-100, 100));
+            }
+        }
+    }
 
 #endif // _DEBUG
 }
 
 void UpdateGame()
 {
-    if (gameState.currentScreen == GAME)
+    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
         // if player is dead and has 0 lives left, game over
         if (player.IsDead() && player.GetLives() <= 0)
@@ -421,6 +489,65 @@ void UpdateGame()
             }
         }
         asteroids.shrink_to_fit();
+
+        for (size_t i = 0; i < enemies.size(); i++)
+        {
+            enemies[i].Update();
+
+            enemies[i].TryToShootAtPlayer(player);
+
+            // check for collisions between player and enemies
+            if (player.CheckCollision(&enemies[i], &pushVector))
+            {
+                player.Push(&enemies[i], pushVector); // push both player and enemy away from each other
+                player.Kill();
+                enemies[i].Kill();
+            }
+
+            // check for collisions between enemies
+            for (size_t j = 0; j < enemies.size(); j++)
+            {
+                if (i < j) // check each pair only once
+                {
+                    if (enemies[i].IsMoving() && enemies[i].CheckCollision(&enemies[j], &pushVector))
+                    {
+                        // push enemies away from each other with the SAT push vector
+                        enemies[i].Push(&enemies[j], pushVector);
+                    }
+                }
+            }
+
+            // check for collisions between player bullets and enemies
+            for (size_t b = 0; b < bullets->size(); b++)
+            {
+                if ((*bullets)[b].CheckCollision(&enemies[i], &pushVector))
+                {
+                    // destroy bullet and enemy
+                    bullets->erase(bullets->begin() + b);
+                    enemies[i].Kill();
+                }
+            }
+            bullets->shrink_to_fit();
+
+            // check for collisions between enemy bullets and player
+            auto enemyBullets = enemies[i].GetBullets();
+            for (size_t b = 0; b < enemyBullets->size(); b++)
+            {
+                if ((*enemyBullets)[b].CheckCollision(&player, &pushVector))
+                {
+                    // destroy bullet and player
+                    (*enemyBullets).erase((*enemyBullets).begin() + b);
+                    player.Kill();
+                }
+            }
+            (*enemyBullets).shrink_to_fit();
+
+            // erase dead enemies
+            if (enemies[i].IsDead())
+            {
+                enemies.erase(enemies.begin() + i);
+            }
+        }
     }
 
     if (gameState.screens[gameState.currentScreen] == nullptr)

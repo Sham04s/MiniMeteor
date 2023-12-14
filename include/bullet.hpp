@@ -1,3 +1,6 @@
+#ifndef __BULLET_H__
+#define __BULLET_H__
+
 #include "game_object.hpp"
 
 #define BULLET_SIZE 40
@@ -17,3 +20,4 @@ public:
 
     bool isOutOfBounds();
 };
+#endif // __BULLET_H__

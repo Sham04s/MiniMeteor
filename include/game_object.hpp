@@ -30,7 +30,6 @@ protected:
     std::vector<Vector2> hitbox;
     Vector2 velocity;
     float angularVelocity; // in degrees per second
-    float mass;
     GameObjectType type;
     Texture2D *texture;
     
@@ -55,7 +54,6 @@ public:
     float GetRotation() { return rotation; }
     Vector2 GetVelocity() { return velocity; }
     float GetAngularVelocity() { return angularVelocity; }
-    float GetMass() { return mass; }
     Vector2 GetForwardDir() { return forwardDir; }
     std::vector<Vector2> GetHitbox() { return hitbox; }
     GameObjectType GetType() { return type; }
