@@ -12,10 +12,11 @@
 enum GameObjectType
 {
     PLAYER,
-    ENEMY,
+    BASIC_ENEMY,
     BULLET,
+    ENEMY_BULLET,
     ASTEROID,
-    EXPLOSION,
+    EXPLOSION, // TODO: maybe this is not needed
     NUM_GAME_OBJECT_TYPES,
     NONE
 };

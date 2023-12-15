@@ -11,7 +11,7 @@ class Bullet : public GameObject
 private:
 
 public:
-    Bullet(Vector2 origin, Vector2 forwardDir);
+    Bullet(Vector2 origin, Vector2 forwardDir, bool isPlayerBullet);
     ~Bullet();
 
     void Update();

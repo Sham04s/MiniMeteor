@@ -28,7 +28,7 @@ Asteroid::Asteroid(Vector2 origin) : GameObject({origin.x - 32, origin.y - 32, 6
     
     // create hitbox as a regular polygon with 8 sides
     const int sides = 8;
-    const float radius = size / 3;
+    const float radius = variant == LARGE ? size / 3 : size / 4;
     const float angleIncrement = 2 * PI / sides;
 
     for (int i = 0; i < sides; i++)

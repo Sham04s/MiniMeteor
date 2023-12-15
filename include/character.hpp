@@ -40,7 +40,6 @@ protected:
 
     virtual void SetDefaultHitBox();
 
-
 public:
     Character(Vector2 origin);
     virtual ~Character();

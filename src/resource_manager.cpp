@@ -13,7 +13,8 @@ const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
     "resources/environment/asteroid_squared_large.png",
     "resources/environment/asteroid_squared_small.png",
     "resources/characters/player/bullet.png",
-    "resources/characters/enemies/basic.png",
+    "resources/characters/enemies/bullet.png",
+    "resources/characters/enemies/basic_enemy.png",
 };
 
 const char *uiTexturesPaths[NUM_UI_TEXTURES] = {
@@ -91,14 +92,31 @@ Texture2D *ResourceManager::GetSpriteTexture(SpriteTextureID id)
 
 Rectangle ResourceManager::GetSpriteSrcRect(SpriteTextureID id, unsigned int frame)
 {
-    if (id == PLAYER_SPRITES)
+    int totalFrames;
+
+    // horizontal spritesheet
+    switch (id)
     {
-        int totalFrames = 8; // horizontal spritesheet
-        int frameWidth = spriteTextures[id].width / totalFrames;
-        int frameHeight = spriteTextures[id].height;
-        return {(float)(frameWidth * frame), 0, (float)frameWidth, (float)frameHeight};
+
+    case PLAYER_SPRITES:
+        totalFrames = 3;
+        break;
+
+    case BULLET_SPRITE:
+        totalFrames = 1;
+        break;
+
+    case ENEMY_BASIC_SPRITES:
+        totalFrames = 3;
+        break;
+
+    default:
+        return {0, 0, (float)spriteTextures[id].width, (float)spriteTextures[id].height}; // default
     }
-    return {0, 0, 0, 0}; // TODO: change this!
+
+    int frameWidth = spriteTextures[id].width / totalFrames;
+    int frameHeight = spriteTextures[id].height;
+    return {(float)(frameWidth * frame), 0, (float)frameWidth, (float)frameHeight};
 }
 
 Texture2D *ResourceManager::GetUITexture(UITextureID id)
@@ -133,12 +151,12 @@ Font *ResourceManager::GetFont()
     return &font;
 }
 
-Texture* ResourceManager::GetDefaultTexture()
+Texture *ResourceManager::GetDefaultTexture()
 {
     return &defaultTexture;
 }
 
-Texture* ResourceManager::GetTransparentTexture()
+Texture *ResourceManager::GetTransparentTexture()
 {
     return &transparentTexture;
 }

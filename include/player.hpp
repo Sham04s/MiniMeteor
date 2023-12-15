@@ -8,6 +8,7 @@ class Player : public Character
 {
 private:
     Vector2 initialOrigin;
+    bool invincible;
     std::vector<int> powerups;
 
 protected:

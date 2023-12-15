@@ -1,10 +1,12 @@
 #include "bullet.hpp"
 
-Bullet::Bullet(Vector2 origin, Vector2 forwardDir) : GameObject({origin.x - BULLET_SIZE / 2, origin.y - BULLET_SIZE / 2, BULLET_SIZE, BULLET_SIZE}, 0, forwardDir, {}, BULLET)
+Bullet::Bullet(Vector2 origin, Vector2 forwardDir, bool isPlayerBullet)
+    : GameObject({origin.x - BULLET_SIZE / 2, origin.y - BULLET_SIZE / 2, BULLET_SIZE, BULLET_SIZE},
+                 0, forwardDir, {}, isPlayerBullet ? BULLET : ENEMY_BULLET)
 {
     this->velocity = Vector2Scale(forwardDir, BULLET_SPEED);
     this->rotation = atan2(forwardDir.y, forwardDir.x) * RAD2DEG + 90;
-    this->texture = ResourceManager::GetSpriteTexture(BULLET_SPRITE);
+    this->texture = ResourceManager::GetSpriteTexture(isPlayerBullet ? BULLET_SPRITE : ENEMY_BULLET_SPRITE);
     this->hitbox = {origin};
 }
 

@@ -5,6 +5,7 @@ Player::Player(Vector2 origin) : Character(origin)
     this->lives = 4;
     this->initialOrigin = {(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2};
     this->state = CHARACTER_IDLE;
+    this->invincible = true; // invincible when spawns
     this->bullets = {};
     this->lastShotTime = 0;
     this->lastDeathTime = 0;
@@ -12,6 +13,7 @@ Player::Player(Vector2 origin) : Character(origin)
     this->acceleration = 200;
     this->deceleration = 100;
     this->turnSpeed = 200;
+    this->type = PLAYER;
     this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
 
     SetDefaultHitBox();
@@ -24,7 +26,13 @@ Player::~Player()
 void Player::Update()
 {
     Character::Update();
-    
+
+    // invincibility ends when player atarts moving
+    if (invincible && (state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING))
+    {
+        invincible = false;
+    }
+
     if (state != CHARACTER_DYING && state != CHARACTER_DEAD)
     {
         HandleInput();
@@ -73,7 +81,6 @@ void Player::HandleInput()
     }
 }
 
-
 void Player::AddPowerup(/*PowerUp powerup*/)
 {
     // TODO: implement
@@ -84,6 +91,7 @@ void Player::Respawn()
     this->origin = this->initialOrigin;
     this->bounds = {origin.x - CHARACTER_SIZE / 2, origin.y - CHARACTER_SIZE / 2, CHARACTER_SIZE, CHARACTER_SIZE};
     this->rotation = 0;
+    this->invincible = true; // invincible when spawns
     this->forwardDir = {0, -1};
     this->velocity = {0, 0};
     this->state = CHARACTER_IDLE;
@@ -93,14 +101,14 @@ void Player::Respawn()
 }
 
 Rectangle Player::GetFrameRec()
-{   
+{
     int frame = 0;
     switch (state)
     {
     case CHARACTER_ACCELERATING:
         frame = 1;
         break;
-    
+
     case CHARACTER_EXTRA_ACCELERATING:
         frame = 2;
         break;

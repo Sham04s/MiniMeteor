@@ -226,7 +226,7 @@ void DrawFrame()
     BeginDrawing();
     ClearBackground(BACKGROUND_COLOR);
 
-    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
+    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER || gameState.currentScreen == PAUSE_MENU)
     {
 
         player.Draw();
@@ -241,6 +241,11 @@ void DrawFrame()
     }
     if (gameState.screens[gameState.currentScreen] != nullptr)
     {
+        if (gameState.currentScreen == PAUSE_MENU)
+        {
+            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.25f));
+        }
+
         gameState.screens[gameState.currentScreen]->Draw();
     }
     if (SHOW_DEBUG)

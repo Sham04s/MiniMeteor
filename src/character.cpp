@@ -28,7 +28,7 @@ void Character::Update()
     {
         return;
     }
-    
+
     // if dying, wait for dying animation to finish
     if (state == CHARACTER_DYING && GetTime() - lastDeathTime > CHARACTER_DYING_TIME)
     {
@@ -105,7 +105,6 @@ void Character::Draw()
         return;
     }
 
-    // TODO: maybe make sprite for all player states, or maybe just use effects?
     Rectangle srcRect = GetFrameRec();
 
     if (state == CHARACTER_DYING)
@@ -142,7 +141,7 @@ void Character::Shoot()
     {
         return;
     }
-    bullets.push_back(Bullet(this->origin, this->forwardDir)); // TODO: consider asigning bullets velocity in Bullet constructor
+    bullets.push_back(Bullet(this->origin, this->forwardDir, this->type == PLAYER)); // TODO: consider asigning bullets velocity in Bullet constructor
     lastShotTime = GetTime();
 
     // when shooting, try to clear bullets that are out of bounds
