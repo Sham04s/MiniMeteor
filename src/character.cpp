@@ -23,7 +23,13 @@ Character::~Character()
 
 void Character::Update()
 {
-    // if dead, do nothing
+    // update bullets no matter what
+    for (size_t i = 0; i < bullets.size(); i++)
+    {
+        bullets[i].Update();
+    }
+    
+    // if dead, do nothing else
     if (state == CHARACTER_DEAD)
     {
         return;
@@ -82,12 +88,6 @@ void Character::Update()
     {
         Translate({0, (float)GetScreenHeight() + CHARACTER_SIZE});
     }
-
-    // update bullets
-    for (size_t i = 0; i < bullets.size(); i++)
-    {
-        bullets[i].Update();
-    }
 }
 
 void Character::Draw()
@@ -141,7 +141,7 @@ void Character::Shoot()
     {
         return;
     }
-    bullets.push_back(Bullet(this->origin, this->forwardDir, this->type == PLAYER)); // TODO: consider asigning bullets velocity in Bullet constructor
+    bullets.push_back(Bullet(this->origin, this->forwardDir, this->type == PLAYER));
     lastShotTime = GetTime();
 
     // when shooting, try to clear bullets that are out of bounds

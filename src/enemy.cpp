@@ -34,8 +34,14 @@ void BasicEnemy::Update()
 {
     Character::Update();
 
+    // if is not alive, do nothing else
+    if (!this->IsAlive())
+    {
+        return;
+    }
+
     // if enemy is looking for player, rotate towards player
-    if (lookingForPlayer)
+    if (this->IsAlive() && lookingForPlayer)
     {
         // reset rotate time
         rotateStartTime = 0;

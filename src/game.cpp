@@ -443,10 +443,7 @@ void UpdateGame()
             gameState.previousScreen = gameState.currentScreen;
             gameState.currentScreen = GAME_OVER;
         }
-        else
-        {
-            player.Update();
-        }
+        player.Update();
 
         Vector2 pushVector = {0, 0};
         auto bullets = player.GetBullets();
@@ -514,7 +511,7 @@ void UpdateGame()
             {
                 if (i < j) // check each pair only once
                 {
-                    if (enemies[i].IsMoving() && enemies[i].CheckCollision(&enemies[j], &pushVector))
+                    if (enemies[i].IsAlive() && enemies[i].CheckCollision(&enemies[j], &pushVector))
                     {
                         // push enemies away from each other with the SAT push vector
                         enemies[i].Push(&enemies[j], pushVector);
@@ -527,7 +524,7 @@ void UpdateGame()
             {
                 if ((*bullets)[b].CheckCollision(&enemies[i], &pushVector))
                 {
-                    // destroy bullet and enemy
+                    // destroy bullet and kill enemy
                     bullets->erase(bullets->begin() + b);
                     enemies[i].Kill();
                 }
@@ -540,17 +537,24 @@ void UpdateGame()
             {
                 if ((*enemyBullets)[b].CheckCollision(&player, &pushVector))
                 {
-                    // destroy bullet and player
+                    // destroy bullet and kill player
                     (*enemyBullets).erase((*enemyBullets).begin() + b);
                     player.Kill();
                 }
             }
             (*enemyBullets).shrink_to_fit();
 
-            // erase dead enemies
             if (enemies[i].IsDead())
             {
-                enemies.erase(enemies.begin() + i);
+                // erase dead enemies if they don't have any bullets left
+                if (enemyBullets->size() == 0)
+                {
+                    enemies.erase(enemies.begin() + i);
+                }
+                else // try to clean up bullets
+                {
+                    enemies[i].CleanBullets();
+                }
             }
         }
     }

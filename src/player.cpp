@@ -42,7 +42,7 @@ void Player::Update()
     {
         state = CHARACTER_DEAD;
     }
-    if (state == CHARACTER_DEAD && GetTime() - lastDeathTime > CHARACTER_RESPAWN_TIME)
+    if (state == CHARACTER_DEAD && lives > 0 && GetTime() - lastDeathTime > CHARACTER_RESPAWN_TIME)
     {
         Respawn();
     }
