@@ -12,7 +12,6 @@ private:
     std::vector<int> powerups;
 
 protected:
-
     void SetDefaultHitBox();
 
 public:
@@ -22,9 +21,12 @@ public:
 
     void Update();
     void HandleInput();
-    
+
     void AddPowerup();
+    bool CanBeKilled();
+    bool Kill();
     void Respawn();
+    void Reset();
 
     Rectangle GetFrameRec();
 

@@ -33,16 +33,18 @@ protected:
     float angularVelocity; // in degrees per second
     GameObjectType type;
     Texture2D *texture;
-    
 
 public:
     GameObject() : bounds({0, 0, 0, 0}), origin({0, 0}), rotation(0), forwardDir({0, 0}), hitbox({}), type(NONE){}; // TODO: change this!
     GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, std::vector<Vector2> hitbox, GameObjectType type);
-    ~GameObject();
+    virtual ~GameObject();
 
-    void Update();
-    void Draw();
-    void DrawDebug();
+    virtual void Update();
+    virtual void Draw();
+    virtual void DrawDebug();
+
+    virtual void PauseSounds();
+    virtual void ResumeSounds();
 
     bool CheckCollision(GameObject *other, Vector2 *pushVector);
     void Push(GameObject *other, Vector2 pushVector);

@@ -13,22 +13,33 @@ Character::Character(Vector2 origin)
     this->deceleration = CHARACTER_DECELERATION;
     this->turnSpeed = CHARACTER_TURN_SPEED;
     this->texture = ResourceManager::GetDefaultTexture();
+    // this->thrustSound = ResourceManager::GetSound(THRUST_SOUND); // defaults to enemy thrust sound
+    this->timeAccelerating = 0;
 
     SetDefaultHitBox();
 }
 
 Character::~Character()
 {
+    if (thrustSound.frameCount != 0 && thrustSound.stream.buffer != nullptr)
+    {
+        if (IsSoundPlaying(thrustSound))
+        {
+            StopSound(thrustSound);
+        }
+        UnloadSoundAlias(thrustSound);
+    }
 }
 
 void Character::Update()
 {
+
     // update bullets no matter what
     for (size_t i = 0; i < bullets.size(); i++)
     {
         bullets[i].Update();
     }
-    
+
     // if dead, do nothing else
     if (state == CHARACTER_DEAD)
     {
@@ -39,6 +50,32 @@ void Character::Update()
     if (state == CHARACTER_DYING && GetTime() - lastDeathTime > CHARACTER_DYING_TIME)
     {
         state = CHARACTER_DEAD;
+    }
+
+    if (state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING)
+    {
+        if (!IsSoundPlaying(thrustSound))
+        {
+            PlaySound(thrustSound);
+        }
+        timeAccelerating += GetFrameTime();
+
+        // decrease pitch proportional to time accelerating
+        const float pitch = fmaxf(THRUST_MIN_PITCH, 1.0f - timeAccelerating / THRUST_PITCH_DECAYING_TIME);
+        SetSoundPitch(thrustSound, pitch * ((state == CHARACTER_EXTRA_ACCELERATING) ? 1.0f : 0.7f));
+
+        // move sound from right to left proportional to player position in x axis
+        const float pan = (THRUST_MAX_PAN - TRHUST_MIN_PAN) * (1.0f - origin.x / GetScreenWidth()) + TRHUST_MIN_PAN;
+        SetSoundPan(thrustSound, pan);
+
+        // decrease volume proportional to player position in y axis
+        const float volume = 1.0f - 2.0f * (1.0f - THRUST_MIN_VOLUME) * fabsf(0.5f - origin.y / GetScreenHeight());
+        SetSoundVolume(thrustSound, volume * ((state == CHARACTER_EXTRA_ACCELERATING) ? 1.0f : 0.7f));
+    }
+    else
+    {
+        StopSound(thrustSound);
+        timeAccelerating = 0;
     }
 
     if (state == CHARACTER_ACCELERATING)
@@ -160,11 +197,12 @@ void Character::CleanBullets()
     bullets.shrink_to_fit();
 }
 
-void Character::Kill()
+// returns true if character is killed, false otherwise
+bool Character::Kill()
 {
     if (state == CHARACTER_DYING || state == CHARACTER_DEAD || this->lives <= 0)
     {
-        return;
+        return false;
     }
     this->lives--;
     this->state = CHARACTER_DYING;
@@ -173,6 +211,7 @@ void Character::Kill()
     {
         this->hitbox = {};
     }
+    return true;
 }
 void Character::Respawn()
 {
@@ -185,6 +224,24 @@ void Character::Respawn()
     this->state = CHARACTER_IDLE;
     // leave bullets live
     SetDefaultHitBox();
+}
+
+void Character::PauseSounds()
+{
+    PauseSound(thrustSound);   
+    for (size_t i = 0; i < bullets.size(); i++)
+    {
+        bullets[i].PauseSounds();
+    }
+}
+
+void Character::ResumeSounds()
+{
+    ResumeSound(thrustSound);
+    for (size_t i = 0; i < bullets.size(); i++)
+    {
+        bullets[i].ResumeSounds();
+    }
 }
 
 void Character::AddLife()

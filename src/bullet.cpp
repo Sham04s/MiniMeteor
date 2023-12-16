@@ -8,6 +8,16 @@ Bullet::Bullet(Vector2 origin, Vector2 forwardDir, bool isPlayerBullet)
     this->rotation = atan2(forwardDir.y, forwardDir.x) * RAD2DEG + 90;
     this->texture = ResourceManager::GetSpriteTexture(isPlayerBullet ? BULLET_SPRITE : ENEMY_BULLET_SPRITE);
     this->hitbox = {origin};
+    this->isPlayerBullet = isPlayerBullet;
+    this->playedSound = false;
+    if (isPlayerBullet)
+    {
+        this->shootSound = ResourceManager::GetSound(BULLET_SOUND);
+    }
+    else
+    {
+        this->shootSound = ResourceManager::GetSound(ENEMY_BULLET_SOUND);
+    }
 }
 
 Bullet::~Bullet()
@@ -17,6 +27,12 @@ Bullet::~Bullet()
 void Bullet::Update()
 {
     Translate(Vector2Scale(velocity, GetFrameTime()));
+
+    if (!playedSound)
+    {
+        PlaySound(*shootSound);
+        playedSound = true;
+    }
 }
 
 void Bullet::Draw()
@@ -28,6 +44,16 @@ void Bullet::DrawDebug()
 {
     GameObject::DrawDebug();
     DrawText(TextFormat("(%.0f, %.0f)", origin.x, origin.y), origin.x - 10, origin.y + 20, 16, WHITE);
+}
+
+void Bullet::PauseSounds()
+{
+    PauseSound(*shootSound);
+}
+
+void Bullet::ResumeSounds()
+{
+    ResumeSound(*shootSound);
 }
 
 bool Bullet::isOutOfBounds()

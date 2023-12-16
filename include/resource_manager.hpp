@@ -33,7 +33,10 @@ enum UITextureID
 
 enum SoundID
 {
-    SHOOT_SOUND,
+    BULLET_SOUND,
+    ENEMY_BULLET_SOUND,
+    THRUST_SOUND,
+    ENEMY_THRUST_SOUND,
     EXPLOSION_SOUND,
     NUM_SOUNDS
 };
@@ -71,7 +74,7 @@ public:
     static Rectangle GetSpriteSrcRect(SpriteTextureID id, unsigned int frame);
     static Texture2D* GetUITexture(UITextureID id);
     static Rectangle GetUISrcRect(UITextureID id, unsigned int frame);
-    static Sound* GetSoundEffect(SoundID id);
+    static Sound* GetSound(SoundID id);
     static Music* GetMusicTrack(MusicID id);
     static Font* GetFont();
 

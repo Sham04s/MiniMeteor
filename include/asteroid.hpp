@@ -37,13 +37,13 @@ public:
     void DrawDebug();
     void Destroy();
 
-    void SetVelocity(Vector2 velocity);
-    void SetRotation(float rotation);
-    void SetAngularVelocity(float angularVelocity);
+    void SetVelocity(Vector2 velocity) { this->velocity = velocity; }
+    void SetRotation(float rotation) { this->rotation = rotation; }
+    void SetAngularVelocity(float angularVelocity) { this->angularVelocity = angularVelocity; }
 
-    Vector2 GetVelocity();
-    float GetRotation();
-    float GetAngularVelocity();
+    Vector2 GetVelocity() { return velocity; }
+    float GetRotation() { return rotation; }
+    float GetAngularVelocity() { return angularVelocity; }
 
     bool IsFloating() { return state == FLOATING; }
     bool IsExploding() { return state == EXPLODING; }

@@ -3,13 +3,14 @@
 #include "raymath.h"
 #include <math.h>
 
-Asteroid::Asteroid(Vector2 origin) : GameObject({origin.x - 32, origin.y - 32, 64, 64}, 0, {0, -1}, {}, ASTEROID)
+Asteroid::Asteroid(Vector2 origin) : GameObject({0}, 0, {0, -1}, {}, ASTEROID)
 {
     this->velocity = {(float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100)};
     this->rotation = GetRandomValue(0, 360);
     this->angularVelocity = GetRandomValue(-10, 10) * 12;
     this->variant = (AsteroidVariant)GetRandomValue(0, 1);
     this->state = FLOATING;
+    this->origin = origin;
 
     // (2x + 1) -> [1, 3, 5, 7] -> large variants
     // (2x + 2) -> [2, 4, 6, 8] -> small variants
@@ -44,7 +45,7 @@ Asteroid::~Asteroid()
 }
 
 void Asteroid::Update()
-{
+{  
     if (state == EXPLODING && GetTime() - lastExplosionTime > ASTEROID_EXPLOSION_TIME)
     {
         state = DESTROYED;
@@ -111,34 +112,4 @@ void Asteroid::Destroy()
         this->hitbox = {};
         this->lastExplosionTime = GetTime(); // TODO: consider implementing custom timer to be able to pause the game
     }
-}
-
-void Asteroid::SetVelocity(Vector2 velocity)
-{
-    this->velocity = velocity;
-}
-
-void Asteroid::SetRotation(float rotation)
-{
-    this->rotation = rotation;
-}
-
-void Asteroid::SetAngularVelocity(float angularVelocity)
-{
-    this->angularVelocity = angularVelocity;
-}
-
-Vector2 Asteroid::GetVelocity()
-{
-    return velocity;
-}
-
-float Asteroid::GetRotation()
-{
-    return rotation;
-}
-
-float Asteroid::GetAngularVelocity()
-{
-    return angularVelocity;
 }

@@ -13,6 +13,8 @@ CORE_API void ExitGame();
 
 void CreateNewGame();
 void CreateUIElements();
+void PauseGame();
+void ResumeGame();
 void DrawFrame();
 void DrawDebug();
 void UpdateGame();

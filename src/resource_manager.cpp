@@ -23,6 +23,13 @@ const char *uiTexturesPaths[NUM_UI_TEXTURES] = {
     "resources/ui/life.png",
 };
 
+const char *soundsPaths[NUM_SOUNDS] = {
+    "resources/sounds/bullet.wav",
+    "resources/sounds/enemy_bullet.wav",
+    "resources/sounds/thrust.wav",
+    "resources/sounds/enemy_thrust.wav",
+};
+
 std::vector<Texture2D> ResourceManager::spriteTextures;
 std::vector<Texture2D> ResourceManager::uiTextures;
 std::vector<Sound> ResourceManager::sounds;
@@ -45,6 +52,10 @@ bool ResourceManager::LoadResources()
     for (size_t i = 0; i < NUM_UI_TEXTURES; i++)
     {
         uiTextures.push_back(LoadTexture(uiTexturesPaths[i]));
+    }
+    for (size_t i = 0; i < NUM_SOUNDS; i++)
+    {
+        sounds.push_back(LoadSound(soundsPaths[i]));
     }
 
     font = GetFontDefault();
@@ -136,7 +147,7 @@ Rectangle ResourceManager::GetUISrcRect(UITextureID id, unsigned int frame)
     return {0, 0, 0, 0}; // TODO: change this!
 }
 
-Sound *ResourceManager::GetSoundEffect(SoundID id)
+Sound *ResourceManager::GetSound(SoundID id)
 {
     return &sounds[id];
 }

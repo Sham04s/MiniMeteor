@@ -13,6 +13,12 @@
 #define SHOOT_COOLDOWN 0.4f        // seconds
 #define CHARACTER_DYING_TIME 0.4f  // seconds
 #define CHARACTER_RESPAWN_TIME 1.0f // second
+#define THRUST_MIN_PITCH 0.5f  // max pitch is 1.0f
+#define THRUST_MIN_VOLUME 0.5f // max volume is 1.0f
+// equal pan is 0.5f
+#define TRHUST_MIN_PAN 0.4f // min is right channel
+#define THRUST_MAX_PAN 0.7f // max is left channel
+#define THRUST_PITCH_DECAYING_TIME 4.0f
 
 enum CharacterState
 {
@@ -37,6 +43,8 @@ protected:
     float acceleration;
     float deceleration;
     float turnSpeed;
+    Sound thrustSound;
+    float timeAccelerating;
 
     virtual void SetDefaultHitBox();
 
@@ -48,8 +56,11 @@ public:
     virtual void Draw();
     virtual void Shoot();
     virtual void CleanBullets();
-    virtual void Kill();
+    virtual bool Kill();
     virtual void Respawn();
+
+    virtual void PauseSounds();
+    virtual void ResumeSounds();
 
     void AddLife();
 

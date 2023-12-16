@@ -5,6 +5,7 @@ BasicEnemy::BasicEnemy(Vector2 origin) : Character(origin)
 {
     this->state = CHARACTER_IDLE;
     this->texture = ResourceManager::GetSpriteTexture(ENEMY_BASIC_SPRITES);
+    this->thrustSound = LoadSoundAlias(*ResourceManager::GetSound(ENEMY_THRUST_SOUND));
     this->lookingForPlayer = false;
     this->lastTryToShootTime = 0;
     this->player = nullptr;

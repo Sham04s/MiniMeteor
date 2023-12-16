@@ -1,4 +1,5 @@
 #include "player.hpp"
+#include <math.h>
 
 Player::Player(Vector2 origin) : Character(origin)
 {
@@ -9,12 +10,9 @@ Player::Player(Vector2 origin) : Character(origin)
     this->bullets = {};
     this->lastShotTime = 0;
     this->lastDeathTime = 0;
-    this->maxSpeed = 200;
-    this->acceleration = 200;
-    this->deceleration = 100;
-    this->turnSpeed = 200;
     this->type = PLAYER;
     this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
+    this->thrustSound = LoadSoundAlias(*ResourceManager::GetSound(THRUST_SOUND));
 
     SetDefaultHitBox();
 }
@@ -27,21 +25,18 @@ void Player::Update()
 {
     Character::Update();
 
-    // invincibility ends when player atarts moving
-    if (invincible && (state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING))
+    // invincibility ends when player atarts moving or shooting
+    if (invincible && (state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING || bullets.size() > 0))
     {
         invincible = false;
     }
 
-    if (state != CHARACTER_DYING && state != CHARACTER_DEAD)
+    // handle input if alive
+    if (this->IsAlive())
     {
         HandleInput();
     }
 
-    if (state == CHARACTER_DYING && GetTime() - lastDeathTime > CHARACTER_DYING_TIME)
-    {
-        state = CHARACTER_DEAD;
-    }
     if (state == CHARACTER_DEAD && lives > 0 && GetTime() - lastDeathTime > CHARACTER_RESPAWN_TIME)
     {
         Respawn();
@@ -69,11 +64,11 @@ void Player::HandleInput()
 
     if (IsKeyDown(KEY_A))
     {
-        Rotate(-CHARACTER_TURN_SPEED * GetFrameTime());
+        Rotate(-turnSpeed * GetFrameTime());
     }
     if (IsKeyDown(KEY_D))
     {
-        Rotate(CHARACTER_TURN_SPEED * GetFrameTime());
+        Rotate(turnSpeed * GetFrameTime());
     }
     if (IsKeyPressed(KEY_SPACE))
     {
@@ -86,6 +81,20 @@ void Player::AddPowerup(/*PowerUp powerup*/)
     // TODO: implement
 }
 
+bool Player::CanBeKilled()
+{
+    return !invincible;
+}
+
+bool Player::Kill()
+{
+    if (!CanBeKilled())
+    {
+        return false;
+    }
+    return Character::Kill();
+}
+
 void Player::Respawn()
 {
     this->origin = this->initialOrigin;
@@ -96,6 +105,24 @@ void Player::Respawn()
     this->velocity = {0, 0};
     this->state = CHARACTER_IDLE;
     this->powerups = {};
+    // leave bullets live
+    SetDefaultHitBox();
+}
+
+void Player::Reset()
+{
+    this->lives = 4;
+    this->origin = this->initialOrigin;
+    this->bounds = {origin.x - CHARACTER_SIZE / 2, origin.y - CHARACTER_SIZE / 2, CHARACTER_SIZE, CHARACTER_SIZE};
+    this->rotation = 0;
+    this->invincible = true; // invincible when spawns
+    this->forwardDir = {0, -1};
+    this->velocity = {0, 0};
+    this->state = CHARACTER_IDLE;
+    this->powerups = {};
+    this->bullets = {};
+    this->lastShotTime = 0;
+    this->lastDeathTime = 0;
     // leave bullets live
     SetDefaultHitBox();
 }

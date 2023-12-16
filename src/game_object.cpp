@@ -54,6 +54,16 @@ void GameObject::DrawDebug()
     DrawLineEx(origin, Vector2Add(origin, Vector2Scale(velocity, 0.25f)), 2, GREEN);
 }
 
+void GameObject::PauseSounds()
+{
+    // base class does not have any sounds
+}
+
+void GameObject::ResumeSounds()
+{
+    // base class does not have any sounds
+}
+
 std::vector<Vector2> getAxes(std::vector<Vector2> hitbox)
 {
     std::vector<Vector2> axes = {};

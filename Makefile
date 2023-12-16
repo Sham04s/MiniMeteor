@@ -72,7 +72,7 @@ endif
 # Specific libraries for each platform
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 	ifeq ($(PLATFORM_OS), WINDOWS)
-		LDLIBS += -lopengl32 -lgdi32 -lwinmm -lcomdlg32 -lole32
+		LDLIBS += -lopengl32 -lgdi32 -lwinmm
 	endif
 	ifeq ($(PLATFORM_OS), LINUX)
 		LDLIBS += -lGL -lm -lpthread -ldl -lrt -lX11
@@ -158,11 +158,16 @@ endif
 
 # Rule to build core as a shared library (dll)
 $(PROJECT_BUILD_DIR)/core.dll: $(CORE_OBJS)
-	$(CXX) -shared -o $(PROJECT_BUILD_DIR)/core.dll $^ $(LDFLAGS) $(LDLIBS)
+	$(CXX) -shared -o $(PROJECT_BUILD_DIR)/core.dll $^ $(LDFLAGS) -l:raylib.dll
 
 # Rule to build object files
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(DFLAGS) -c $< -o $@
+
+# Copy resources folder (only for desktop platforms)
+res:
+	mkdir -p $(PROJECT_BUILD_DIR)/resources
+	cp -r resources/* $(PROJECT_BUILD_DIR)/resources
 
 # Clean rule
 clean:

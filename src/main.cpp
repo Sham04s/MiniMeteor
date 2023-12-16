@@ -19,7 +19,7 @@
     if (GameDLL)              \
     {                         \
         FreeLibrary(GameDLL); \
-        deleteTempDLL();      \
+        DeleteTempDLL();      \
     }
 
 typedef void (*CoreFunc)(void);
@@ -40,7 +40,7 @@ float elapsedTimeSinceLastCheck = 0;
 const char *dllName = "core.dll";
 const char *tempDllName = "temp_core.dll";
 
-void createTempDLL()
+void CreateTempDLL()
 {
     std::ifstream src(dllName, std::ios::binary);
     if (!src.is_open())
@@ -54,7 +54,7 @@ void createTempDLL()
     dst.close();
 }
 
-void deleteTempDLL()
+void DeleteTempDLL()
 {
     remove(tempDllName);
 }
@@ -73,7 +73,7 @@ void LoadGame()
 {
 #ifdef WINDOWS_HOT_RELOAD
     lastLoadSuccess = false;
-    createTempDLL();
+    CreateTempDLL();
     GameDLL = LoadLibraryA(tempDllName);
     if (!GameDLL)
     {
@@ -151,12 +151,12 @@ int main()
             break;
         }
 #ifdef WINDOWS_HOT_RELOAD
-            if (notifyShowTime > 0)
-            {
-                int textWidth = MeasureText("Reloaded!", 20);
-                DrawText("Reloaded!", (DEFAULT_WIDTH - textWidth) / 2, 20, 20, ColorAlpha(WHITE, fminf(1.0f, notifyShowTime)));
-                notifyShowTime -= GetFrameTime();
-            }
+        if (notifyShowTime > 0)
+        {
+            int textWidth = MeasureText("Reloaded!", 20);
+            DrawText("Reloaded!", (DEFAULT_WIDTH - textWidth) / 2, 20, 20, ColorAlpha(WHITE, fminf(1.0f, notifyShowTime)));
+            notifyShowTime -= GetFrameTime();
+        }
 
         elapsedTimeSinceLastCheck += GetFrameTime();
         if (elapsedTimeSinceLastCheck > 1.0f)
