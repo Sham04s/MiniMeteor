@@ -28,6 +28,9 @@ const char *soundsPaths[NUM_SOUNDS] = {
     "resources/sounds/enemy_bullet.wav",
     "resources/sounds/thrust.wav",
     "resources/sounds/enemy_thrust.wav",
+    "resources/sounds/explosion.wav",
+    "resources/sounds/ship_explosion.wav",
+    "resources/sounds/enemy_explosion.wav",
 };
 
 std::vector<Texture2D> ResourceManager::spriteTextures;
@@ -47,15 +50,36 @@ bool ResourceManager::LoadResources()
 
     for (size_t i = 0; i < NUM_SPRITE_TEXTURES; i++)
     {
-        spriteTextures.push_back(LoadTexture(spriteTexturesPaths[i]));
+        if (!FileExists(spriteTexturesPaths[i]))
+        {
+            spriteTextures.push_back(defaultTexture);
+        }
+        else
+        {
+            spriteTextures.push_back(LoadTexture(spriteTexturesPaths[i]));
+        }
     }
     for (size_t i = 0; i < NUM_UI_TEXTURES; i++)
     {
-        uiTextures.push_back(LoadTexture(uiTexturesPaths[i]));
+        if (!FileExists(uiTexturesPaths[i]))
+        {
+            uiTextures.push_back(defaultTexture);
+        }
+        else
+        {
+            uiTextures.push_back(LoadTexture(uiTexturesPaths[i]));
+        }
     }
     for (size_t i = 0; i < NUM_SOUNDS; i++)
     {
-        sounds.push_back(LoadSound(soundsPaths[i]));
+        if (!FileExists(soundsPaths[i]))
+        {
+            sounds.push_back({0});
+        }
+        else
+        {
+            sounds.push_back(LoadSound(soundsPaths[i]));
+        }
     }
 
     font = GetFontDefault();
@@ -150,6 +174,15 @@ Rectangle ResourceManager::GetUISrcRect(UITextureID id, unsigned int frame)
 Sound *ResourceManager::GetSound(SoundID id)
 {
     return &sounds[id];
+}
+
+Sound ResourceManager::CreateSoundAlias(SoundID id)
+{
+    if (id >= sounds.size())
+    {
+        return {0};
+    }
+    return LoadSoundAlias(sounds[id]);
 }
 
 Music *ResourceManager::GetMusicTrack(MusicID id)

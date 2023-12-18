@@ -43,7 +43,10 @@ protected:
     float acceleration;
     float deceleration;
     float turnSpeed;
+    Sound shootSound;
     Sound thrustSound;
+    Sound explosionSound;
+    bool exploded;
     float timeAccelerating;
 
     virtual void SetDefaultHitBox();
@@ -54,6 +57,7 @@ public:
 
     virtual void Update();
     virtual void Draw();
+    virtual void DrawDebug();
     virtual void Shoot();
     virtual void CleanBullets();
     virtual bool Kill();

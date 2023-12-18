@@ -10,8 +10,6 @@ class Bullet : public GameObject
 {
 private:
     bool isPlayerBullet;
-    Sound *shootSound;
-    bool playedSound;
 
 public:
     Bullet(Vector2 origin, Vector2 forwardDir, bool isPlayerBullet);
@@ -20,9 +18,6 @@ public:
     void Update();
     void Draw();
     void DrawDebug();
-
-    void PauseSounds();
-    void ResumeSounds();
 
     bool isOutOfBounds();
 };

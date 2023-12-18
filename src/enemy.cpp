@@ -4,8 +4,6 @@
 BasicEnemy::BasicEnemy(Vector2 origin) : Character(origin)
 {
     this->state = CHARACTER_IDLE;
-    this->texture = ResourceManager::GetSpriteTexture(ENEMY_BASIC_SPRITES);
-    this->thrustSound = LoadSoundAlias(*ResourceManager::GetSound(ENEMY_THRUST_SOUND));
     this->lookingForPlayer = false;
     this->lastTryToShootTime = 0;
     this->player = nullptr;
@@ -20,6 +18,11 @@ BasicEnemy::BasicEnemy(Vector2 origin) : Character(origin)
     this->acceleration = CHARACTER_ACCELERATION / 3;
     this->deceleration = CHARACTER_DECELERATION / 3;
     this->lives = 1;
+
+    this->texture = ResourceManager::GetSpriteTexture(ENEMY_BASIC_SPRITES);
+    this->shootSound = ResourceManager::CreateSoundAlias(ENEMY_SHOOT_SOUND);
+    this->thrustSound = ResourceManager::CreateSoundAlias(ENEMY_THRUST_SOUND);
+    this->explosionSound = ResourceManager::CreateSoundAlias(ENEMY_EXPLOSION_SOUND);
 
     SetDefaultHitBox();
 

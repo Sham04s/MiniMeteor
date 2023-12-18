@@ -91,6 +91,10 @@ void CreateNewGame()
     {
         player = new Player({(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2});
     }
+    for (size_t i = 0; i < asteroids.size(); i++)
+    {
+        delete asteroids[i];
+    }
     asteroids.clear();
     for (size_t i = 0; i < 5; i++)
     {
@@ -116,6 +120,10 @@ void CreateNewGame()
         asteroids.push_back(new Asteroid(pos));
     }
 
+    for (size_t i = 0; i < enemies.size(); i++)
+    {
+        delete enemies[i];
+    }
     enemies.clear();
     for (size_t i = 0; i < 2; i++)
     {
@@ -327,25 +335,14 @@ void DrawDebug()
     }
 
     DrawText(TextFormat("Audio ready: %s", IsAudioDeviceReady() ? "true" : "false"), 10, 40, 20, RED);
-    DrawText(TextFormat("Is Sound Ready: %s", IsSoundReady(*ResourceManager::GetSound(BULLET_SOUND)) ? "true" : "false"), 10, 80, 20, RED);
+    DrawText(TextFormat("Is Sound Ready: %s", IsSoundReady(*ResourceManager::GetSound(SHOOT_SOUND)) ? "true" : "false"), 10, 80, 20, RED);
 }
 
 void HandleInput()
 {
-    if (IsKeyDown(KEY_LEFT_CONTROL))
+    if (IsKeyPressed(KEY_R))
     {
-        if (IsKeyPressed(KEY_R))
-        {
-            ResourceManager::UnloadResources();
-            ResourceManager::LoadResources();
-        }
-    }
-    else
-    {
-        if (IsKeyPressed(KEY_R))
-        {
-            CreateNewGame();
-        }
+        CreateNewGame();
     }
 
     if (IsKeyPressed(KEY_ESCAPE))
@@ -493,17 +490,26 @@ void UpdateGame()
         Vector2 pushVector = {0, 0};
         auto bullets = player->GetBullets();
 
+        // ---------------------------------------------------------------
+        // -------------------------- asteroids --------------------------
+        // ---------------------------------------------------------------
         for (size_t i = 0; i < asteroids.size(); i++)
         {
             asteroids[i]->Update();
 
+            // -----------------------------------------------------------------
+            // -------------------------- asteroids / player -------------------
+            // -----------------------------------------------------------------
             // check for collisions between player and asteroids
             if (player->CheckCollision(asteroids[i], &pushVector))
             {
+                player->Kill(); // try to kill player if not invincible
                 player->Push(asteroids[i], pushVector); // push both player and asteroid away from each other
-                player->Kill();
             }
 
+            // ---------------------------------------------------------------------------
+            // -------------------------- asteroids / asteroids --------------------------
+            // ---------------------------------------------------------------------------
             // check for collisions between asteroids
             for (size_t j = 0; j < asteroids.size(); j++)
             {
@@ -517,6 +523,22 @@ void UpdateGame()
                 }
             }
 
+            // --------------------------------------------------------------------------------
+            // -------------------------- asteroids / enemies ----------------------------------
+            // --------------------------------------------------------------------------------
+            // check for collisions between enemies and asteroids
+            for (size_t j = 0; j < enemies.size(); j++)
+            {
+                if (asteroids[i]->CheckCollision(enemies[j], &pushVector))
+                {
+                    // push asteroids away from each other with the SAT push vector
+                    asteroids[i]->Push(enemies[j], pushVector);
+                }
+            }
+
+            // --------------------------------------------------------------------------------
+            // -------------------------- asteroids / player bullets --------------------------
+            // --------------------------------------------------------------------------------
             // check for collisions between bullets and asteroids
             for (size_t b = 0; b < bullets->size(); b++)
             {
@@ -537,12 +559,18 @@ void UpdateGame()
         }
         asteroids.shrink_to_fit();
 
+        // ---------------------------------------------------------------
+        // -------------------------- enemies ----------------------------
+        // ---------------------------------------------------------------
         for (size_t i = 0; i < enemies.size(); i++)
         {
             enemies[i]->Update();
 
             enemies[i]->TryToShootAtPlayer(*player);
 
+            // -----------------------------------------------------------------
+            // -------------------------- enemies / player ---------------------
+            // -----------------------------------------------------------------
             // check for collisions between player and enemies
             if (player->CheckCollision(enemies[i], &pushVector))
             {
@@ -553,6 +581,9 @@ void UpdateGame()
                 }
             }
 
+            // ---------------------------------------------------------------------------
+            // -------------------------- enemies / enemies ------------------------------
+            // ---------------------------------------------------------------------------
             // check for collisions between enemies
             for (size_t j = 0; j < enemies.size(); j++)
             {
@@ -566,6 +597,9 @@ void UpdateGame()
                 }
             }
 
+            // --------------------------------------------------------------------------------
+            // -------------------------- enemies / player bullets ----------------------------
+            // --------------------------------------------------------------------------------
             // check for collisions between player bullets and enemies
             for (size_t b = 0; b < bullets->size(); b++)
             {
@@ -578,6 +612,9 @@ void UpdateGame()
             }
             bullets->shrink_to_fit();
 
+            // --------------------------------------------------------------------------------
+            // -------------------------- enemy bullets / player ------------------------------
+            // --------------------------------------------------------------------------------
             // check for collisions between enemy bullets and player
             auto enemyBullets = enemies[i]->GetBullets();
             for (size_t b = 0; b < enemyBullets->size(); b++)
@@ -593,11 +630,13 @@ void UpdateGame()
             }
             (*enemyBullets).shrink_to_fit();
 
+            // remove dead enemies from the enemies vector
             if (enemies[i]->IsDead())
             {
                 // erase dead enemies if they don't have any bullets left
                 if (enemyBullets->size() == 0)
                 {
+                    delete enemies[i];
                     enemies.erase(enemies.begin() + i);
                 }
                 else // try to clean up bullets

@@ -25,6 +25,7 @@ class Asteroid : public GameObject
 private:
     AsteroidVariant variant;
     AsteroidState state;
+    Sound explosionSound;
     float size;
     float lastExplosionTime;
     

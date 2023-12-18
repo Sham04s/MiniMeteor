@@ -22,10 +22,12 @@ Asteroid::Asteroid(Vector2 origin) : GameObject({0}, 0, {0, -1}, {}, ASTEROID)
     }
 
     this->texture = ResourceManager::GetSpriteTexture(randomAsteroidTexture);
+    this->explosionSound = ResourceManager::CreateSoundAlias(EXPLOSION_SOUND);
+    SetSoundVolume(explosionSound, size / ASTEROID_SIZE_LARGE); // set volume according to size
     this->bounds = {origin.x - size / 2, origin.y - size / 2, size, size};
 
     // TODO: maybe use a predefined hitbox for each variant?
-    
+
     // create hitbox as a regular polygon with 8 sides
     const int sides = 8;
     const float radius = variant == LARGE ? size / 3 : size / 4;
@@ -42,10 +44,18 @@ Asteroid::Asteroid(Vector2 origin) : GameObject({0}, 0, {0, -1}, {}, ASTEROID)
 
 Asteroid::~Asteroid()
 {
+    if (explosionSound.frameCount > 0 && explosionSound.stream.buffer != NULL)
+    {
+        if (IsSoundPlaying(explosionSound))
+        {
+            StopSound(explosionSound);
+        }
+        UnloadSoundAlias(explosionSound);
+    }
 }
 
 void Asteroid::Update()
-{  
+{
     if (state == EXPLODING && GetTime() - lastExplosionTime > ASTEROID_EXPLOSION_TIME)
     {
         state = DESTROYED;
@@ -75,6 +85,12 @@ void Asteroid::Update()
     {
         Translate({0, GetScreenHeight() + size});
     }
+
+    if (state == EXPLODING && !IsSoundPlaying(explosionSound))
+    {
+        PlaySound(explosionSound);
+    }
+
 }
 
 void Asteroid::Draw()

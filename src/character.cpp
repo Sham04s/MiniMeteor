@@ -13,21 +13,41 @@ Character::Character(Vector2 origin)
     this->deceleration = CHARACTER_DECELERATION;
     this->turnSpeed = CHARACTER_TURN_SPEED;
     this->texture = ResourceManager::GetDefaultTexture();
-    // this->thrustSound = ResourceManager::GetSound(THRUST_SOUND); // defaults to enemy thrust sound
     this->timeAccelerating = 0;
+    this->exploded = false;
+
+    this->shootSound = {0};
+    this->thrustSound = {0};
+    this->explosionSound = {0};
 
     SetDefaultHitBox();
 }
 
 Character::~Character()
 {
-    if (thrustSound.frameCount != 0 && thrustSound.stream.buffer != nullptr)
+    if (thrustSound.frameCount > 0 && thrustSound.stream.buffer != NULL)
     {
         if (IsSoundPlaying(thrustSound))
         {
             StopSound(thrustSound);
         }
         UnloadSoundAlias(thrustSound);
+    }
+    if (shootSound.frameCount > 0 && shootSound.stream.buffer != NULL)
+    {
+        if (IsSoundPlaying(shootSound))
+        {
+            StopSound(shootSound);
+        }
+        UnloadSoundAlias(shootSound);
+    }
+    if (explosionSound.frameCount > 0 && explosionSound.stream.buffer != NULL)
+    {
+        if (IsSoundPlaying(explosionSound))
+        {
+            StopSound(explosionSound);
+        }
+        UnloadSoundAlias(explosionSound);
     }
 }
 
@@ -56,26 +76,41 @@ void Character::Update()
     {
         if (!IsSoundPlaying(thrustSound))
         {
+            StopSound(thrustSound);
             PlaySound(thrustSound);
         }
         timeAccelerating += GetFrameTime();
 
         // decrease pitch proportional to time accelerating
         const float pitch = fmaxf(THRUST_MIN_PITCH, 1.0f - timeAccelerating / THRUST_PITCH_DECAYING_TIME);
-        SetSoundPitch(thrustSound, pitch * ((state == CHARACTER_EXTRA_ACCELERATING) ? 1.0f : 0.7f));
+        SetSoundPitch(thrustSound, Clamp(pitch, 0, 1) * ((state == CHARACTER_EXTRA_ACCELERATING) ? 1.0f : 0.7f)); // TODO: remove clamp when implementing custom timer
 
         // move sound from right to left proportional to player position in x axis
         const float pan = (THRUST_MAX_PAN - TRHUST_MIN_PAN) * (1.0f - origin.x / GetScreenWidth()) + TRHUST_MIN_PAN;
-        SetSoundPan(thrustSound, pan);
+        SetSoundPan(thrustSound, Clamp(pan, 0, 1));
 
         // decrease volume proportional to player position in y axis
         const float volume = 1.0f - 2.0f * (1.0f - THRUST_MIN_VOLUME) * fabsf(0.5f - origin.y / GetScreenHeight());
-        SetSoundVolume(thrustSound, volume * ((state == CHARACTER_EXTRA_ACCELERATING) ? 1.0f : 0.7f));
+        SetSoundVolume(thrustSound, Clamp(volume, 0, 1) * ((state == CHARACTER_EXTRA_ACCELERATING) ? 1.0f : 0.7f));
     }
     else
     {
         StopSound(thrustSound);
         timeAccelerating = 0;
+    }
+
+    if (IsSoundReady(explosionSound))
+    {
+        if (!IsAlive() && !exploded)
+        {
+            exploded = true;
+            PlaySound(explosionSound);
+        }
+        if (IsAlive() && exploded)
+        {
+            exploded = false;
+            StopSound(explosionSound);
+        }
     }
 
     if (state == CHARACTER_ACCELERATING)
@@ -162,6 +197,15 @@ void Character::Draw()
                    {GetBounds().width / 2, GetBounds().height / 2}, GetRotation(), WHITE);
 }
 
+void Character::DrawDebug()
+{
+    GameObject::DrawDebug();
+    for (size_t i = 0; i < bullets.size(); i++)
+    {
+        bullets[i].DrawDebug();
+    }
+}
+
 void Character::Accelerate(float acceleration)
 {
     this->velocity = Vector2Add(this->velocity, Vector2Scale(this->forwardDir, acceleration * GetFrameTime()));
@@ -178,8 +222,10 @@ void Character::Shoot()
     {
         return;
     }
-    bullets.push_back(Bullet(this->origin, this->forwardDir, this->type == PLAYER));
+    bullets.push_back(Bullet(Vector2Add(this->origin, Vector2Scale(this->forwardDir, CHARACTER_SIZE / 4)),
+                             this->forwardDir, this->type == PLAYER));
     lastShotTime = GetTime();
+    PlaySound(shootSound);
 
     // when shooting, try to clear bullets that are out of bounds
     CleanBullets();
@@ -228,11 +274,8 @@ void Character::Respawn()
 
 void Character::PauseSounds()
 {
-    PauseSound(thrustSound);   
-    for (size_t i = 0; i < bullets.size(); i++)
-    {
-        bullets[i].PauseSounds();
-    }
+    PauseSound(thrustSound);
+    PauseSound(shootSound);
 }
 
 void Character::ResumeSounds()

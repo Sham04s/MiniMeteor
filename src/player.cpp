@@ -12,7 +12,9 @@ Player::Player(Vector2 origin) : Character(origin)
     this->lastDeathTime = 0;
     this->type = PLAYER;
     this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
-    this->thrustSound = LoadSoundAlias(*ResourceManager::GetSound(THRUST_SOUND));
+    this->shootSound = ResourceManager::CreateSoundAlias(SHOOT_SOUND);
+    this->thrustSound = ResourceManager::CreateSoundAlias(THRUST_SOUND);
+    this->explosionSound = ResourceManager::CreateSoundAlias(SHIP_EXPLOSION_SOUND);
 
     SetDefaultHitBox();
 }
@@ -26,7 +28,7 @@ void Player::Update()
     Character::Update();
 
     // invincibility ends when player atarts moving or shooting
-    if (invincible && (state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING || bullets.size() > 0))
+    if (invincible && (state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING || lastShotTime > 0.0f))
     {
         invincible = false;
     }
@@ -43,6 +45,13 @@ void Player::Update()
     }
 }
 
+void Player::DrawDebug()
+{
+    Character::DrawDebug();
+    DrawText(TextFormat("Invincible: %s", invincible ? "true" : "false"), 10, 10, 20, invincible ? GREEN : RED);
+    DrawText(TextFormat("Last shot time: %f", lastShotTime), 10, 30, 20, WHITE);
+}
+
 void Player::HandleInput()
 {
     if (IsKeyPressed(KEY_W))
@@ -53,11 +62,11 @@ void Player::HandleInput()
     {
         this->state = CHARACTER_IDLE;
     }
-    if (IsKeyPressed(KEY_LEFT_SHIFT) && this->state == CHARACTER_ACCELERATING)
+    if (IsKeyDown(KEY_LEFT_SHIFT) && this->state == CHARACTER_ACCELERATING)
     {
         this->state = CHARACTER_EXTRA_ACCELERATING;
     }
-    if (IsKeyReleased(KEY_LEFT_SHIFT) && this->state == CHARACTER_EXTRA_ACCELERATING)
+    if (IsKeyUp(KEY_LEFT_SHIFT) && this->state == CHARACTER_EXTRA_ACCELERATING)
     {
         this->state = CHARACTER_ACCELERATING;
     }
@@ -105,6 +114,8 @@ void Player::Respawn()
     this->velocity = {0, 0};
     this->state = CHARACTER_IDLE;
     this->powerups = {};
+    this->lastDeathTime = 0;
+    this->lastShotTime = 0;
     // leave bullets live
     SetDefaultHitBox();
 }
@@ -120,7 +131,7 @@ void Player::Reset()
     this->velocity = {0, 0};
     this->state = CHARACTER_IDLE;
     this->powerups = {};
-    this->bullets = {};
+    this->bullets.clear();
     this->lastShotTime = 0;
     this->lastDeathTime = 0;
     // leave bullets live

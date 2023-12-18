@@ -20,6 +20,7 @@ public:
     ~Player();
 
     void Update();
+    void DrawDebug();
     void HandleInput();
 
     void AddPowerup();

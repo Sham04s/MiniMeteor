@@ -37,7 +37,7 @@ protected:
     
 public:
     BasicEnemy(Vector2 origin);
-    ~BasicEnemy();
+    ~BasicEnemy();    
 
     void Update();
     void DrawDebug();
