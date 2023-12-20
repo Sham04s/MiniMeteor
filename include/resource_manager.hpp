@@ -18,8 +18,13 @@ enum SpriteTextureID
     BULLET_SPRITE,
     ENEMY_BULLET_SPRITE,
     ENEMY_BASIC_SPRITES,
-    ENEMY_BOMBER_SPRITE,
-    EXPLOSION_SPRITE,
+    POWERUP_LIFE_ITEM_SPRITE,
+    POWERUP_SHIELD_SPRITE,
+    POWERUP_SHIELD_ITEM_SPRITE,
+    POWERUP_TEMPORARY_SHIELD_SPRITE,
+    POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE,
+    // ENEMY_BOMBER_SPRITE,
+    // EXPLOSION_SPRITE,
     NUM_SPRITE_TEXTURES
 };
 
@@ -65,25 +70,23 @@ private:
     static Font font;
 
     static Texture2D defaultTexture;
-    static Texture2D transparentTexture;
+    static Texture2D invalidTexture;
 
 public:
     static bool LoadResources();
-    static bool ReloadResouces();
     static void UnloadResources();
 
-    static Texture2D* GetSpriteTexture(SpriteTextureID id);
+    static Texture2D *GetSpriteTexture(SpriteTextureID id);
     static Rectangle GetSpriteSrcRect(SpriteTextureID id, unsigned int frame);
-    static Texture2D* GetUITexture(UITextureID id);
+    static Texture2D *GetUITexture(UITextureID id);
     static Rectangle GetUISrcRect(UITextureID id, unsigned int frame);
-    static Sound* GetSound(SoundID id);
+    static Sound *GetSound(SoundID id);
     static Sound CreateSoundAlias(SoundID id);
-    static Music* GetMusicTrack(MusicID id);
-    static Font* GetFont();
+    static Music *GetMusicTrack(MusicID id);
+    static Font *GetFont();
 
-    static Texture* GetDefaultTexture();
-    static Texture* GetTransparentTexture();
-
+    static Texture *GetDefaultTexture();
+    static Texture *GetInvalidTexture();
 };
 
 #endif // __RESOURCE_MANAGER_H__

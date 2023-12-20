@@ -22,13 +22,12 @@
 
 enum CharacterState
 {
-    CHARACTER_IDLE,
-    CHARACTER_ACCELERATING,
-    CHARACTER_EXTRA_ACCELERATING,
-    CHARACTER_TURNING_LEFT,
-    CHARACTER_TURNING_RIGHT,
-    CHARACTER_DYING,
-    CHARACTER_DEAD,
+    IDLE,
+    ACCELERATING,
+    TURNING_LEFT,
+    TURNING_RIGHT,
+    DYING,
+    DEAD,
 };
 
 class Character : public GameObject
@@ -45,6 +44,7 @@ protected:
     float turnSpeed;
     Sound shootSound;
     Sound thrustSound;
+    float pitchAndVolumeScale;
     Sound explosionSound;
     bool exploded;
     float timeAccelerating;
@@ -60,6 +60,8 @@ public:
     virtual void DrawDebug();
     virtual void Shoot();
     virtual void CleanBullets();
+    virtual bool CanBeKilled();
+    virtual bool CanBeHit();
     virtual bool Kill();
     virtual void Respawn();
 
@@ -72,11 +74,10 @@ public:
 
     virtual Rectangle GetFrameRec();
     
-    bool IsMoving() { return state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING; }
-    bool IsTurning() { return state == CHARACTER_TURNING_LEFT || state == CHARACTER_TURNING_RIGHT; }
-    bool IsDying() { return state == CHARACTER_DYING; }
-    bool IsDead() { return state == CHARACTER_DEAD; }
-    bool IsAlive() { return state != CHARACTER_DEAD && state != CHARACTER_DYING; }
+    bool IsTurning() { return state == TURNING_LEFT || state == TURNING_RIGHT; }
+    bool IsDying() { return state == DYING; }
+    bool IsDead() { return state == DEAD; }
+    bool IsAlive() { return state != DEAD && state != DYING; }
     bool CanShoot() { return GetTime() - lastShotTime > SHOOT_COOLDOWN; }
     int GetLives() { return lives; }
     std::vector<Bullet> *GetBullets() { return &bullets; }

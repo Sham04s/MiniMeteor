@@ -16,7 +16,7 @@ enum GameObjectType
     BULLET,
     ENEMY_BULLET,
     ASTEROID,
-    EXPLOSION, // TODO: maybe this is not needed
+    POWER_UP,
     NUM_GAME_OBJECT_TYPES,
     NONE
 };
@@ -35,7 +35,7 @@ protected:
     Texture2D *texture;
 
 public:
-    GameObject() : bounds({0, 0, 0, 0}), origin({0, 0}), rotation(0), forwardDir({0, 0}), hitbox({}), type(NONE){}; // TODO: change this!
+    GameObject() : GameObject({0, 0}, 0, {0, 0}, {}, NONE) {};
     GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, std::vector<Vector2> hitbox, GameObjectType type);
     virtual ~GameObject();
 

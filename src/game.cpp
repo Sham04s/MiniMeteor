@@ -1,17 +1,16 @@
 #include <stdio.h>
+#include <math.h>
 
 #include "raylib.h"
 
 #include "game.hpp"
-#include <math.h>
+#include "game_ui.hpp"
 
 #include "resource_manager.hpp"
 #include "player.hpp"
 #include "asteroid.hpp"
 #include "enemy.hpp"
-#include "button.hpp"
-#include "lives_bar.hpp"
-#include "utils.hpp"
+#include "power_up.hpp"
 
 #ifdef _DEBUG
 bool SHOW_DEBUG = true;
@@ -21,41 +20,12 @@ bool SHOW_DEBUG = false;
 
 bool HIDE_SPRITES = false;
 
-#define PRIMARY_COLOR GetColor(0x3c9dd7ff)
-#define PRIMARY_COLOR_BRIGHT GetColor(0x8dc3e3ff)
-#define PRIMARY_COLOR_DARK GetColor(0x058ad9ff)
-#define PRIMARY_COLOR_DARKER GetColor(0x004d7aff)
-#define SECONDARY_COLOR GetColor(0x4d50deff)
-#define SECONDARY_COLOR_BRIGHT GetColor(0x989ae7ff)
-#define SECONDARY_COLOR_DARK GetColor(0x0c12dfff)
-#define SECONDARY_COLOR_DARKER GetColor(0x000386ff)
-#define SECONDARY_COLOR_2 GetColor(0x34df7fff)
-#define SECONDARY_COLOR_2_BRIGTH GetColor(0x8ce9b4ff)
-#define SECONDARY_COLOR_2_DAR GetColor(0x00e162ff)
-#define SECONDARY_COLOR_2_DARKER GetColor(0x00893bff)
-#define BACKGROUND_COLOR GetColor(0x242424ff)
-
-enum ScreenID
-{
-    GAME,
-    GAME_OVER,
-    MAIN_MENU,
-    PAUSE_MENU,
-    OPTIONS,
-    EXITING,
-    NUM_SCREENS
-};
-
-struct GameState
-{
-    ScreenID currentScreen;
-    ScreenID previousScreen;
-    UIObject *screens[NUM_SCREENS];
-} gameState;
+GameState gameState;
 
 Player *player;
 std::vector<Asteroid *> asteroids;
 std::vector<BasicEnemy *> enemies;
+PowerUp *powerup; // only one powerup can be in the screen at a time
 
 void InitGame()
 {
@@ -76,7 +46,7 @@ void InitGame()
     gameState.currentScreen = MAIN_MENU;
     player = new Player({(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2});
 
-    CreateUIElements();
+    CreateUIElements(player);
 }
 
 void CreateNewGame()
@@ -160,88 +130,6 @@ void CreateNewGame()
     }
 }
 
-void CreateUIElements()
-{
-    // main menu buttons
-    const int mainMenuButtonCount = 3;
-    Button *mainMenuButtons[mainMenuButtonCount] = {
-        new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { CreateNewGame(); }),
-        new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = OPTIONS; }),
-        new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = EXITING; }),
-    };
-
-    // main menu
-    UIObject *mainMenu = new UIObject(createCenteredButtonRec(mainMenuButtons, mainMenuButtonCount),
-                                      nullptr, ResourceManager::GetDefaultTexture());
-
-    // game ui
-    UIObject *game = new UIObject(Rectangle{0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()}, nullptr, ResourceManager::GetDefaultTexture());
-
-    game->AddChild(new LivesBar(Rectangle{(float)GetScreenWidth() / 2 + 100, 10, (float)GetScreenWidth() / 2 - 100, 50}, player));
-
-    // pause menu buttons
-    const int pauseButtonCount = 5;
-    Button *pauseButtons[pauseButtonCount] = {
-        new Button(Vector2{0, 0}, nullptr, "Resume", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { ResumeGame(); }),
-        new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { CreateNewGame(); }),
-        new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = MAIN_MENU; }),
-        new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = OPTIONS; }),
-        new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = EXITING; }),
-    };
-
-    // pause menu
-    UIObject *pauseMenu = new UIObject(createCenteredButtonRec(pauseButtons, pauseButtonCount), nullptr, ResourceManager::GetDefaultTexture());
-
-    // game over buttons
-    const int gameOverButtonCount = 2;
-    Button *gameOverButtons[gameOverButtonCount] = {
-        new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { CreateNewGame(); }),
-        new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = MAIN_MENU; }),
-    };
-
-    // game over
-    UIObject *gameOver = new UIObject(createCenteredButtonRec(gameOverButtons, gameOverButtonCount), nullptr, ResourceManager::GetDefaultTexture());
-
-    Button *b;
-    for (int i = 0; i < mainMenuButtonCount; i++)
-    {
-        b = mainMenuButtons[i];
-        b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
-        mainMenu->AddChild(b);
-    }
-
-    for (int i = 0; i < pauseButtonCount; i++)
-    {
-        b = pauseButtons[i];
-        b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
-        pauseMenu->AddChild(b);
-    }
-
-    for (int i = 0; i < gameOverButtonCount; i++)
-    {
-        b = gameOverButtons[i];
-        b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
-        gameOver->AddChild(b);
-    }
-
-    gameState.screens[GAME] = game;
-    gameState.screens[GAME_OVER] = gameOver;
-    gameState.screens[MAIN_MENU] = mainMenu;
-    gameState.screens[PAUSE_MENU] = pauseMenu;
-    gameState.screens[OPTIONS] = nullptr;
-    gameState.screens[EXITING] = nullptr;
-}
-
 void PauseGame()
 {
     gameState.previousScreen = gameState.currentScreen;
@@ -279,7 +167,10 @@ void DrawFrame()
 
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER || gameState.currentScreen == PAUSE_MENU)
     {
-
+        if (powerup != nullptr)
+        {
+            powerup->Draw();
+        }
         player->Draw();
         for (size_t i = 0; i < asteroids.size(); i++)
         {
@@ -307,10 +198,16 @@ void DrawFrame()
     EndDrawing();
 }
 
+PowerUpType powerupToSpawn = LIFE;
+
 void DrawDebug()
 {
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
+        if (powerup != nullptr)
+        {
+            powerup->DrawDebug();
+        }
         player->DrawDebug();
 
         for (size_t i = 0; i < asteroids.size(); i++)
@@ -334,8 +231,7 @@ void DrawDebug()
         DrawText("No screen", (GetScreenWidth() - MeasureText("No screen", 40)) / 2, GetScreenHeight() - 40, 40, RED);
     }
 
-    DrawText(TextFormat("Audio ready: %s", IsAudioDeviceReady() ? "true" : "false"), 10, 40, 20, RED);
-    DrawText(TextFormat("Is Sound Ready: %s", IsSoundReady(*ResourceManager::GetSound(SHOOT_SOUND)) ? "true" : "false"), 10, 80, 20, RED);
+    DrawText(TextFormat("Powerup to spawn: %i", powerupToSpawn), 10, GetScreenHeight() - 40, 20, WHITE);
 }
 
 void HandleInput()
@@ -416,6 +312,20 @@ void HandleInput()
     {
         asteroids.push_back(new Asteroid((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
     }
+    if (IsKeyPressed(KEY_C))
+    {
+        enemies.push_back(new BasicEnemy((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}));
+    }
+    if (IsKeyPressed(KEY_V))
+    {
+        if (powerup != nullptr)
+        {
+            delete powerup;
+        }
+        powerup = new PowerUp(Vector2Clamp(GetMousePosition(), {0, 0}, {(float)GetScreenWidth(), (float)GetScreenHeight()}),
+                              powerupToSpawn);
+    }
+
     if (IsKeyPressed(KEY_KP_ADD))
     {
         player->AddLife();
@@ -423,6 +333,15 @@ void HandleInput()
     if (IsKeyPressed(KEY_KP_SUBTRACT))
     {
         player->Kill();
+    }
+
+    if (GetMouseWheelMove() > 0)
+    {
+        powerupToSpawn = (PowerUpType)((powerupToSpawn + 1) % NUM_POWER_UP_TYPES);
+    }
+    if (GetMouseWheelMove() < 0)
+    {
+        powerupToSpawn = (PowerUpType)((powerupToSpawn - 1 + NUM_POWER_UP_TYPES) % NUM_POWER_UP_TYPES);
     }
 
     if (player != nullptr && CheckCollisionPointRec(GetMousePosition(), player->GetBounds()))
@@ -474,177 +393,257 @@ void HandleInput()
 #endif // _DEBUG
 }
 
+void HandlePlayerUpdate()
+{
+    player->Update();
+    // if player is dead and has 0 lives left, game over
+    if (player->IsDead() && player->GetLives() <= 0)
+    {
+        gameState.previousScreen = gameState.currentScreen;
+        gameState.currentScreen = GAME_OVER;
+    }
+}
+
+void HandleAsteroidPlayerCollision(Asteroid *asteroid)
+{
+    Vector2 pushVector = {0, 0};
+    // check for collisions between player and asteroids
+    if (player->CheckCollision(asteroid, &pushVector))
+    {
+        if (player->CanBeKilled())
+        {
+            player->Kill(); // try to kill player if not invincible
+        }
+        player->Push(asteroid, pushVector); // push both player and asteroid away from each other
+    }
+}
+
+void HandleAsteroidAsteroidCollision(Asteroid *asteroid, size_t asteroidIdx)
+{
+    Vector2 pushVector = {0, 0};
+
+    // check for collisions between asteroids
+    for (size_t j = 0; j < asteroids.size(); j++)
+    {
+        if (asteroidIdx < j) // check each pair only once
+        {
+            if (asteroid->IsFloating() && asteroid->CheckCollision(asteroids[j], &pushVector))
+            {
+                // push asteroids away from each other with the SAT push vector
+                asteroid->Push(asteroids[j], pushVector);
+            }
+        }
+    }
+}
+
+void HandleAsteroidEnemyCollision(Asteroid *asteroid)
+{
+    Vector2 pushVector = {0, 0};
+
+    // check for collisions between enemies and asteroids
+    for (size_t i = 0; i < enemies.size(); i++)
+    {
+        if (asteroid->CheckCollision(enemies[i], &pushVector))
+        {
+            // push asteroids away from each other with the SAT push vector
+            asteroid->Push(enemies[i], pushVector);
+        }
+    }
+}
+
+void HandleAsteroidBulletCollision(Asteroid *asteroid)
+{
+    Vector2 pushVector = {0, 0};
+    auto bullets = player->GetBullets();
+
+    // check for collisions between bullets and asteroids
+    for (size_t b = 0; b < bullets->size(); b++)
+    {
+        if ((*bullets)[b].CheckCollision(asteroid, &pushVector))
+        {
+            // destroy bullet and asteroid
+            bullets->erase(bullets->begin() + b);
+            asteroid->Destroy();
+        }
+    }
+    bullets->shrink_to_fit();
+}
+
+void HandleEnemyPlayerCollision(BasicEnemy *enemy)
+{
+    Vector2 pushVector = {0, 0};
+
+    // check for collisions between player and enemies
+    if (player->CheckCollision(enemy, &pushVector))
+    {
+        if (player->CanBeKilled())
+        {
+            player->Kill();
+            enemy->Kill();
+        }
+        if (player->CanBeHit())
+        {
+            player->Push(enemy, pushVector); // push both player and enemy away from each other
+        }
+    }
+}
+
+void HandleEnemyEnemyCollision(BasicEnemy *enemy, size_t enemyIdx)
+{
+    Vector2 pushVector = {0, 0};
+
+    // check for collisions between enemies
+    for (size_t j = 0; j < enemies.size(); j++)
+    {
+        if (enemyIdx < j) // check each pair only once
+        {
+            if (enemy->IsAlive() && enemy->CheckCollision(enemies[j], &pushVector))
+            {
+                // push enemies away from each other with the SAT push vector
+                enemy->Push(enemies[j], pushVector);
+            }
+        }
+    }
+}
+
+void HandleEnemyBulletCollision(BasicEnemy *enemy)
+{
+    Vector2 pushVector = {0, 0};
+    auto bullets = player->GetBullets();
+
+    // check for collisions between player bullets and enemies
+    for (size_t b = 0; b < bullets->size(); b++)
+    {
+        if ((*bullets)[b].CheckCollision(enemy, &pushVector))
+        {
+            // destroy bullet and kill enemy
+            bullets->erase(bullets->begin() + b);
+            enemy->Kill();
+        }
+    }
+    bullets->shrink_to_fit();
+}
+
+void HandleEnemyBulletPlayerCollision(BasicEnemy *enemy)
+{
+    Vector2 pushVector = {0, 0};
+    auto enemyBullets = enemy->GetBullets();
+
+    // check for collisions between enemy bullets and player
+    for (size_t b = 0; b < enemyBullets->size(); b++)
+    {
+        if ((*enemyBullets)[b].CheckCollision(player, &pushVector))
+        {
+            if (player->CanBeKilled())
+            {
+                player->Kill();
+            }
+            if (player->CanBeHit())
+            {
+                (*enemyBullets).erase((*enemyBullets).begin() + b);
+            }
+        }
+    }
+    (*enemyBullets).shrink_to_fit();
+}
+
+void HandleAsteroidCollisions()
+{
+    for (size_t i = 0; i < asteroids.size(); i++)
+    {
+        asteroids[i]->Update();
+
+        HandleAsteroidPlayerCollision(asteroids[i]);
+        HandleAsteroidAsteroidCollision(asteroids[i], i);
+        HandleAsteroidEnemyCollision(asteroids[i]);
+        HandleAsteroidBulletCollision(asteroids[i]);
+
+        // erase destroyed asteroids
+        if (asteroids[i]->IsDestroyed())
+        {
+            asteroids.erase(asteroids.begin() + i);
+        }
+    }
+    asteroids.shrink_to_fit();
+}
+
+void HandleEnemyActions()
+{
+    for (size_t i = 0; i < enemies.size(); i++)
+    {
+        enemies[i]->Update();
+        enemies[i]->TryToShootAtPlayer(*player);
+
+        HandleEnemyPlayerCollision(enemies[i]);
+        HandleEnemyEnemyCollision(enemies[i], i);
+        HandleEnemyBulletCollision(enemies[i]);
+        HandleEnemyBulletPlayerCollision(enemies[i]);
+
+        auto enemyBullets = enemies[i]->GetBullets();
+
+        // remove dead enemies from the enemies vector
+        if (enemies[i]->IsDead())
+        {
+            // erase dead enemies if they don't have any bullets left
+            if (enemyBullets->size() == 0)
+            {
+                delete enemies[i];
+                enemies.erase(enemies.begin() + i);
+            }
+            else // try to clean up bullets
+            {
+                enemies[i]->CleanBullets();
+            }
+        }
+    }
+}
+
+void HandlePowerUpUpdate()
+{
+    if (powerup == nullptr)
+    {
+        // try to spawn a power up
+        const float spawnChance = 0.10f; // 10% chance of spawning a power up every second
+        if (fmodf(GetTime(), 1.0f) < GetFrameTime() && GetRandomValue(0, 100) < spawnChance * 100)
+        {
+            powerup = new PowerUp({(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())},
+                                  (PowerUpType)GetRandomValue(0, NUM_POWER_UP_TYPES - 1));
+        }
+        return;
+    }
+
+    powerup->Update();
+
+    Vector2 pushVector = {0, 0};
+
+    if (powerup->CheckCollision(player, &pushVector))
+    {
+        if (player->AddPowerup(powerup))
+        {
+            // at this point the powerup is owned by the player
+            powerup = nullptr;
+            return;
+        }
+    }
+
+    if (powerup->IsExpired())
+    {
+        delete powerup;
+        powerup = nullptr;
+    }
+}
+
 void UpdateGame()
 {
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
+        HandlePlayerUpdate();
 
-        // if player is dead and has 0 lives left, game over
-        if (player->IsDead() && player->GetLives() <= 0)
-        {
-            gameState.previousScreen = gameState.currentScreen;
-            gameState.currentScreen = GAME_OVER;
-        }
-        player->Update();
+        HandleAsteroidCollisions();
 
-        Vector2 pushVector = {0, 0};
-        auto bullets = player->GetBullets();
+        HandleEnemyActions();
 
-        // ---------------------------------------------------------------
-        // -------------------------- asteroids --------------------------
-        // ---------------------------------------------------------------
-        for (size_t i = 0; i < asteroids.size(); i++)
-        {
-            asteroids[i]->Update();
-
-            // -----------------------------------------------------------------
-            // -------------------------- asteroids / player -------------------
-            // -----------------------------------------------------------------
-            // check for collisions between player and asteroids
-            if (player->CheckCollision(asteroids[i], &pushVector))
-            {
-                player->Kill(); // try to kill player if not invincible
-                player->Push(asteroids[i], pushVector); // push both player and asteroid away from each other
-            }
-
-            // ---------------------------------------------------------------------------
-            // -------------------------- asteroids / asteroids --------------------------
-            // ---------------------------------------------------------------------------
-            // check for collisions between asteroids
-            for (size_t j = 0; j < asteroids.size(); j++)
-            {
-                if (i < j) // check each pair only once
-                {
-                    if (asteroids[i]->IsFloating() && asteroids[i]->CheckCollision(asteroids[j], &pushVector))
-                    {
-                        // push asteroids away from each other with the SAT push vector
-                        asteroids[i]->Push(asteroids[j], pushVector);
-                    }
-                }
-            }
-
-            // --------------------------------------------------------------------------------
-            // -------------------------- asteroids / enemies ----------------------------------
-            // --------------------------------------------------------------------------------
-            // check for collisions between enemies and asteroids
-            for (size_t j = 0; j < enemies.size(); j++)
-            {
-                if (asteroids[i]->CheckCollision(enemies[j], &pushVector))
-                {
-                    // push asteroids away from each other with the SAT push vector
-                    asteroids[i]->Push(enemies[j], pushVector);
-                }
-            }
-
-            // --------------------------------------------------------------------------------
-            // -------------------------- asteroids / player bullets --------------------------
-            // --------------------------------------------------------------------------------
-            // check for collisions between bullets and asteroids
-            for (size_t b = 0; b < bullets->size(); b++)
-            {
-                if ((*bullets)[b].CheckCollision(asteroids[i], &pushVector))
-                {
-                    // destroy bullet and asteroid
-                    bullets->erase(bullets->begin() + b);
-                    asteroids[i]->Destroy();
-                }
-            }
-            bullets->shrink_to_fit();
-
-            // erase destroyed asteroids
-            if (asteroids[i]->IsDestroyed())
-            {
-                asteroids.erase(asteroids.begin() + i);
-            }
-        }
-        asteroids.shrink_to_fit();
-
-        // ---------------------------------------------------------------
-        // -------------------------- enemies ----------------------------
-        // ---------------------------------------------------------------
-        for (size_t i = 0; i < enemies.size(); i++)
-        {
-            enemies[i]->Update();
-
-            enemies[i]->TryToShootAtPlayer(*player);
-
-            // -----------------------------------------------------------------
-            // -------------------------- enemies / player ---------------------
-            // -----------------------------------------------------------------
-            // check for collisions between player and enemies
-            if (player->CheckCollision(enemies[i], &pushVector))
-            {
-                if (player->Kill())
-                {
-                    player->Push(enemies[i], pushVector); // push both player and enemy away from each other
-                    enemies[i]->Kill();
-                }
-            }
-
-            // ---------------------------------------------------------------------------
-            // -------------------------- enemies / enemies ------------------------------
-            // ---------------------------------------------------------------------------
-            // check for collisions between enemies
-            for (size_t j = 0; j < enemies.size(); j++)
-            {
-                if (i < j) // check each pair only once
-                {
-                    if (enemies[i]->IsAlive() && enemies[i]->CheckCollision(enemies[j], &pushVector))
-                    {
-                        // push enemies away from each other with the SAT push vector
-                        enemies[i]->Push(enemies[j], pushVector);
-                    }
-                }
-            }
-
-            // --------------------------------------------------------------------------------
-            // -------------------------- enemies / player bullets ----------------------------
-            // --------------------------------------------------------------------------------
-            // check for collisions between player bullets and enemies
-            for (size_t b = 0; b < bullets->size(); b++)
-            {
-                if ((*bullets)[b].CheckCollision(enemies[i], &pushVector))
-                {
-                    // destroy bullet and kill enemy
-                    bullets->erase(bullets->begin() + b);
-                    enemies[i]->Kill();
-                }
-            }
-            bullets->shrink_to_fit();
-
-            // --------------------------------------------------------------------------------
-            // -------------------------- enemy bullets / player ------------------------------
-            // --------------------------------------------------------------------------------
-            // check for collisions between enemy bullets and player
-            auto enemyBullets = enemies[i]->GetBullets();
-            for (size_t b = 0; b < enemyBullets->size(); b++)
-            {
-                if ((*enemyBullets)[b].CheckCollision(player, &pushVector))
-                {
-                    // destroy bullet if player can be killed
-                    if (player->Kill())
-                    {
-                        (*enemyBullets).erase((*enemyBullets).begin() + b);
-                    }
-                }
-            }
-            (*enemyBullets).shrink_to_fit();
-
-            // remove dead enemies from the enemies vector
-            if (enemies[i]->IsDead())
-            {
-                // erase dead enemies if they don't have any bullets left
-                if (enemyBullets->size() == 0)
-                {
-                    delete enemies[i];
-                    enemies.erase(enemies.begin() + i);
-                }
-                else // try to clean up bullets
-                {
-                    enemies[i]->CleanBullets();
-                }
-            }
-        }
+        HandlePowerUpUpdate();
     }
     if (gameState.screens[gameState.currentScreen] == nullptr)
     {
@@ -672,6 +671,11 @@ bool GameLoop()
 void ExitGame()
 {
     delete player;
+
+    if (powerup != nullptr)
+    {
+        delete powerup;
+    }
 
     for (size_t i = 0; i < asteroids.size(); i++)
     {

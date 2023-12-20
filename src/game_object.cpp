@@ -12,7 +12,8 @@ GameObject::GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, std
     this->velocity = {0, 0};
     this->angularVelocity = 0;
     this->type = type;
-    this->texture = nullptr;
+    this->texture = ResourceManager::GetInvalidTexture();
+    
 }
 
 GameObject::~GameObject()
@@ -25,16 +26,6 @@ void GameObject::Update() // for overriding
 
 void GameObject::Draw()
 {
-    if (texture == nullptr)
-    {
-        Rectangle dst = {bounds.x, bounds.y, bounds.width / 2, bounds.height / 2};
-        DrawRectanglePro(dst, {dst.width / 2, dst.height / 2}, rotation, WHITE);
-        DrawRectanglePro({dst.x + dst.width / 2, dst.y + dst.height / 2, dst.width, dst.height}, {dst.width / 2, dst.height / 2}, rotation, WHITE);
-        dst.y += dst.height;
-        DrawRectanglePro(dst, {dst.width / 2, dst.height / 2}, rotation, PURPLE);
-        DrawRectanglePro({dst.x + dst.width / 2, dst.y - dst.height / 2, dst.width, dst.height}, {dst.width / 2, dst.height / 2}, rotation, PURPLE);
-        return;
-    }
     Rectangle dst = {origin.x, origin.y, bounds.width, bounds.height};
     DrawTexturePro(*texture, {0, 0, (float)texture->width, (float)texture->height}, dst, {bounds.width / 2, bounds.height / 2}, rotation, WHITE);
 }

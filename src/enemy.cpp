@@ -3,7 +3,7 @@
 
 BasicEnemy::BasicEnemy(Vector2 origin) : Character(origin)
 {
-    this->state = CHARACTER_IDLE;
+    this->state = IDLE;
     this->lookingForPlayer = false;
     this->lastTryToShootTime = 0;
     this->player = nullptr;
@@ -55,15 +55,15 @@ void BasicEnemy::Update()
         const float angleToPlayer = Vector2Angle(forwardDir, Vector2Subtract(player->GetOrigin(), origin)) * RAD2DEG;
         if (angleToPlayer > rotationSpeed)
         {
-            state = CHARACTER_TURNING_RIGHT;
+            state = TURNING_RIGHT;
         }
         else if (angleToPlayer < -rotationSpeed)
         {
-            state = CHARACTER_TURNING_LEFT;
+            state = TURNING_LEFT;
         }
         else
         {
-            state = CHARACTER_IDLE;
+            state = IDLE;
             Rotate(angleToPlayer);
         }
     }
@@ -72,18 +72,18 @@ void BasicEnemy::Update()
     if (lookingForPlayer && IsLookingAt(player->GetOrigin()))
     {
         Shoot();
-        state = CHARACTER_ACCELERATING;
+        state = ACCELERATING;
         accelerateStartTime = GetTime();
         lookingForPlayer = false;
     }
 
     // accelerate randomly
-    if (state == CHARACTER_IDLE)
+    if (state == IDLE)
     {
         const float probOfAccelerating = 0.01f;
         if (GetRandomValue(0, 100) < probOfAccelerating * 100)
         {
-            state = CHARACTER_ACCELERATING;
+            state = ACCELERATING;
             accelerateTime = ((float)GetRandomValue(0, 100) / 100.0f) *
                                  (ENEMY_ACCELERATE_MAX_TIME - ENEMY_ACCELERATE_MIN_TIME) +
                              ENEMY_ACCELERATE_MIN_TIME;
@@ -92,11 +92,11 @@ void BasicEnemy::Update()
     }
 
     // stop accelerating after a while
-    if (state == CHARACTER_EXTRA_ACCELERATING || state == CHARACTER_ACCELERATING)
+    if (state == ACCELERATING)
     {
         if (GetTime() - accelerateStartTime > accelerateTime)
         {
-            state = CHARACTER_IDLE;
+            state = IDLE;
             accelerateTime = INFINITY;
         }
     }
@@ -107,7 +107,7 @@ void BasicEnemy::Update()
         const float probOfTurning = 0.01f;
         if (GetRandomValue(0, 100) < probOfTurning * 100)
         {
-            state = GetRandomValue(0, 1) ? CHARACTER_TURNING_LEFT : CHARACTER_TURNING_RIGHT;
+            state = GetRandomValue(0, 1) ? TURNING_LEFT : TURNING_RIGHT;
             rotateTime = ((float)GetRandomValue(0, 100) / 100.0f) *
                              (ENEMY_ROTATE_MAX_TIME - ENEMY_ROTATE_MIN_TIME) +
                          ENEMY_ROTATE_MIN_TIME;
@@ -116,11 +116,11 @@ void BasicEnemy::Update()
     }
 
     // stop turning after a while
-    if (state == CHARACTER_TURNING_LEFT || state == CHARACTER_TURNING_RIGHT)
+    if (state == TURNING_LEFT || state == TURNING_RIGHT)
     {
         if (GetTime() - rotateStartTime > rotateTime)
         {
-            state = CHARACTER_IDLE;
+            state = IDLE;
             rotateTime = INFINITY;
         }
     }
@@ -148,13 +148,13 @@ Rectangle BasicEnemy::GetFrameRec()
     int frame;
     switch (state)
     {
-    case CHARACTER_ACCELERATING:
+    case ACCELERATING:
         frame = 1;
         break;
 
-    case CHARACTER_EXTRA_ACCELERATING:
-        frame = 2;
-        break;
+    // case EXTRA_ACCELERATING:
+    //     frame = 2;
+    //     break;
 
     default:
         frame = 0; // idle

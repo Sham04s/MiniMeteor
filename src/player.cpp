@@ -1,12 +1,16 @@
 #include "player.hpp"
 #include <math.h>
+#include <string>
 
 Player::Player(Vector2 origin) : Character(origin)
 {
     this->lives = 4;
     this->initialOrigin = {(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2};
-    this->state = CHARACTER_IDLE;
+    this->state = IDLE;
     this->invincible = true; // invincible when spawns
+    this->usingBoost = false;
+    this->boostTime = BOOST_TIME;
+    this->lastBoostUsedTime = 0;
     this->bullets = {};
     this->lastShotTime = 0;
     this->lastDeathTime = 0;
@@ -28,9 +32,36 @@ void Player::Update()
     Character::Update();
 
     // invincibility ends when player atarts moving or shooting
-    if (invincible && (state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING || lastShotTime > 0.0f))
+    if (invincible && (state == ACCELERATING || usingBoost || lastShotTime > 0.0f))
     {
         invincible = false;
+    }
+
+    if (usingBoost)
+    {
+        boostTime = fmaxf(boostTime - GetFrameTime(), 0.0f);
+        if (boostTime <= 0.0f)
+        {
+            usingBoost = false;
+        }
+        lastBoostUsedTime = GetTime();
+    }
+    else if (GetTime() - lastBoostUsedTime > BOOST_RECHARGE_COOLDOWN)
+    {
+        boostTime = fminf(boostTime + GetFrameTime(), BOOST_TIME);
+    }
+
+    if (usingBoost && boostTime > 0.0f)
+    {
+        acceleration = CHARACTER_ACCELERATION * 2;
+        maxSpeed = CHARACTER_MAX_SPEED * 2;
+        pitchAndVolumeScale = 1.0f;
+    }
+    else
+    {
+        acceleration = CHARACTER_ACCELERATION;
+        maxSpeed = CHARACTER_MAX_SPEED;
+        pitchAndVolumeScale = 0.7f;
     }
 
     // handle input if alive
@@ -39,36 +70,140 @@ void Player::Update()
         HandleInput();
     }
 
-    if (state == CHARACTER_DEAD && lives > 0 && GetTime() - lastDeathTime > CHARACTER_RESPAWN_TIME)
+    if (state == DEAD && lives > 0 && GetTime() - lastDeathTime > CHARACTER_RESPAWN_TIME)
     {
         Respawn();
+    }
+
+    UpdatePowerups();
+}
+
+void Player::UpdatePowerups()
+{
+    for (size_t i = 0; i < powerups.size(); i++)
+    {
+        powerups[i]->Update();
+        powerups[i]->UpdateBounds(this->bounds);
+        switch (powerups[i]->GetType())
+        {
+        case TEMPORARY_SHIELD:
+            invincible = powerups[i]->CanBeApplied();
+            break;
+        case TEMPORARY_INFINITE_BOOST:
+            usingBoost = powerups[i]->CanBeApplied();
+            break;
+        default:
+            break;
+        }
+        if (!powerups[i]->CanBeApplied())
+        {
+            delete powerups[i];
+            powerups.erase(powerups.begin() + i);
+        }
+    }
+    powerups.shrink_to_fit();
+}
+
+void Player::Draw()
+{
+    Character::Draw();
+
+    // draw boost bar
+    const float timeSinceBoost = GetTime() - lastBoostUsedTime;
+    if (IsAlive() && timeSinceBoost < BOOST_BAR_HIDE_TIME + BOOST_BAR_FADE_TIME)
+    {
+        Rectangle boostBar = {bounds.x + 10, bounds.y + bounds.height - 10, bounds.width - 20, 5};
+        boostBar.width = boostBar.width * boostTime / BOOST_TIME;
+        float alpha = 1.0f;
+        if (timeSinceBoost >= BOOST_BAR_HIDE_TIME)
+        {
+            alpha -= (timeSinceBoost - BOOST_BAR_HIDE_TIME) / BOOST_BAR_FADE_TIME;
+        }
+        DrawRectangleRounded(boostBar, 0.5f, 0, Fade(GREEN, alpha));
+    }
+
+    if (IsAlive())
+    {   
+        for (size_t i = 0; i < powerups.size(); i++)
+        {
+            powerups[i]->Draw();
+        }
+
+        // draw temporary shield timer
+        PowerUp *temporaryShield = GetPowerup(TEMPORARY_SHIELD);
+        if (temporaryShield != nullptr)
+        {
+            const float timeLeft = temporaryShield->GetEffectiveUseTime();
+            Rectangle shieldTimer = {bounds.x + 10, bounds.y + bounds.height - 20, bounds.width - 20, 5};
+            shieldTimer.width = shieldTimer.width * timeLeft / TEMPORARY_SHIELD_TIME;
+            DrawRectangleRounded(shieldTimer, 0.5f, 0, BLUE);
+        }
     }
 }
 
 void Player::DrawDebug()
 {
     Character::DrawDebug();
-    DrawText(TextFormat("Invincible: %s", invincible ? "true" : "false"), 10, 10, 20, invincible ? GREEN : RED);
-    DrawText(TextFormat("Last shot time: %f", lastShotTime), 10, 30, 20, WHITE);
+
+    std::string powerupsText = "Powerups: [";
+    for (size_t i = 0; i < powerups.size(); i++)
+    {
+        const char *typeText = "";
+        switch (powerups[i]->GetType())
+        {
+        case SHIELD:
+            typeText = "SHIELD";
+            break;
+        case TEMPORARY_SHIELD:
+            typeText = "TEMPORARY_SHIELD";
+            break;
+        case TEMPORARY_INFINITE_BOOST:
+            typeText = "TEMPORARY_INFINITE_BOOST";
+            break;
+        case FIRE_RATE_UPGRADE:
+            typeText = "FIRE_RATE_UPGRADE";
+            break;
+        case LIFE:
+            typeText = "LIFE";
+            break;
+        default:
+            break;
+        }
+
+        if (i > 0)
+        {
+            powerupsText += ", ";
+        }
+        powerupsText += typeText;
+
+        powerups[i]->DrawDebug();
+    }
+    powerupsText += "]";
+
+    DrawText(powerupsText.c_str(), 10, 60, 16, WHITE);
+
+    Rectangle belowBounds = {bounds.x, bounds.y + bounds.height, bounds.width, 20};
+    DrawText(TextFormat("Invincible: %s", invincible ? "true" : "false"), belowBounds.x, belowBounds.y, 16, invincible ? GREEN : RED);
 }
 
 void Player::HandleInput()
 {
     if (IsKeyPressed(KEY_W))
     {
-        this->state = CHARACTER_ACCELERATING;
+        this->state = ACCELERATING;
     }
     if (IsKeyReleased(KEY_W))
     {
-        this->state = CHARACTER_IDLE;
+        this->state = IDLE;
+        usingBoost = false;
     }
-    if (IsKeyDown(KEY_LEFT_SHIFT) && this->state == CHARACTER_ACCELERATING)
+    if (IsKeyDown(KEY_LEFT_SHIFT) && this->state == ACCELERATING)
     {
-        this->state = CHARACTER_EXTRA_ACCELERATING;
+        usingBoost = true;
     }
-    if (IsKeyUp(KEY_LEFT_SHIFT) && this->state == CHARACTER_EXTRA_ACCELERATING)
+    if (IsKeyUp(KEY_LEFT_SHIFT) && usingBoost)
     {
-        this->state = CHARACTER_ACCELERATING;
+        usingBoost = false;
     }
 
     if (IsKeyDown(KEY_A))
@@ -85,14 +220,60 @@ void Player::HandleInput()
     }
 }
 
-void Player::AddPowerup(/*PowerUp powerup*/)
+bool Player::AddPowerup(PowerUp *powerup)
 {
-    // TODO: implement
+    if (powerup->IsPickedUp() || powerup->IsExpired())
+    {
+        return false;
+    }
+    if (powerup->GetType() == LIFE)
+    {
+        powerup->PickUp();
+        lives++;
+        delete powerup;
+        return true;
+    }
+    if (powerup->GetType() == TEMPORARY_SHIELD)
+    {
+        powerup->PickUp();
+        PowerUp *temporaryShield = GetPowerup(TEMPORARY_SHIELD);
+        if (temporaryShield != nullptr)
+        {
+            temporaryShield->ResetUseTime();
+            delete powerup;
+        }
+        else
+        {
+            powerup->UpdateBounds(this->bounds);
+            invincible = true;
+            powerups.push_back(powerup);
+        }
+        return true;
+    }
+
+    return false;
+}
+
+bool Player::HasPowerup(PowerUpType type)
+{
+    for (size_t i = 0; i < powerups.size(); i++)
+    {
+        if (powerups[i]->GetType() == type)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Player::CanBeKilled()
 {
     return !invincible;
+}
+
+bool Player::CanBeHit()
+{
+    return !invincible || HasPowerup(SHIELD) || HasPowerup(TEMPORARY_SHIELD);
 }
 
 bool Player::Kill()
@@ -112,30 +293,27 @@ void Player::Respawn()
     this->invincible = true; // invincible when spawns
     this->forwardDir = {0, -1};
     this->velocity = {0, 0};
-    this->state = CHARACTER_IDLE;
-    this->powerups = {};
+    this->state = IDLE;
     this->lastDeathTime = 0;
     this->lastShotTime = 0;
+    this->lastBoostUsedTime = 0;
+    this->usingBoost = false;
+    this->boostTime = BOOST_TIME;
     // leave bullets live
     SetDefaultHitBox();
+
+    for (size_t i = 0; i < powerups.size(); i++) // TODO: maybe don't delete powerups when respawning
+    {
+        delete powerups[i];
+    }
+    powerups.clear();
 }
 
 void Player::Reset()
 {
+    Respawn();
     this->lives = 4;
-    this->origin = this->initialOrigin;
-    this->bounds = {origin.x - CHARACTER_SIZE / 2, origin.y - CHARACTER_SIZE / 2, CHARACTER_SIZE, CHARACTER_SIZE};
-    this->rotation = 0;
-    this->invincible = true; // invincible when spawns
-    this->forwardDir = {0, -1};
-    this->velocity = {0, 0};
-    this->state = CHARACTER_IDLE;
-    this->powerups = {};
     this->bullets.clear();
-    this->lastShotTime = 0;
-    this->lastDeathTime = 0;
-    // leave bullets live
-    SetDefaultHitBox();
 }
 
 Rectangle Player::GetFrameRec()
@@ -143,15 +321,11 @@ Rectangle Player::GetFrameRec()
     int frame = 0;
     switch (state)
     {
-    case CHARACTER_ACCELERATING:
-        frame = 1;
+    case ACCELERATING:
+        frame = (usingBoost && boostTime > 0) ? 2 : 1;
         break;
 
-    case CHARACTER_EXTRA_ACCELERATING:
-        frame = 2;
-        break;
-
-    case CHARACTER_DYING:
+    case DYING:
         // frame = (int)((GetTime() - lastDeathTime) / CHARACTER_DYING_TIME * 4) + 3; // for sprites
         frame = 0; // idle
         break;
@@ -172,4 +346,16 @@ void Player::SetDefaultHitBox()
     {
         this->hitbox[i] = Vector2Add(Vector2Scale(this->hitbox[i], CHARACTER_SIZE / 2), GetOrigin());
     }
+}
+
+PowerUp *Player::GetPowerup(PowerUpType type)
+{
+    for (size_t i = 0; i < powerups.size(); i++)
+    {
+        if (powerups[i]->GetType() == type)
+        {
+            return powerups[i];
+        }
+    }
+    return nullptr;
 }

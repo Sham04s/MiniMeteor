@@ -1,20 +1,26 @@
 #include "resource_manager.hpp"
+#include <map>
 
 using namespace std;
 
-const char *spriteTexturesPaths[NUM_SPRITE_TEXTURES] = {
-    "resources/characters/player/player.png",
-    "resources/environment/asteroid_detailed_large.png",
-    "resources/environment/asteroid_detailed_small.png",
-    "resources/environment/asteroid_large.png",
-    "resources/environment/asteroid_small.png",
-    "resources/environment/asteroid_squared_detailed_large.png",
-    "resources/environment/asteroid_squared_detailed_small.png",
-    "resources/environment/asteroid_squared_large.png",
-    "resources/environment/asteroid_squared_small.png",
-    "resources/characters/player/bullet.png",
-    "resources/characters/enemies/bullet.png",
-    "resources/characters/enemies/basic_enemy.png",
+const std::map<SpriteTextureID, const char *> spriteTexturesPathsMap = {
+    {PLAYER_SPRITES, "resources/characters/player/player.png"},
+    {ASTEROID_DETAILED_LARGE_SPRITE, "resources/environment/asteroid_detailed_large.png"},
+    {ASTEROID_DETAILED_SMALL_SPRITE, "resources/environment/asteroid_detailed_small.png"},
+    {ASTEROID_LARGE_SPRITE, "resources/environment/asteroid_large.png"},
+    {ASTEROID_SMALL_SPRITE, "resources/environment/asteroid_small.png"},
+    {ASTEROID_SQUARED_DETAILED_LARGE_SPRITE, "resources/environment/asteroid_squared_detailed_large.png"},
+    {ASTEROID_SQUARED_DETAILED_SMALL_SPRITE, "resources/environment/asteroid_squared_detailed_small.png"},
+    {ASTEROID_SQUARED_LARGE_SPRITE, "resources/environment/asteroid_squared_large.png"},
+    {ASTEROID_SQUARED_SMALL_SPRITE, "resources/environment/asteroid_squared_small.png"},
+    {BULLET_SPRITE, "resources/characters/player/bullet.png"},
+    {ENEMY_BULLET_SPRITE, "resources/characters/enemies/bullet.png"},
+    {ENEMY_BASIC_SPRITES, "resources/characters/enemies/basic_enemy.png"},
+    {POWERUP_LIFE_ITEM_SPRITE, "resources/powerups/life_item.png"},
+    {POWERUP_SHIELD_SPRITE, "resources/powerups/shield.png"},
+    {POWERUP_SHIELD_ITEM_SPRITE, "resources/powerups/shield_item.png"},
+    {POWERUP_TEMPORARY_SHIELD_SPRITE, "resources/powerups/temporary_shield.png"},
+    {POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE, "resources/powerups/temporary_shield_item.png"},
 };
 
 const char *uiTexturesPaths[NUM_UI_TEXTURES] = {
@@ -39,7 +45,7 @@ std::vector<Sound> ResourceManager::sounds;
 std::vector<Music> ResourceManager::music;
 Font ResourceManager::font;
 Texture2D ResourceManager::defaultTexture;
-Texture2D ResourceManager::transparentTexture;
+Texture2D ResourceManager::invalidTexture;
 
 bool ResourceManager::LoadResources()
 {
@@ -48,22 +54,29 @@ bool ResourceManager::LoadResources()
         return false;
     }
 
+    // create invalid texture from image
+    Image invalidTextureImage = GenImageColor(64, 64, BLACK);
+    ImageDrawRectangle(&invalidTextureImage, 0, 0, 32, 32, PURPLE);
+    ImageDrawRectangle(&invalidTextureImage, 32, 32, 32, 32, PURPLE);
+    invalidTexture = LoadTextureFromImage(invalidTextureImage);
+    UnloadImage(invalidTextureImage);
+
     for (size_t i = 0; i < NUM_SPRITE_TEXTURES; i++)
     {
-        if (!FileExists(spriteTexturesPaths[i]))
+        if (!FileExists(spriteTexturesPathsMap.at((SpriteTextureID)i)))
         {
-            spriteTextures.push_back(defaultTexture);
+            spriteTextures.push_back(invalidTexture);
         }
         else
         {
-            spriteTextures.push_back(LoadTexture(spriteTexturesPaths[i]));
+            spriteTextures.push_back(LoadTexture(spriteTexturesPathsMap.at((SpriteTextureID)i)));
         }
     }
     for (size_t i = 0; i < NUM_UI_TEXTURES; i++)
     {
         if (!FileExists(uiTexturesPaths[i]))
         {
-            uiTextures.push_back(defaultTexture);
+            uiTextures.push_back(invalidTexture);
         }
         else
         {
@@ -85,12 +98,6 @@ bool ResourceManager::LoadResources()
     font = GetFontDefault();
 
     return true;
-}
-
-bool ResourceManager::ReloadResouces()
-{
-    UnloadResources();
-    return LoadResources();
 }
 
 void ResourceManager::UnloadResources()
@@ -117,7 +124,7 @@ void ResourceManager::UnloadResources()
     }
     music.clear();
     UnloadTexture(defaultTexture);
-    UnloadTexture(transparentTexture);
+    UnloadTexture(invalidTexture);
 }
 
 Texture2D *ResourceManager::GetSpriteTexture(SpriteTextureID id)
@@ -200,7 +207,7 @@ Texture *ResourceManager::GetDefaultTexture()
     return &defaultTexture;
 }
 
-Texture *ResourceManager::GetTransparentTexture()
+Texture *ResourceManager::GetInvalidTexture()
 {
-    return &transparentTexture;
+    return &invalidTexture;
 }

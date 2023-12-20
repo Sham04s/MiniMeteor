@@ -4,7 +4,7 @@ Character::Character(Vector2 origin)
     : GameObject({origin.x - CHARACTER_SIZE / 2, origin.y - CHARACTER_SIZE / 2, CHARACTER_SIZE, CHARACTER_SIZE}, 0, {0, -1}, {}, NONE)
 {
     this->lives = CHARACTER_MAX_LIVES;
-    this->state = CHARACTER_IDLE;
+    this->state = IDLE;
     this->bullets = {};
     this->lastShotTime = 0;
     this->lastDeathTime = 0;
@@ -15,6 +15,7 @@ Character::Character(Vector2 origin)
     this->texture = ResourceManager::GetDefaultTexture();
     this->timeAccelerating = 0;
     this->exploded = false;
+    this->pitchAndVolumeScale = 0.7f;
 
     this->shootSound = {0};
     this->thrustSound = {0};
@@ -61,18 +62,18 @@ void Character::Update()
     }
 
     // if dead, do nothing else
-    if (state == CHARACTER_DEAD)
+    if (state == DEAD)
     {
         return;
     }
 
     // if dying, wait for dying animation to finish
-    if (state == CHARACTER_DYING && GetTime() - lastDeathTime > CHARACTER_DYING_TIME)
+    if (state == DYING && GetTime() - lastDeathTime > CHARACTER_DYING_TIME)
     {
-        state = CHARACTER_DEAD;
+        state = DEAD;
     }
 
-    if (state == CHARACTER_ACCELERATING || state == CHARACTER_EXTRA_ACCELERATING)
+    if (state == ACCELERATING)
     {
         if (!IsSoundPlaying(thrustSound))
         {
@@ -83,7 +84,7 @@ void Character::Update()
 
         // decrease pitch proportional to time accelerating
         const float pitch = fmaxf(THRUST_MIN_PITCH, 1.0f - timeAccelerating / THRUST_PITCH_DECAYING_TIME);
-        SetSoundPitch(thrustSound, Clamp(pitch, 0, 1) * ((state == CHARACTER_EXTRA_ACCELERATING) ? 1.0f : 0.7f)); // TODO: remove clamp when implementing custom timer
+        SetSoundPitch(thrustSound, Clamp(pitch, 0, 1) * pitchAndVolumeScale); // TODO: remove clamp when implementing custom timer
 
         // move sound from right to left proportional to player position in x axis
         const float pan = (THRUST_MAX_PAN - TRHUST_MIN_PAN) * (1.0f - origin.x / GetScreenWidth()) + TRHUST_MIN_PAN;
@@ -91,7 +92,7 @@ void Character::Update()
 
         // decrease volume proportional to player position in y axis
         const float volume = 1.0f - 2.0f * (1.0f - THRUST_MIN_VOLUME) * fabsf(0.5f - origin.y / GetScreenHeight());
-        SetSoundVolume(thrustSound, Clamp(volume, 0, 1) * ((state == CHARACTER_EXTRA_ACCELERATING) ? 1.0f : 0.7f));
+        SetSoundVolume(thrustSound, Clamp(volume, 0, 1) * pitchAndVolumeScale);
     }
     else
     {
@@ -113,29 +114,24 @@ void Character::Update()
         }
     }
 
-    if (state == CHARACTER_ACCELERATING)
+    if (state == ACCELERATING)
     {
         Accelerate(acceleration);
     }
 
-    if (state == CHARACTER_EXTRA_ACCELERATING)
-    {
-        Accelerate(acceleration * 2);
-    }
-
     // decelerate character if above max speed
-    if (Vector2Length(velocity) > maxSpeed * (state == CHARACTER_EXTRA_ACCELERATING ? 2 : 1))
+    if (Vector2Length(velocity) > maxSpeed)
     {
         // decelerate
-        velocity = Vector2Subtract(velocity, Vector2Scale(Vector2Normalize(velocity), deceleration * 3 * GetFrameTime()));
+        velocity = Vector2Subtract(velocity, Vector2Scale(Vector2Normalize(velocity), deceleration * GetFrameTime()));
     }
 
     // rotate character
-    if (state == CHARACTER_TURNING_LEFT)
+    if (state == TURNING_LEFT)
     {
         Rotate(-turnSpeed * GetFrameTime());
     }
-    if (state == CHARACTER_TURNING_RIGHT)
+    if (state == TURNING_RIGHT)
     {
         Rotate(turnSpeed * GetFrameTime());
     }
@@ -172,14 +168,14 @@ void Character::Draw()
 
     // then draw player
 
-    if (state == CHARACTER_DEAD)
+    if (state == DEAD)
     {
         return;
     }
 
     Rectangle srcRect = GetFrameRec();
 
-    if (state == CHARACTER_DYING)
+    if (state == DYING)
     {
         const float deathProgress = (GetTime() - lastDeathTime) / CHARACTER_DYING_TIME;
         const float scale = 1 + deathProgress;
@@ -243,15 +239,25 @@ void Character::CleanBullets()
     bullets.shrink_to_fit();
 }
 
+bool Character::CanBeKilled()
+{
+    return state != DYING && state != DEAD;
+}
+
+bool Character::CanBeHit()
+{
+    return state != DYING && state != DEAD;
+}
+
 // returns true if character is killed, false otherwise
 bool Character::Kill()
 {
-    if (state == CHARACTER_DYING || state == CHARACTER_DEAD || this->lives <= 0)
+    if (state == DYING || state == DEAD || this->lives <= 0)
     {
         return false;
     }
     this->lives--;
-    this->state = CHARACTER_DYING;
+    this->state = DYING;
     this->lastDeathTime = GetTime();
     if (this->lives <= 0)
     {
@@ -267,7 +273,7 @@ void Character::Respawn()
     this->rotation = 0;
     this->forwardDir = {0, -1};
     this->velocity = {0, 0};
-    this->state = CHARACTER_IDLE;
+    this->state = IDLE;
     // leave bullets live
     SetDefaultHitBox();
 }
