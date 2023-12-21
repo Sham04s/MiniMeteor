@@ -29,11 +29,14 @@ protected:
     float rotation; // TODO: maybe this is not needed
     Vector2 forwardDir;
     std::vector<Vector2> hitbox;
+    Vector2 previousVelocity;
     Vector2 velocity;
+    float previousAngularVelocity;
     float angularVelocity; // in degrees per second
     GameObjectType type;
     Texture2D *texture;
 
+    
 public:
     GameObject() : GameObject({0, 0}, 0, {0, 0}, {}, NONE) {};
     GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, std::vector<Vector2> hitbox, GameObjectType type);
@@ -42,6 +45,7 @@ public:
     virtual void Update();
     virtual void Draw();
     virtual void DrawDebug();
+    virtual void HandleCollision(GameObject *other, Vector2 *pushVector);
 
     virtual void PauseSounds();
     virtual void ResumeSounds();

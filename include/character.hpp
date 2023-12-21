@@ -58,6 +58,7 @@ public:
     virtual void Update();
     virtual void Draw();
     virtual void DrawDebug();
+    virtual void HandleCollision(GameObject *other, Vector2 *pushVector);
     virtual void Shoot();
     virtual void CleanBullets();
     virtual bool CanBeKilled();

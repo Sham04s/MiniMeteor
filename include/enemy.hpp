@@ -36,18 +36,19 @@ protected:
     void SetDefaultHitBox();
     
 public:
-    BasicEnemy(Vector2 origin);
+    BasicEnemy(Vector2 origin, Player *player);
     ~BasicEnemy();    
 
     void Update();
     void DrawDebug();
+    void HandleCollision(GameObject *other, Vector2 *pushVector);
     Rectangle GetFrameRec();
 
-    void ShootAtPlayer(Player &player);
-    void TryToShootAtPlayer(Player &player);
+    void ShootAtPlayer();
+    void TryToShootAtPlayer();
 
     bool IsLookingForPlayer() { return lookingForPlayer; }
-    bool IsLookingAtPlayer(Player &player);
+    bool IsLookingAtPlayer();
     bool IsLookingAt(Vector2 position);
 };
 #endif // __ENEMY_H__

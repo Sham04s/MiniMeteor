@@ -9,11 +9,12 @@ GameObject::GameObject(Rectangle bounds, float rotation, Vector2 forwardDir, std
     this->rotation = rotation;
     this->forwardDir = forwardDir;
     this->hitbox = hitbox;
+    this->previousVelocity = {0, 0};
     this->velocity = {0, 0};
+    this->previousAngularVelocity = 0;
     this->angularVelocity = 0;
     this->type = type;
     this->texture = ResourceManager::GetInvalidTexture();
-    
 }
 
 GameObject::~GameObject()
@@ -22,6 +23,10 @@ GameObject::~GameObject()
 
 void GameObject::Update() // for overriding
 {
+    this->previousVelocity = this->velocity;
+    this->previousAngularVelocity = this->angularVelocity;
+    Translate(Vector2Scale(velocity, GetFrameTime()));
+    Rotate(angularVelocity * GetFrameTime());
 }
 
 void GameObject::Draw()
@@ -43,6 +48,12 @@ void GameObject::DrawDebug()
     Vector2 forwardEndPoint = {origin.x + forwardDir.x * 50, origin.y + forwardDir.y * 50};
     DrawLineEx(origin, forwardEndPoint, 2, BLUE);
     DrawLineEx(origin, Vector2Add(origin, Vector2Scale(velocity, 0.25f)), 2, GREEN);
+}
+
+void GameObject::HandleCollision(GameObject *other, Vector2 *pushVector)
+{
+    // base class just pushes the objects apart
+    Push(other, *pushVector);
 }
 
 void GameObject::PauseSounds()
@@ -117,17 +128,16 @@ float getOverlap(Vector2 a, Vector2 b, float *overlap)
 
 bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
 {
+    *pushVector = {0};
     // if the hitbox is a single point then just check if the point is inside the other hitbox
     if (hitbox.size() == 1)
     {
-        pushVector = {0};
         return CheckCollisionPointPoly(hitbox[0], other->GetHitbox().data(), other->GetHitbox().size());
     }
 
     // same as above but for the other object
     if (other->GetHitbox().size() == 1)
     {
-        pushVector = {0};
         return CheckCollisionPointPoly(other->GetHitbox()[0], hitbox.data(), hitbox.size());
     }
 
@@ -198,9 +208,9 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
     // minimum translation vector
     Vector2 mtv = Vector2Scale(smallest, overlap);
 
-    Vector2 c1c2 = Vector2Subtract(this->origin, other->GetOrigin());
+    Vector2 c2c1 = Vector2Subtract(other->GetOrigin(), this->origin);
     // check if the normal is in the direction of the center to center vector
-    if (Vector2DotProduct(c1c2, mtv) < 0)
+    if (Vector2DotProduct(c2c1, mtv) < 0)
     {
         // if its in the opposite direction then flip it
         mtv = Vector2Negate(mtv);
@@ -211,17 +221,28 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
 
 void GameObject::Push(GameObject *other, Vector2 pushVector)
 {
-    float e = 0.85f;
+    static const float e = 0.85f;
 
-    Vector2 thisVelocity = this->velocity;
-    this->velocity = Vector2Scale(Vector2Normalize(pushVector), e * Vector2Length(other->GetVelocity()));
-    other->SetVelocity(Vector2Scale(Vector2Normalize(pushVector), -e * Vector2Length(thisVelocity)));
+    this->previousVelocity = this->velocity;
+    if (Vector2Length(this->previousVelocity) < 0.1f && Vector2Length(other->previousVelocity) < 0.1f)
+    {
+        other->velocity = Vector2Scale(Vector2Normalize(pushVector), e * 100.0f);
+    }
+    else if (Vector2Length(this->previousVelocity) < 0.1f)
+    {
+        other->velocity = Vector2Scale(Vector2Normalize(pushVector), e * Vector2Length(other->previousVelocity));
+    }
+    else
+    {
+        other->velocity = Vector2Scale(Vector2Normalize(pushVector), e * Vector2Length(this->previousVelocity));
+    }
+    // other->SetVelocity(Vector2Scale(Vector2Normalize(pushVector), -e * Vector2Length(thisVelocity)));
 
-    float thisAngularVelocity = this->angularVelocity;
-    this->angularVelocity = e * other->GetAngularVelocity();
-    other->SetAngularVelocity(-e * thisAngularVelocity);
+    other->previousAngularVelocity = other->angularVelocity;
+    other->angularVelocity = e * this->previousAngularVelocity;
+    // other->SetAngularVelocity(-e * thisAngularVelocity);
 
-    Translate(Vector2Scale(this->velocity, GetFrameTime()));
+    // Translate(Vector2Scale(this->velocity, GetFrameTime()));
     other->Translate(Vector2Scale(other->GetVelocity(), GetFrameTime()));
 }
 

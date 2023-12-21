@@ -37,6 +37,7 @@ public:
     void Draw();
     void DrawDebug();
     void Destroy();
+    void HandleCollision(GameObject *other, Vector2 *pushVector);
 
     void SetVelocity(Vector2 velocity) { this->velocity = velocity; }
     void SetRotation(float rotation) { this->rotation = rotation; }

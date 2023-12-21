@@ -1,4 +1,6 @@
 #include "asteroid.hpp"
+#include "bullet.hpp"
+#include "player.hpp"
 
 #include "raymath.h"
 #include <math.h>
@@ -65,8 +67,7 @@ void Asteroid::Update()
         return;
     }
 
-    Rotate(angularVelocity * GetFrameTime());
-    Translate(Vector2Scale(velocity, GetFrameTime()));
+    GameObject::Update();
 
     // wrap around screen
     if (origin.x > GetScreenWidth() + size / 2)
@@ -90,7 +91,6 @@ void Asteroid::Update()
     {
         PlaySound(explosionSound);
     }
-
 }
 
 void Asteroid::Draw()
@@ -127,5 +127,31 @@ void Asteroid::Destroy()
         this->state = EXPLODING;
         this->hitbox = {};
         this->lastExplosionTime = GetTime(); // TODO: consider implementing custom timer to be able to pause the game
+    }
+}
+
+void Asteroid::HandleCollision(GameObject *other, Vector2 *pushVector)
+{
+    // destroy if hit by player bullet
+    if (other->GetType() == BULLET)
+    {
+        if (((Bullet *)other)->IsPlayerBullet())
+        {
+            Destroy();
+        }
+        return;
+    }
+    // only push if player can be hit
+    if (other->GetType() == PLAYER)
+    {
+        Player *player = (Player *)other;
+        if (player->CanBeHit())
+        {
+            Push(other, *pushVector);
+        }
+    }
+    else // push if other is not a bullet or player
+    {
+        Push(other, *pushVector);
     }
 }

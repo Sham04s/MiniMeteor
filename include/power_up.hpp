@@ -25,7 +25,7 @@ enum PowerUpType
 class PowerUp : public GameObject
 {
 private:
-    PowerUpType type;
+    PowerUpType powerupType;
     bool pickedUp;
     float timeToLive;
     float effectiveUseTime;
@@ -38,16 +38,17 @@ public:
     virtual void Update();
     virtual void Draw();
     virtual void DrawDebug();
+    virtual void HandleCollision(GameObject *other, Vector2 *pushVector);
 
     void PickUp();
     void UpdateBounds(Rectangle playerBounds);
     void ResetUseTime();
 
-    PowerUpType GetType() { return type; }
+    PowerUpType GetType() { return powerupType; }
     float GetTimeToLive() { return timeToLive; }
     float GetEffectiveUseTime() { return effectiveUseTime; }
     bool IsPickedUp() { return pickedUp; }
-    bool IsExpired() { return timeToLive <= 0.0f; }
+    bool IsExpired() { return timeToLive <= 0.0f && !pickedUp; }
     bool CanBeApplied() { return effectiveUseTime > 0.0f; }
 };
 

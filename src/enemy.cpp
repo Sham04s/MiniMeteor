@@ -1,12 +1,12 @@
 #include "enemy.hpp"
 #include <math.h>
 
-BasicEnemy::BasicEnemy(Vector2 origin) : Character(origin)
+BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
 {
     this->state = IDLE;
     this->lookingForPlayer = false;
     this->lastTryToShootTime = 0;
-    this->player = nullptr;
+    this->player = player;
     this->type = BASIC_ENEMY;
     this->accelerateStartTime = 0;
     this->accelerateTime = INFINITY;
@@ -32,6 +32,7 @@ BasicEnemy::BasicEnemy(Vector2 origin) : Character(origin)
 
 BasicEnemy::~BasicEnemy()
 {
+    Kill();
 }
 
 void BasicEnemy::Update()
@@ -43,6 +44,8 @@ void BasicEnemy::Update()
     {
         return;
     }
+
+    TryToShootAtPlayer();
 
     // if enemy is looking for player, rotate towards player
     if (this->IsAlive() && lookingForPlayer)
@@ -143,6 +146,26 @@ void BasicEnemy::DrawDebug()
     }
 }
 
+void BasicEnemy::HandleCollision(GameObject *other, Vector2 *pushVector)
+{
+    if (other->GetType() == BULLET)
+    {
+        if (((Bullet *)other)->IsPlayerBullet())
+        {
+            Kill();
+        }
+        return;
+    }
+    Push(other, *pushVector);
+    if (other->GetType() == PLAYER)
+    {
+        if (((Player *)other)->CanBeKilled())
+        {
+            this->Kill();
+        }
+    }
+}
+
 Rectangle BasicEnemy::GetFrameRec()
 {
     int frame;
@@ -152,9 +175,9 @@ Rectangle BasicEnemy::GetFrameRec()
         frame = 1;
         break;
 
-    // case EXTRA_ACCELERATING:
-    //     frame = 2;
-    //     break;
+        // case EXTRA_ACCELERATING:
+        //     frame = 2;
+        //     break;
 
     default:
         frame = 0; // idle
@@ -164,19 +187,18 @@ Rectangle BasicEnemy::GetFrameRec()
     return ResourceManager::GetSpriteSrcRect(ENEMY_BASIC_SPRITES, frame);
 }
 
-void BasicEnemy::ShootAtPlayer(Player &player)
+void BasicEnemy::ShootAtPlayer()
 {
     if (lookingForPlayer)
     {
         return;
     }
     lookingForPlayer = true;
-    this->player = &player;
 }
 
-void BasicEnemy::TryToShootAtPlayer(Player &player)
+void BasicEnemy::TryToShootAtPlayer()
 {
-    if (!this->IsAlive() || player.IsDead() || lookingForPlayer || GetTime() - lastTryToShootTime < ENEMY_TRY_TO_SHOOT_COOLDOWN)
+    if (!this->IsAlive() || player->IsDead() || lookingForPlayer || GetTime() - lastTryToShootTime < ENEMY_TRY_TO_SHOOT_COOLDOWN)
     {
         return;
     }
@@ -185,18 +207,18 @@ void BasicEnemy::TryToShootAtPlayer(Player &player)
     const double probOfShooting = 0.5f;
     if (GetRandomValue(0, 100) < probOfShooting * 100)
     {
-        ShootAtPlayer(player);
+        ShootAtPlayer();
     }
     lastTryToShootTime = GetTime();
 }
 
-bool BasicEnemy::IsLookingAtPlayer(Player &player)
+bool BasicEnemy::IsLookingAtPlayer()
 {
     if (!lookingForPlayer)
     {
         return false;
     }
-    return IsLookingAt(player.GetOrigin());
+    return IsLookingAt(player->GetOrigin());
 }
 
 bool BasicEnemy::IsLookingAt(Vector2 position)

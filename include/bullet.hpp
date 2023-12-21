@@ -10,6 +10,7 @@ class Bullet : public GameObject
 {
 private:
     bool isPlayerBullet;
+    bool isAlive;
 
 public:
     Bullet(Vector2 origin, Vector2 forwardDir, bool isPlayerBullet);
@@ -18,7 +19,11 @@ public:
     void Update();
     void Draw();
     void DrawDebug();
+    void HandleCollision(GameObject *other, Vector2 *pushVector);
+    void Destroy() { isAlive = false; }
 
-    bool isOutOfBounds();
+    bool IsOutOfBounds();
+    bool IsPlayerBullet() { return isPlayerBullet; }
+    bool IsAlive() { return isAlive; }
 };
 #endif // __BULLET_H__

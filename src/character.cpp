@@ -67,6 +67,8 @@ void Character::Update()
         return;
     }
 
+    
+
     // if dying, wait for dying animation to finish
     if (state == DYING && GetTime() - lastDeathTime > CHARACTER_DYING_TIME)
     {
@@ -129,15 +131,18 @@ void Character::Update()
     // rotate character
     if (state == TURNING_LEFT)
     {
-        Rotate(-turnSpeed * GetFrameTime());
+        angularVelocity = -turnSpeed;
     }
-    if (state == TURNING_RIGHT)
+    else if (state == TURNING_RIGHT)
     {
-        Rotate(turnSpeed * GetFrameTime());
+        angularVelocity = turnSpeed;
+    }
+    else {
+        angularVelocity = 0;
     }
 
     // move character
-    Translate(Vector2Scale(velocity, GetFrameTime()));
+    GameObject::Update();
 
     // wrap around screen
     if (origin.x > GetScreenWidth() + CHARACTER_SIZE / 2)
@@ -202,6 +207,11 @@ void Character::DrawDebug()
     }
 }
 
+void Character::HandleCollision(GameObject *other, Vector2 *pushVector)
+{
+    GameObject::HandleCollision(other, pushVector);
+}
+
 void Character::Accelerate(float acceleration)
 {
     this->velocity = Vector2Add(this->velocity, Vector2Scale(this->forwardDir, acceleration * GetFrameTime()));
@@ -222,16 +232,13 @@ void Character::Shoot()
                              this->forwardDir, this->type == PLAYER));
     lastShotTime = GetTime();
     PlaySound(shootSound);
-
-    // when shooting, try to clear bullets that are out of bounds
-    CleanBullets();
 }
 
 void Character::CleanBullets()
 {
     for (size_t i = 0; i < bullets.size(); i++)
     {
-        if (bullets[i].isOutOfBounds())
+        if (!bullets[i].IsAlive())
         {
             bullets.erase(bullets.begin() + i);
         }
@@ -259,10 +266,7 @@ bool Character::Kill()
     this->lives--;
     this->state = DYING;
     this->lastDeathTime = GetTime();
-    if (this->lives <= 0)
-    {
-        this->hitbox = {};
-    }
+    this->hitbox.clear();
     return true;
 }
 void Character::Respawn()

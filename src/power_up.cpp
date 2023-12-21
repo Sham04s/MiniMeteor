@@ -18,8 +18,8 @@ PowerUp::PowerUp(Vector2 origin, PowerUpType type) : GameObject()
     this->origin = origin;
     this->bounds = {origin.x - POWER_UP_SIZE / 2, origin.y - POWER_UP_SIZE / 2, POWER_UP_SIZE, POWER_UP_SIZE};
     this->hitbox = {{bounds.x, bounds.y}, {bounds.x + bounds.width, bounds.y}, {bounds.x + bounds.width, bounds.y + bounds.height}, {bounds.x, bounds.y + bounds.height}};
-    this->type = type;
-    GameObject::type = POWER_UP;
+    this->powerupType = type;
+    this->type = POWER_UP;
     this->pickedUp = false;
     this->timeToLive = POWER_UP_TIME_TO_LIVE;
     this->effectiveUseTime = 0.0f;
@@ -68,7 +68,7 @@ void PowerUp::DrawDebug()
 {
     GameObject::DrawDebug();
     const char *typeText = "";
-    switch (type)
+    switch (powerupType)
     {
     case SHIELD:
         typeText = "SHIELD";
@@ -91,12 +91,19 @@ void PowerUp::DrawDebug()
     DrawText(typeText, bounds.x, bounds.y + bounds.height + 5, 16, WHITE);
 }
 
+void PowerUp::HandleCollision(GameObject *other, Vector2 *pushVector)
+{
+    // do nothing
+    (void)other;
+    *pushVector = {0};
+}
+
 void PowerUp::PickUp()
 {
     pickedUp = true;
     timeToLive = 0.0f;
     hitbox.clear();
-    switch (type)
+    switch (powerupType)
     {
     case SHIELD:
         this->texture = ResourceManager::GetSpriteTexture(POWERUP_SHIELD_SPRITE);
@@ -125,7 +132,7 @@ void PowerUp::UpdateBounds(Rectangle playerBounds)
 
 void PowerUp::ResetUseTime()
 {
-    switch (type)
+    switch (powerupType)
     {
     case SHIELD:
         break;

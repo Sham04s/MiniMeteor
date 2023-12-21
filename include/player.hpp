@@ -37,6 +37,7 @@ public:
     void Draw();
     void DrawDebug();
     void HandleInput();
+    void HandleCollision(GameObject *other, Vector2 *pushVector);
 
     bool AddPowerup(PowerUp *powerup);
     bool HasPowerup(PowerUpType type);

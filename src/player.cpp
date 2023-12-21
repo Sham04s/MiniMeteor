@@ -1,4 +1,5 @@
 #include "player.hpp"
+#include "enemy.hpp"
 #include <math.h>
 #include <string>
 
@@ -123,7 +124,7 @@ void Player::Draw()
     }
 
     if (IsAlive())
-    {   
+    {
         for (size_t i = 0; i < powerups.size(); i++)
         {
             powerups[i]->Draw();
@@ -208,15 +209,53 @@ void Player::HandleInput()
 
     if (IsKeyDown(KEY_A))
     {
-        Rotate(-turnSpeed * GetFrameTime());
+        this->angularVelocity = -turnSpeed;
     }
-    if (IsKeyDown(KEY_D))
+    else if (IsKeyDown(KEY_D))
     {
-        Rotate(turnSpeed * GetFrameTime());
+        this->angularVelocity = turnSpeed;
     }
+    else {
+        this->angularVelocity = 0;
+    }
+    Rotate(angularVelocity * GetFrameTime());
     if (IsKeyPressed(KEY_SPACE))
     {
         Shoot();
+    }
+}
+
+void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
+{
+    if (other->GetType() == BASIC_ENEMY || other->GetType() == ASTEROID)
+    {
+        if (CanBeKilled())
+        {
+            Kill();
+        }
+        Push(other, *pushVector);
+        return;
+    }
+    if (other->GetType() == ENEMY_BULLET)
+    {
+        if (CanBeHit())
+        {
+            ((Bullet *)other)->Destroy();
+        }
+        if (CanBeKilled())
+        {
+            Kill();
+        }
+        return;
+    }
+    if (other->GetType() == POWER_UP)
+    {
+        PowerUp *powerup = (PowerUp *)other;
+        if (AddPowerup(powerup))
+        {
+            powerup->PickUp();
+        }
+        return;
     }
 }
 
@@ -228,9 +267,8 @@ bool Player::AddPowerup(PowerUp *powerup)
     }
     if (powerup->GetType() == LIFE)
     {
-        powerup->PickUp();
+        // powerup->PickUp();
         lives++;
-        delete powerup;
         return true;
     }
     if (powerup->GetType() == TEMPORARY_SHIELD)
@@ -240,7 +278,6 @@ bool Player::AddPowerup(PowerUp *powerup)
         if (temporaryShield != nullptr)
         {
             temporaryShield->ResetUseTime();
-            delete powerup;
         }
         else
         {
@@ -293,6 +330,7 @@ void Player::Respawn()
     this->invincible = true; // invincible when spawns
     this->forwardDir = {0, -1};
     this->velocity = {0, 0};
+    this->angularVelocity = 0;
     this->state = IDLE;
     this->lastDeathTime = 0;
     this->lastShotTime = 0;
