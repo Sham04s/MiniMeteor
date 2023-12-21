@@ -17,9 +17,9 @@ Character::Character(Vector2 origin)
     this->exploded = false;
     this->pitchAndVolumeScale = 0.7f;
 
-    this->shootSound = {0};
-    this->thrustSound = {0};
-    this->explosionSound = {0};
+    this->shootSound = {{0}};
+    this->thrustSound = {{0}};
+    this->explosionSound = {{0}};
 
     SetDefaultHitBox();
 }
@@ -295,7 +295,7 @@ void Character::ResumeSounds()
 
 void Character::AddLife()
 {
-    this->lives++; // TODO: cosider checking if lives < CHARACTER_MAX_LIVES or not adding lives at all in the game loop
+    this->lives = fminf(this->lives + 1, CHARACTER_MAX_LIVES);
 }
 
 void Character::SetDefaultHitBox()

@@ -87,7 +87,7 @@ bool ResourceManager::LoadResources()
     {
         if (!FileExists(soundsPaths[i]))
         {
-            sounds.push_back({0});
+            sounds.push_back({{0}});
         }
         else
         {
@@ -187,7 +187,7 @@ Sound ResourceManager::CreateSoundAlias(SoundID id)
 {
     if (id >= sounds.size())
     {
-        return {0};
+        return {{0}};
     }
     return LoadSoundAlias(sounds[id]);
 }
