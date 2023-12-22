@@ -17,10 +17,15 @@ const std::map<SpriteTextureID, const char *> spriteTexturesPathsMap = {
     {ENEMY_BULLET_SPRITE, "resources/characters/enemies/bullet.png"},
     {ENEMY_BASIC_SPRITES, "resources/characters/enemies/basic_enemy.png"},
     {POWERUP_LIFE_ITEM_SPRITE, "resources/powerups/life_item.png"},
-    {POWERUP_SHIELD_SPRITE, "resources/powerups/shield.png"},
+    {POWERUP_TEMPORARY_SHIELD_SPRITE, "resources/powerups/shield.png"},
     {POWERUP_SHIELD_ITEM_SPRITE, "resources/powerups/shield_item.png"},
-    {POWERUP_TEMPORARY_SHIELD_SPRITE, "resources/powerups/temporary_shield.png"},
+    {POWERUP_SHIELD_SPRITE, "resources/powerups/temporary_shield.png"},
     {POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE, "resources/powerups/temporary_shield_item.png"},
+    {POWERUP_FIRE_RATE_UPGRADE_ITEM_SPRITE, "resources/powerups/fire_rate_upgrade_item.png"},
+    {POWERUP_BULLET_SPREAD_UPGRADE_ITEM_SPRITE, "resources/powerups/bullet_spread_upgrade_item.png"},
+    {POWERUP_EXTRA_BULLET_UPGRADE_ITEM_SPRITE, "resources/powerups/extra_bullet_upgrade_item.png"},
+    {POWERUP_BULLET_SPEED_UPGRADE_ITEM_SPRITE, "resources/powerups/bullet_speed_upgrade_item.png"},
+    {POWERUP_TEMPORARY_INFINITE_BOOST_ITEM_SPRITE, "resources/powerups/temporary_infinite_boost_item.png"},
 };
 
 const char *uiTexturesPaths[NUM_UI_TEXTURES] = {

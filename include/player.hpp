@@ -11,6 +11,9 @@
 #define BOOST_RECHARGE_COOLDOWN 1.5f                         // seconds
 #define BOOST_BAR_HIDE_TIME (BOOST_RECHARGE_COOLDOWN + 1.0f) // seconds
 #define BOOST_BAR_FADE_TIME 0.5f                             // seconds
+#define MAX_UPGRADES_PER_TYPE 5
+
+// TODO: implement turret mode
 
 class Player : public Character
 {
@@ -40,7 +43,9 @@ public:
     void HandleCollision(GameObject *other, Vector2 *pushVector);
 
     bool AddPowerup(PowerUp *powerup);
+    bool RemovePowerup(PowerUpType type);
     bool HasPowerup(PowerUpType type);
+    int CountPowerup(PowerUpType type);
     bool CanBeKilled();
     bool CanBeHit();
     bool Kill();

@@ -26,9 +26,6 @@ GameState gameState;
 Player *player;
 std::vector<GameObject *> gameObjects;
 bool powerupSpawned = false;
-// std::vector<Asteroid *> asteroids;
-// std::vector<BasicEnemy *> enemies;
-// PowerUp *powerup; // only one powerup can be in the screen at a time
 
 void InitGame()
 {
@@ -181,7 +178,7 @@ void DrawDebug()
         DrawText("No screen", (GetScreenWidth() - MeasureText("No screen", 40)) / 2, GetScreenHeight() - 40, 40, RED);
     }
 
-    DrawText(TextFormat("Powerup to spawn: %i", powerupToSpawn), 10, GetScreenHeight() - 40, 20, WHITE);
+    DrawText(TextFormat("Powerup to spawn: %s", PowerUp::GetPowerUpName(powerupToSpawn)), 10, GetScreenHeight() - 40, 20, WHITE);
 }
 
 void HandleInput()
@@ -362,10 +359,12 @@ void UpdateGameObjects()
             {
                 delete powerup;
                 gameObjects.erase(gameObjects.begin() + i);
+                powerupSpawned = false;
             }
             else if (powerup->IsPickedUp())
             {
                 gameObjects.erase(gameObjects.begin() + i);
+                powerupSpawned = false;
             }
         }
     }
@@ -451,10 +450,11 @@ void UpdateGame()
         if (!powerupSpawned)
         {
             // try to spawn a power up
-            const float spawnChance = 0.10f; // 10% chance of spawning a power up every second
+            const float spawnChance = 0.20f; // 10% chance of spawning a power up every second
             if (fmodf(GetTime(), 1.0f) < GetFrameTime() && GetRandomValue(0, 100) < spawnChance * 100)
             {
-                gameObjects.push_back(new PowerUp((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())}, powerupToSpawn));
+                gameObjects.push_back(new PowerUp((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())},
+                                                  (PowerUpType)GetRandomValue(0, NUM_POWER_UP_TYPES - 1)));
                 powerupSpawned = true;
             }
         }

@@ -5,6 +5,7 @@
 
 #define BULLET_SIZE 40
 #define BULLET_SPEED 250
+#define BULLET_SPREAD 10.0f // degrees
 
 class Bullet : public GameObject
 {
@@ -13,7 +14,7 @@ private:
     bool isAlive;
 
 public:
-    Bullet(Vector2 origin, Vector2 forwardDir, bool isPlayerBullet);
+    Bullet(Vector2 origin, Vector2 forwardDir, float speed, bool isPlayerBullet);
     ~Bullet();
 
     void Update();

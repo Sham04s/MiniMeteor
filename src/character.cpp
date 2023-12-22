@@ -17,6 +17,11 @@ Character::Character(Vector2 origin)
     this->exploded = false;
     this->pitchAndVolumeScale = 0.7f;
 
+    this->shootCooldown = CHARACTER_SHOOT_COOLDOWN;
+    this->bulletsPerShot = 1;
+    this->bulletsSpeed = BULLET_SPEED;
+    this->bulletsSpread = BULLET_SPREAD;
+
     this->shootSound = {{0}};
     this->thrustSound = {{0}};
     this->explosionSound = {{0}};
@@ -61,21 +66,30 @@ void Character::Update()
         bullets[i].Update();
     }
 
+    if (state & ~IDLE)
+    {
+        state &= ~IDLE;
+    } else
+    {
+        state = IDLE;
+    }
+
+    // move character
+    GameObject::Update();
+
     // if dead, do nothing else
-    if (state == DEAD)
+    if (state & DEAD)
     {
         return;
     }
 
-    
-
     // if dying, wait for dying animation to finish
-    if (state == DYING && GetTime() - lastDeathTime > CHARACTER_DYING_TIME)
+    if (state & DYING && GetTime() - lastDeathTime > CHARACTER_DYING_TIME)
     {
         state = DEAD;
     }
 
-    if (state == ACCELERATING)
+    if (state & ACCELERATING)
     {
         if (!IsSoundPlaying(thrustSound))
         {
@@ -116,7 +130,7 @@ void Character::Update()
         }
     }
 
-    if (state == ACCELERATING)
+    if (state & ACCELERATING)
     {
         Accelerate(acceleration);
     }
@@ -129,37 +143,35 @@ void Character::Update()
     }
 
     // rotate character
-    if (state == TURNING_LEFT)
+    if (state & TURNING_LEFT)
     {
         angularVelocity = -turnSpeed;
     }
-    else if (state == TURNING_RIGHT)
+    else if (state & TURNING_RIGHT)
     {
         angularVelocity = turnSpeed;
     }
-    else {
+    else
+    {
         angularVelocity = 0;
     }
 
-    // move character
-    GameObject::Update();
-
     // wrap around screen
-    if (origin.x > GetScreenWidth() + CHARACTER_SIZE / 2)
+    if (origin.x > GetScreenWidth() + CHARACTER_SIZE / 4)
     {
-        Translate({-(float)GetScreenWidth() - CHARACTER_SIZE, 0});
+        Translate({-(float)GetScreenWidth() - CHARACTER_SIZE / 2, 0});
     }
-    else if (origin.x < -CHARACTER_SIZE / 2)
+    else if (origin.x < -CHARACTER_SIZE / 4)
     {
-        Translate({(float)GetScreenWidth() + CHARACTER_SIZE, 0});
+        Translate({(float)GetScreenWidth() + CHARACTER_SIZE / 2, 0});
     }
-    if (origin.y > GetScreenHeight() + CHARACTER_SIZE / 2)
+    if (origin.y > GetScreenHeight() + CHARACTER_SIZE / 4)
     {
-        Translate({0, -(float)GetScreenHeight() - CHARACTER_SIZE});
+        Translate({0, -(float)GetScreenHeight() - CHARACTER_SIZE / 2});
     }
-    else if (origin.y < -CHARACTER_SIZE / 2)
+    else if (origin.y < -CHARACTER_SIZE / 4)
     {
-        Translate({0, (float)GetScreenHeight() + CHARACTER_SIZE});
+        Translate({0, (float)GetScreenHeight() + CHARACTER_SIZE / 2});
     }
 }
 
@@ -173,14 +185,14 @@ void Character::Draw()
 
     // then draw player
 
-    if (state == DEAD)
+    if (state & DEAD)
     {
         return;
     }
 
     Rectangle srcRect = GetFrameRec();
 
-    if (state == DYING)
+    if (state & DYING)
     {
         const float deathProgress = (GetTime() - lastDeathTime) / CHARACTER_DYING_TIME;
         const float scale = 1 + deathProgress;
@@ -228,8 +240,12 @@ void Character::Shoot()
     {
         return;
     }
-    bullets.push_back(Bullet(Vector2Add(this->origin, Vector2Scale(this->forwardDir, CHARACTER_SIZE / 4)),
-                             this->forwardDir, this->type == PLAYER));
+    Vector2 bulletDir = Vector2Rotate(forwardDir, (bulletsPerShot - 1) * bulletsSpread * DEG2RAD / 2);
+    for (int i = 0; i < bulletsPerShot; i++)
+    {
+        bullets.push_back(Bullet(Vector2Add(this->origin, Vector2Scale(this->forwardDir, CHARACTER_SIZE / 4)),
+                                 Vector2Rotate(bulletDir, -i * bulletsSpread * DEG2RAD), bulletsSpeed, this->type == PLAYER));
+    }
     lastShotTime = GetTime();
     PlaySound(shootSound);
 }
@@ -248,18 +264,18 @@ void Character::CleanBullets()
 
 bool Character::CanBeKilled()
 {
-    return state != DYING && state != DEAD;
+    return IsAlive();
 }
 
 bool Character::CanBeHit()
 {
-    return state != DYING && state != DEAD;
+    return IsAlive();
 }
 
 // returns true if character is killed, false otherwise
 bool Character::Kill()
 {
-    if (state == DYING || state == DEAD || this->lives <= 0)
+    if ((state & (DYING | DEAD)) || this->lives <= 0)
     {
         return false;
     }

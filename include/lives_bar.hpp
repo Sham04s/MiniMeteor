@@ -3,6 +3,7 @@
 
 #define MAX_LIVES 10
 
+// TODO: make this a player info ui object, or maybe create a player info ui object that contains this
 class LivesBar : public UIObject
 {
 private:

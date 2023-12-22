@@ -1,5 +1,6 @@
 #include "enemy.hpp"
 #include <math.h>
+#include <string>
 
 BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
 {
@@ -58,15 +59,17 @@ void BasicEnemy::Update()
         const float angleToPlayer = Vector2Angle(forwardDir, Vector2Subtract(player->GetOrigin(), origin)) * RAD2DEG;
         if (angleToPlayer > rotationSpeed)
         {
-            state = TURNING_RIGHT;
+            state &= ~TURNING_LEFT;
+            state |= TURNING_RIGHT;
         }
         else if (angleToPlayer < -rotationSpeed)
         {
-            state = TURNING_LEFT;
+            state &= ~TURNING_RIGHT;
+            state |= TURNING_LEFT;
         }
         else
         {
-            state = IDLE;
+            state &= ~(TURNING_LEFT | TURNING_RIGHT);
             Rotate(angleToPlayer);
         }
     }
@@ -75,18 +78,18 @@ void BasicEnemy::Update()
     if (lookingForPlayer && IsLookingAt(player->GetOrigin()))
     {
         Shoot();
-        state = ACCELERATING;
+        state |= ACCELERATING;
         accelerateStartTime = GetTime();
         lookingForPlayer = false;
     }
 
     // accelerate randomly
-    if (state == IDLE)
+    if (state & (IDLE | TURNING_LEFT | TURNING_RIGHT))
     {
         const float probOfAccelerating = 0.01f;
         if (GetRandomValue(0, 100) < probOfAccelerating * 100)
         {
-            state = ACCELERATING;
+            state |= ACCELERATING;
             accelerateTime = ((float)GetRandomValue(0, 100) / 100.0f) *
                                  (ENEMY_ACCELERATE_MAX_TIME - ENEMY_ACCELERATE_MIN_TIME) +
                              ENEMY_ACCELERATE_MIN_TIME;
@@ -95,11 +98,11 @@ void BasicEnemy::Update()
     }
 
     // stop accelerating after a while
-    if (state == ACCELERATING)
+    if (state & ACCELERATING)
     {
         if (GetTime() - accelerateStartTime > accelerateTime)
         {
-            state = IDLE;
+            state &= ~ACCELERATING;
             accelerateTime = INFINITY;
         }
     }
@@ -110,7 +113,7 @@ void BasicEnemy::Update()
         const float probOfTurning = 0.01f;
         if (GetRandomValue(0, 100) < probOfTurning * 100)
         {
-            state = GetRandomValue(0, 1) ? TURNING_LEFT : TURNING_RIGHT;
+            state |= GetRandomValue(0, 1) ? TURNING_LEFT : TURNING_RIGHT;
             rotateTime = ((float)GetRandomValue(0, 100) / 100.0f) *
                              (ENEMY_ROTATE_MAX_TIME - ENEMY_ROTATE_MIN_TIME) +
                          ENEMY_ROTATE_MIN_TIME;
@@ -119,11 +122,11 @@ void BasicEnemy::Update()
     }
 
     // stop turning after a while
-    if (state == TURNING_LEFT || state == TURNING_RIGHT)
+    if (state & (TURNING_LEFT | TURNING_RIGHT))
     {
         if (GetTime() - rotateStartTime > rotateTime)
         {
-            state = IDLE;
+            state &= ~(TURNING_LEFT | TURNING_RIGHT);
             rotateTime = INFINITY;
         }
     }
@@ -134,9 +137,19 @@ void BasicEnemy::DrawDebug()
     Character::DrawDebug();
 
     // draw enemy information below bounds
-    const char *stateStrings[] = {"IDLE", "ACCELERATING", "EXTRA_ACCELERATING", "TURNING_LEFT", "TURNING_RIGHT", "DYING", "DEAD"};
+    static const char *stateStrings[] = {"IDLE", "ACCELERATING", "TURNING_LEFT", "TURNING_RIGHT", "DYING", "DEAD"};
 
-    DrawText(TextFormat("State: %s", stateStrings[state]), origin.x - CHARACTER_SIZE / 2, origin.y + CHARACTER_SIZE / 2 + 10, 10, WHITE);
+    std::string stateString;
+    for (int i = 0; i < 6; i++)
+    {
+        if (state & (1 << i))
+        {
+            stateString += stateStrings[i];
+            stateString += " ";
+        }
+    }
+
+    DrawText(TextFormat("State: %s", stateString.c_str()), origin.x - CHARACTER_SIZE / 2, origin.y + CHARACTER_SIZE / 2 + 10, 10, WHITE);
     DrawText(TextFormat("Looking for player: %s", lookingForPlayer ? "true" : "false"), origin.x - CHARACTER_SIZE / 2, origin.y + CHARACTER_SIZE / 2 + 20, 10, lookingForPlayer ? GREEN : RED);
     DrawText(TextFormat("Turn speed: %f", turnSpeed), origin.x - CHARACTER_SIZE / 2, origin.y + CHARACTER_SIZE / 2 + 30, 10, WHITE);
     if (lookingForPlayer)
@@ -156,32 +169,18 @@ void BasicEnemy::HandleCollision(GameObject *other, Vector2 *pushVector)
         }
         return;
     }
-    Push(other, *pushVector);
-    if (other->GetType() == PLAYER)
+    if (other->GetType() == ASTEROID || other->GetType() == BASIC_ENEMY)
     {
-        if (((Player *)other)->CanBeKilled())
-        {
-            this->Kill();
-        }
+        Push(other, *pushVector);
     }
 }
 
 Rectangle BasicEnemy::GetFrameRec()
 {
-    int frame;
-    switch (state)
+    int frame = 0;
+    if (state & ACCELERATING)
     {
-    case ACCELERATING:
         frame = 1;
-        break;
-
-        // case EXTRA_ACCELERATING:
-        //     frame = 2;
-        //     break;
-
-    default:
-        frame = 0; // idle
-        break;
     }
 
     return ResourceManager::GetSpriteSrcRect(ENEMY_BASIC_SPRITES, frame);

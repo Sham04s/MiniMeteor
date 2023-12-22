@@ -1,4 +1,5 @@
 #include "game_object.hpp"
+#include "utils.hpp"
 
 #include <math.h>
 
@@ -64,66 +65,6 @@ void GameObject::PauseSounds()
 void GameObject::ResumeSounds()
 {
     // base class does not have any sounds
-}
-
-std::vector<Vector2> getAxes(std::vector<Vector2> hitbox)
-{
-    std::vector<Vector2> axes = {};
-
-    for (size_t i = 0; i < hitbox.size(); i++)
-    {
-        // get the current vertex
-        Vector2 p1 = hitbox[i];
-        // get the next vertex
-        Vector2 p2 = hitbox[i + 1 == hitbox.size() ? 0 : i + 1];
-        // subtract the two to get the edge vector
-        Vector2 edge = Vector2Subtract(p1, p2);
-        // get either perpendicular vector
-        Vector2 normal = Vector2Normalize({-edge.y, edge.x});
-        // the perp method is just (x, y) =&gt; (-y, x) or (y, -x)
-        axes.push_back(normal);
-    }
-
-    return axes;
-}
-
-Vector2 project(Vector2 axis, std::vector<Vector2> hitbox)
-{
-    float min = 0;
-    float max = 0;
-
-    for (size_t i = 0; i < hitbox.size(); i++)
-    {
-        float dotProduct = Vector2DotProduct(axis, hitbox[i]);
-        if (i == 0 || dotProduct < min)
-        {
-            min = dotProduct;
-        }
-        if (i == 0 || dotProduct > max)
-        {
-            max = dotProduct;
-        }
-    }
-
-    return {min, max};
-}
-
-float getOverlap(Vector2 a, Vector2 b, float *overlap)
-{
-    float minA = a.x;
-    float maxA = a.y;
-    float minB = b.x;
-    float maxB = b.y;
-
-    if (maxA >= minB && maxB >= minA)
-    {
-        *overlap = fmin(maxA, maxB) - fmax(minA, minB);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }
 
 bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
@@ -222,13 +163,14 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
 void GameObject::Push(GameObject *other, Vector2 pushVector)
 {
     static const float e = 0.85f;
+    static const float nullVelocityThreshold = 1e-9f;
 
     this->previousVelocity = this->velocity;
-    if (Vector2Length(this->previousVelocity) < 0.1f && Vector2Length(other->previousVelocity) < 0.1f)
+    if (Vector2Length(this->previousVelocity) < nullVelocityThreshold && Vector2Length(other->previousVelocity) < nullVelocityThreshold)
     {
         other->velocity = Vector2Scale(Vector2Normalize(pushVector), e * 100.0f);
     }
-    else if (Vector2Length(this->previousVelocity) < 0.1f)
+    else if (Vector2Length(this->previousVelocity) < nullVelocityThreshold)
     {
         other->velocity = Vector2Scale(Vector2Normalize(pushVector), e * Vector2Length(other->previousVelocity));
     }
@@ -244,6 +186,7 @@ void GameObject::Push(GameObject *other, Vector2 pushVector)
 
     // Translate(Vector2Scale(this->velocity, GetFrameTime()));
     other->Translate(Vector2Scale(other->GetVelocity(), GetFrameTime()));
+    this->Translate(Vector2Scale(this->GetVelocity(), GetFrameTime()));
 }
 
 void GameObject::Translate(Vector2 translation)

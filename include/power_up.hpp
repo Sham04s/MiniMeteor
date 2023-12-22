@@ -9,7 +9,7 @@
 #define POWER_UP_BLINK_PERIOD POWER_UP_BLINK_TIME / 5.0f // seconds
 
 #define TEMPORARY_SHIELD_TIME 5.0f // seconds
-#define TEMPORARY_BOOST_TIME 5.0f  // seconds
+#define TEMPORARY_INFINITE_BOOST_TIME 5.0f  // seconds
 #define FIRE_RATE_UPGRADE_MULTIPLIER 2.0f
 
 enum PowerUpType
@@ -18,6 +18,9 @@ enum PowerUpType
     TEMPORARY_SHIELD,
     TEMPORARY_INFINITE_BOOST,
     FIRE_RATE_UPGRADE,
+    BULLET_SPEED_UPGRADE,
+    BULLET_SPREAD_UPGRADE,
+    EXTRA_BULLET_UPGRADE,
     LIFE,
     NUM_POWER_UP_TYPES
 };
@@ -27,6 +30,7 @@ class PowerUp : public GameObject
 private:
     PowerUpType powerupType;
     bool pickedUp;
+    bool drawable;
     float timeToLive;
     float effectiveUseTime;
 
@@ -50,6 +54,8 @@ public:
     bool IsPickedUp() { return pickedUp; }
     bool IsExpired() { return timeToLive <= 0.0f && !pickedUp; }
     bool CanBeApplied() { return effectiveUseTime > 0.0f; }
+
+    static const char *GetPowerUpName(PowerUpType type);
 };
 
 #endif // __POWER_UP_H__

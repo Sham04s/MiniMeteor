@@ -21,10 +21,18 @@ void LivesBar::Draw()
 {
     Rectangle lifeBounds = {centeredBounds.x + lifeSize * (MAX_LIVES - 1), centeredBounds.y, lifeSize, lifeSize};
 
-    for (int i = 0; i < player->GetLives(); i++)
+    for (int i = 0; i < player->GetLives() - 1; i++)
     {
         DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, WHITE);
         lifeBounds.x -= lifeSize;
+    }
+    if (player->HasPowerup(SHIELD))
+    {
+        DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, BLUE);
+    }
+    else
+    {
+        DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, WHITE);
     }
 }
 

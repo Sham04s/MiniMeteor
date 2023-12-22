@@ -141,17 +141,10 @@ void Asteroid::HandleCollision(GameObject *other, Vector2 *pushVector)
         }
         return;
     }
-    // only push if player can be hit
-    if (other->GetType() == PLAYER)
+    if (other->GetType() == POWER_UP || other->GetType() == PLAYER) // player already handles collision with asteroids
     {
-        Player *player = (Player *)other;
-        if (player->CanBeHit())
-        {
-            Push(other, *pushVector);
-        }
+        // do nothing
+        return;
     }
-    else // push if other is not a bullet or player
-    {
-        Push(other, *pushVector);
-    }
+    Push(other, *pushVector);
 }
