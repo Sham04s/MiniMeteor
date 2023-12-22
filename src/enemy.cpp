@@ -21,7 +21,7 @@ BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
     this->lives = 1;
 
     this->texture = ResourceManager::GetSpriteTexture(ENEMY_BASIC_SPRITES);
-    this->shootSound = ResourceManager::CreateSoundAlias(ENEMY_SHOOT_SOUND);
+    this->shootSound = ResourceManager::CreateSoundAlias(ENEMY_BULLET_SOUND);
     this->thrustSound = ResourceManager::CreateSoundAlias(ENEMY_THRUST_SOUND);
     this->explosionSound = ResourceManager::CreateSoundAlias(ENEMY_EXPLOSION_SOUND);
 

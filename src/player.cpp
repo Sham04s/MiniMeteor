@@ -17,7 +17,7 @@ Player::Player(Vector2 origin) : Character(origin)
     this->lastDeathTime = 0;
     this->type = PLAYER;
     this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
-    this->shootSound = ResourceManager::CreateSoundAlias(SHOOT_SOUND);
+    this->shootSound = ResourceManager::CreateSoundAlias(BULLET_SOUND);
     this->thrustSound = ResourceManager::CreateSoundAlias(THRUST_SOUND);
     this->explosionSound = ResourceManager::CreateSoundAlias(SHIP_EXPLOSION_SOUND);
 

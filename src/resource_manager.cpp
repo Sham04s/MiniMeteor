@@ -28,20 +28,19 @@ const std::map<SpriteTextureID, const char *> spriteTexturesPathsMap = {
     {POWERUP_TEMPORARY_INFINITE_BOOST_ITEM_SPRITE, "resources/powerups/temporary_infinite_boost_item.png"},
 };
 
-const char *uiTexturesPaths[NUM_UI_TEXTURES] = {
-    "resources/ui/primary_button.png",
-    "resources/ui/blue_button03.png",
-    "resources/ui/life.png",
+const std::map<UITextureID, const char *> uiTexturesPathsMap = {
+    {BUTTON_PRIMARY_TEXTURE, "resources/ui/primary_button.png"},
+    {LIFE_TEXTURE, "resources/ui/life.png"},
 };
 
-const char *soundsPaths[NUM_SOUNDS] = {
-    "resources/sounds/bullet.wav",
-    "resources/sounds/enemy_bullet.wav",
-    "resources/sounds/thrust.wav",
-    "resources/sounds/enemy_thrust.wav",
-    "resources/sounds/explosion.wav",
-    "resources/sounds/ship_explosion.wav",
-    "resources/sounds/enemy_explosion.wav",
+const std::map<SoundID, const char *> soundsPathsMap = {
+    {BULLET_SOUND, "resources/sounds/bullet.wav"},
+    {ENEMY_BULLET_SOUND, "resources/sounds/enemy_bullet.wav"},
+    {THRUST_SOUND, "resources/sounds/thrust.wav"},
+    {ENEMY_THRUST_SOUND, "resources/sounds/enemy_thrust.wav"},
+    {EXPLOSION_SOUND, "resources/sounds/explosion.wav"},
+    {SHIP_EXPLOSION_SOUND, "resources/sounds/ship_explosion.wav"},
+    {ENEMY_EXPLOSION_SOUND, "resources/sounds/enemy_explosion.wav"},
 };
 
 std::vector<Texture2D> ResourceManager::spriteTextures;
@@ -79,24 +78,24 @@ bool ResourceManager::LoadResources()
     }
     for (size_t i = 0; i < NUM_UI_TEXTURES; i++)
     {
-        if (!FileExists(uiTexturesPaths[i]))
+        if (!FileExists(uiTexturesPathsMap.at((UITextureID)i)))
         {
             uiTextures.push_back(invalidTexture);
         }
         else
         {
-            uiTextures.push_back(LoadTexture(uiTexturesPaths[i]));
+            uiTextures.push_back(LoadTexture(uiTexturesPathsMap.at((UITextureID)i)));
         }
     }
     for (size_t i = 0; i < NUM_SOUNDS; i++)
     {
-        if (!FileExists(soundsPaths[i]))
+        if (!FileExists(soundsPathsMap.at((SoundID)i)))
         {
             sounds.push_back({{0}});
         }
         else
         {
-            sounds.push_back(LoadSound(soundsPaths[i]));
+            sounds.push_back(LoadSound(soundsPathsMap.at((SoundID)i)));
         }
     }
 
