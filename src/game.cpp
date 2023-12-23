@@ -8,6 +8,7 @@
 #include "game_ui.hpp"
 
 #include "resource_manager.hpp"
+#include "score_registry.hpp"
 #include "player.hpp"
 #include "asteroid.hpp"
 #include "enemy.hpp"
@@ -27,6 +28,8 @@ Player *player;
 std::vector<GameObject *> gameObjects;
 bool powerupSpawned = false;
 
+float oneSecondTimer = 0.0f;
+
 void InitGame()
 {
     SetExitKey(KEY_NULL);
@@ -43,6 +46,7 @@ void InitGame()
         printf("Failed to load resources!\n");
     }
 
+    gameState.previousScreen = MAIN_MENU;
     gameState.currentScreen = MAIN_MENU;
     player = new Player({(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2});
 
@@ -51,8 +55,7 @@ void InitGame()
 
 void CreateNewGame()
 {
-    gameState.previousScreen = gameState.currentScreen;
-    gameState.currentScreen = GAME;
+    ChangeScreen(GAME);
 
     // reset player
     if (player != nullptr)
@@ -107,10 +110,45 @@ void CreateNewGame()
     }
 }
 
+void ChangeScreen(ScreenID screen)
+{
+    if (gameState.currentScreen == screen)
+    {
+        return;
+    }
+    gameState.previousScreen = gameState.currentScreen;
+    gameState.currentScreen = screen;
+
+    if (screen == MAIN_MENU)
+    {
+        for (size_t i = 0; i < gameObjects.size(); i++)
+        {
+            delete gameObjects[i];
+        }
+        gameObjects.clear();
+        player->Reset();
+    }
+}
+
+void PreviousScreen()
+{
+    if (gameState.currentScreen == OPTIONS)
+    {
+        if (gameState.previousScreen == PAUSE_MENU)
+        {
+            gameState.currentScreen = PAUSE_MENU;
+        }
+        else if (gameState.previousScreen == MAIN_MENU)
+        {
+            gameState.currentScreen = MAIN_MENU;
+        }
+        gameState.previousScreen = OPTIONS;
+    }
+}
+
 void PauseGame()
 {
-    gameState.previousScreen = gameState.currentScreen;
-    gameState.currentScreen = PAUSE_MENU;
+    ChangeScreen(PAUSE_MENU);
     player->PauseSounds();
     for (size_t i = 0; i < gameObjects.size(); i++)
     {
@@ -120,8 +158,7 @@ void PauseGame()
 
 void ResumeGame()
 {
-    gameState.previousScreen = gameState.currentScreen;
-    gameState.currentScreen = GAME;
+    ChangeScreen(GAME);
     player->ResumeSounds();
     for (size_t i = 0; i < gameObjects.size(); i++)
     {
@@ -151,6 +188,7 @@ void DrawFrame()
 
         gameState.screens[gameState.currentScreen]->Draw();
     }
+
     if (SHOW_DEBUG)
     {
         DrawDebug();
@@ -203,17 +241,9 @@ void HandleInput()
         {
             ResumeGame();
         }
-        else if (gameState.currentScreen == OPTIONS)
+        else
         {
-            if (gameState.previousScreen == PAUSE_MENU)
-            {
-                gameState.currentScreen = PAUSE_MENU;
-            }
-            else if (gameState.previousScreen == MAIN_MENU)
-            {
-                gameState.currentScreen = MAIN_MENU;
-            }
-            gameState.previousScreen = OPTIONS;
+            PreviousScreen();
         }
     }
 
@@ -357,6 +387,7 @@ void UpdateGameObjects()
             Asteroid *asteroid = (Asteroid *)gameObjects[i];
             if (asteroid->IsDestroyed())
             {
+                AddScore(asteroid->GetVariant() == LARGE ? LARGE_ASTEROID_DESTROYED : SMALL_ASTEROID_DESTROYED);
                 delete asteroid;
                 gameObjects.erase(gameObjects.begin() + i);
             }
@@ -366,6 +397,7 @@ void UpdateGameObjects()
             BasicEnemy *enemy = (BasicEnemy *)gameObjects[i];
             if (enemy->IsDead() && enemy->GetBullets()->size() == 0)
             {
+                AddScore(BASIC_ENEMY_KILLED);
                 delete enemy;
                 gameObjects.erase(gameObjects.begin() + i);
             }
@@ -381,6 +413,7 @@ void UpdateGameObjects()
             }
             else if (powerup->IsPickedUp())
             {
+                AddScore((ScoreType)powerup->GetType());
                 gameObjects.erase(gameObjects.begin() + i);
                 powerupSpawned = false;
             }
@@ -469,7 +502,7 @@ void UpdateGame()
         {
             // try to spawn a power up
             const float spawnChance = 0.20f; // 10% chance of spawning a power up every second
-            if (fmodf(GetTime(), 1.0f) < GetFrameTime() && GetRandomValue(0, 100) < spawnChance * 100)
+            if (oneSecondTimer > 1.0f && GetRandomValue(0, 100) < spawnChance * 100)
             {
                 gameObjects.push_back(new PowerUp((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())},
                                                   (PowerUpType)GetRandomValue(0, NUM_POWER_UP_TYPES - 1)));
@@ -482,6 +515,17 @@ void UpdateGame()
             gameState.previousScreen = gameState.currentScreen;
             gameState.currentScreen = GAME_OVER;
         }
+        else
+        {
+            AddScore(TIME_ALIVE);
+        }
+
+        if (oneSecondTimer > 1.0f)
+        {
+            oneSecondTimer = 0.0f;
+        }
+
+        oneSecondTimer += GetFrameTime();
     }
     if (gameState.screens[gameState.currentScreen] == nullptr)
     {

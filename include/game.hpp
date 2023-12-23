@@ -13,12 +13,34 @@ CORE_API void InitGame();
 CORE_API bool GameLoop();
 CORE_API void ExitGame();
 
+enum ScreenID
+{
+    GAME,
+    GAME_OVER,
+    MAIN_MENU,
+    PAUSE_MENU,
+    OPTIONS,
+    EXITING,
+    NUM_SCREENS
+};
+
 void CreateNewGame();
 void PauseGame();
 void ResumeGame();
 void DrawFrame();
 void DrawDebug();
+void ChangeScreen(ScreenID screen);
+void PreviousScreen();
 void UpdateGame();
+
+typedef struct GameState
+{
+    ScreenID currentScreen;
+    ScreenID previousScreen;
+    UIObject *screens[NUM_SCREENS];
+} GameState;
+
+extern GameState gameState;
 
 #define PRIMARY_COLOR GetColor(0x3c9dd7ff)
 #define PRIMARY_COLOR_BRIGHT GetColor(0x8dc3e3ff)
@@ -33,25 +55,5 @@ void UpdateGame();
 #define SECONDARY_COLOR_2_DAR GetColor(0x00e162ff)
 #define SECONDARY_COLOR_2_DARKER GetColor(0x00893bff)
 #define BACKGROUND_COLOR GetColor(0x242424ff)
-
-enum ScreenID
-{
-    GAME,
-    GAME_OVER,
-    MAIN_MENU,
-    PAUSE_MENU,
-    OPTIONS,
-    EXITING,
-    NUM_SCREENS
-};
-
-typedef struct GameState
-{
-    ScreenID currentScreen;
-    ScreenID previousScreen;
-    UIObject *screens[NUM_SCREENS];
-} GameState;
-
-extern GameState gameState;
 
 #endif // __GAME_H__

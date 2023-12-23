@@ -51,7 +51,6 @@ void PowerUp::Update()
 
 void PowerUp::Draw()
 {
-    // TODO: draw power up
     if ((!pickedUp && timeToLive <= 0.0f) || !drawable)
     {
         return;
@@ -88,6 +87,7 @@ void PowerUp::HandleCollision(GameObject *other, Vector2 *pushVector)
 
 void PowerUp::PickUp()
 {
+    // TODO: add sound effect
     pickedUp = true;
     drawable = false;
     timeToLive = 0.0f;

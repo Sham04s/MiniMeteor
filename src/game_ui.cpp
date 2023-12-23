@@ -2,6 +2,8 @@
 #include "game.hpp"
 #include "utils.hpp"
 #include "resource_manager.hpp"
+#include "player_ui.hpp"
+#include "score_summary.hpp"
 
 UIObject *CreateMainMenu()
 {
@@ -11,9 +13,9 @@ UIObject *CreateMainMenu()
         new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { CreateNewGame(); }),
         new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = OPTIONS; }),
+                   { ChangeScreen(OPTIONS); }),
         new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = EXITING; }),
+                   { ChangeScreen(EXITING); }),
     };
 
     // main menu
@@ -27,16 +29,14 @@ UIObject *CreateMainMenu()
         b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
         mainMenu->AddChild(b);
     }
-    
+
     return mainMenu;
 }
 
 UIObject *CreateGameUI(Player *player)
 {
-    // game ui
-    UIObject *game = new UIObject(Rectangle{0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()}, nullptr, ResourceManager::GetDefaultTexture());
-
-    game->AddChild(new LivesBar(Rectangle{(float)GetScreenWidth() / 2 + 100, 10, (float)GetScreenWidth() / 2 - 100, 50}, player));
+    // in-game ui
+    UIObject *game = new PlayerUI(player);
     return game;
 }
 
@@ -50,11 +50,11 @@ UIObject *CreatePauseMenu()
         new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { CreateNewGame(); }),
         new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = MAIN_MENU; }),
+                   { ChangeScreen(MAIN_MENU); }),
         new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = OPTIONS; }),
+                   { ChangeScreen(OPTIONS); }),
         new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = EXITING; }),
+                   { ChangeScreen(EXITING); }),
     };
 
     // pause menu
@@ -79,20 +79,31 @@ UIObject *CreateGameOverMenu()
         new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { CreateNewGame(); }),
         new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { gameState.previousScreen = gameState.currentScreen; gameState.currentScreen = MAIN_MENU; }),
+                   { ChangeScreen(MAIN_MENU); }),
     };
 
+    Rectangle gameOverButtonRec = createCenteredButtonRec(gameOverButtons, gameOverButtonCount);
+    gameOverButtonRec.y += gameOverButtonRec.height * 2;
+    UIObject *buttons = new UIObject(gameOverButtonRec, nullptr, ResourceManager::GetDefaultTexture());
+
+    // game over score summary
+    Rectangle scoreSummaryRec = {gameOverButtonRec.x - gameOverButtonRec.height * 1.5f, gameOverButtonRec.y - gameOverButtonRec.height * 6, gameOverButtonRec.width * 2, gameOverButtonRec.height * 6};
+    UIObject *scoreSummary = new ScoreSummary(scoreSummaryRec, nullptr);
+    scoreSummary->SetRelBounds(scoreSummaryRec);
+
     // game over
-    UIObject *gameOver = new UIObject(createCenteredButtonRec(gameOverButtons, gameOverButtonCount), nullptr, ResourceManager::GetDefaultTexture());
+    UIObject *gameOver = new UIObject(Rectangle{0, 0, 0, 0}, nullptr, ResourceManager::GetDefaultTexture());
+    gameOver->AddChild(scoreSummary);
 
     Button *b;
     for (int i = 0; i < gameOverButtonCount; i++)
     {
         b = gameOverButtons[i];
         b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
-        gameOver->AddChild(b);
+        buttons->AddChild(b);
     }
-    
+    gameOver->AddChild(buttons);
+
     return gameOver;
 }
 

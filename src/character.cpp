@@ -100,7 +100,7 @@ void Character::Update()
 
         // decrease pitch proportional to time accelerating
         const float pitch = fmaxf(THRUST_MIN_PITCH, 1.0f - timeAccelerating / THRUST_PITCH_DECAYING_TIME);
-        SetSoundPitch(thrustSound, Clamp(pitch, 0, 1) * pitchAndVolumeScale); // TODO: remove clamp when implementing custom timer
+        SetSoundPitch(thrustSound, Clamp(pitch, 0, 1) * pitchAndVolumeScale);
 
         // move sound from right to left proportional to player position in x axis
         const float pan = (THRUST_MAX_PAN - TRHUST_MIN_PAN) * (1.0f - origin.x / GetScreenWidth()) + TRHUST_MIN_PAN;

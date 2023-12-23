@@ -1,3 +1,6 @@
+#ifndef __LIVES_BAR_H__
+#define __LIVES_BAR_H__
+
 #include "ui_object.hpp"
 #include "player.hpp"
 
@@ -19,3 +22,4 @@ public:
     void Draw();
     void DrawDebug();
 };
+#endif // __LIVES_BAR_H__

@@ -1,5 +1,6 @@
 #include "player.hpp"
 #include "enemy.hpp"
+
 #include <math.h>
 #include <string>
 
@@ -470,7 +471,7 @@ void Player::Respawn()
 void Player::Reset()
 {
     Respawn();
-    this->lives = 4;
+    this->lives = 1;
     this->bullets.clear();
 }
 

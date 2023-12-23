@@ -132,6 +132,13 @@ public:
      * @return True if the asteroid is destroyed, false otherwise.
      */
     bool IsDestroyed() { return state == DESTROYED; }
+
+    /**
+     * @brief Gets the variant of the asteroid.
+     *
+     * @return The variant of the asteroid.
+     */
+    bool GetVariant() { return variant; }
 };
 
 #endif // __ASTEROID_H__
