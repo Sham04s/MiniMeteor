@@ -58,6 +58,7 @@ Asteroid::~Asteroid()
 
 void Asteroid::Update()
 {
+    // change state to DESTROYED after explosion animation is finished
     if (state == EXPLODING && GetTime() - lastExplosionTime > ASTEROID_EXPLOSION_TIME)
     {
         state = DESTROYED;
@@ -67,9 +68,10 @@ void Asteroid::Update()
         return;
     }
 
+    // Translation and rotation
     GameObject::Update();
 
-    // wrap around screen
+    // Teleport to the other side of the screen if the asteroid goes off-screen
     if (origin.x > GetScreenWidth() + size / 2)
     {
         Translate({-GetScreenWidth() - size, 0});
@@ -87,6 +89,7 @@ void Asteroid::Update()
         Translate({0, GetScreenHeight() + size});
     }
 
+    // Play explosion sound if asteroid is exploding
     if (state == EXPLODING && !IsSoundPlaying(explosionSound))
     {
         PlaySound(explosionSound);
@@ -95,6 +98,13 @@ void Asteroid::Update()
 
 void Asteroid::Draw()
 {
+    if (state == DESTROYED)
+    {
+        return;
+    }
+
+    // draw explosion animation if asteroid is exploding
+    // the asteroid grows in size and fades out
     if (state == EXPLODING)
     {
         float explosionProgress = (GetTime() - lastExplosionTime) / ASTEROID_EXPLOSION_TIME;
@@ -108,10 +118,7 @@ void Asteroid::Draw()
 
         return;
     }
-    if (state == DESTROYED)
-    {
-        return;
-    }
+
     GameObject::Draw();
 }
 
@@ -125,8 +132,8 @@ void Asteroid::Destroy()
     if (state == FLOATING)
     {
         this->state = EXPLODING;
-        this->hitbox = {};
-        this->lastExplosionTime = GetTime(); // TODO: consider implementing custom timer to be able to pause the game
+        this->hitbox = {}; // remove hitbox to prevent collisions
+        this->lastExplosionTime = GetTime();
     }
 }
 

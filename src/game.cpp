@@ -53,6 +53,8 @@ void CreateNewGame()
 {
     gameState.previousScreen = gameState.currentScreen;
     gameState.currentScreen = GAME;
+
+    // reset player
     if (player != nullptr)
     {
         player->Reset();
@@ -61,6 +63,8 @@ void CreateNewGame()
     {
         player = new Player({(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2});
     }
+
+    // delete all game objects
     for (size_t i = 0; i < gameObjects.size(); i++)
     {
         delete gameObjects[i];
@@ -70,9 +74,10 @@ void CreateNewGame()
     const size_t numAsteroids = 5;
     const size_t numEnemies = 2;
 
+    // create new game objects
     for (size_t i = 0; i < numAsteroids + numEnemies; i++)
     {
-        // generate random position exluding the player's position and other asteroids positions
+        // generate random position exluding the player's position and other objects positions
         Vector2 pos;
         bool insidePlayer;
         bool insideGameObject;
@@ -297,12 +302,13 @@ void HandleInput()
         powerupToSpawn = (PowerUpType)((powerupToSpawn - 1 + NUM_POWER_UP_TYPES) % NUM_POWER_UP_TYPES);
     }
 
+    static GameObject *movingObject = nullptr;
+
     if (player != nullptr && CheckCollisionPointRec(GetMousePosition(), player->GetBounds()))
     {
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+        if (movingObject == nullptr && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
-            player->SetVelocity({0});
-            player->Translate(GetMouseDelta());
+            movingObject = player;
         }
     }
 
@@ -310,17 +316,29 @@ void HandleInput()
     {
         if (CheckCollisionPointRec(GetMousePosition(), gameObjects[i]->GetBounds()))
         {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            if (movingObject == nullptr && (IsMouseButtonDown(MOUSE_LEFT_BUTTON) || IsMouseButtonDown(MOUSE_RIGHT_BUTTON)))
             {
-                gameObjects[i]->SetVelocity({0});
-                gameObjects[i]->Translate(GetMouseDelta());
+                movingObject = gameObjects[i];
             }
-            if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
-            {
-                Vector2 velocity = Vector2Subtract(GetMousePosition(), gameObjects[i]->GetOrigin());
-                gameObjects[i]->SetVelocity(Vector2Scale(velocity, 3));
-                gameObjects[i]->SetAngularVelocity(GetRandomValue(-100, 100));
-            }
+        }
+    }
+
+    if (movingObject != nullptr && (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) || IsMouseButtonReleased(MOUSE_RIGHT_BUTTON)))
+    {
+        movingObject = nullptr;
+    }
+
+    if (movingObject != nullptr)
+    {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+        {
+            movingObject->SetVelocity({0, 0});
+            movingObject->Translate(GetMouseDelta());
+        }
+        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
+        {
+            movingObject->SetVelocity(Vector2Scale(GetMouseDelta(), 0.4f / GetFrameTime()));
+            movingObject->SetAngularVelocity(GetRandomValue(-180, 180));
         }
     }
 

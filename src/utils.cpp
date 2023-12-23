@@ -55,7 +55,7 @@ Vector2 project(Vector2 axis, std::vector<Vector2> hitbox)
     return {min, max};
 }
 
-float getOverlap(Vector2 a, Vector2 b, float *overlap)
+bool overlaps(Vector2 a, Vector2 b, float *overlap)
 {
     float minA = a.x;
     float maxA = a.y;
@@ -67,8 +67,5 @@ float getOverlap(Vector2 a, Vector2 b, float *overlap)
         *overlap = fmin(maxA, maxB) - fmax(minA, minB);
         return true;
     }
-    else
-    {
-        return false;
-    }
+    return false;
 }

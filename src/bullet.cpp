@@ -53,12 +53,12 @@ void Bullet::HandleCollision(GameObject *other, Vector2 *pushVector)
     {
         return;
     }
-    if (other->GetType() == ASTEROID || other->GetType() == BASIC_ENEMY || other->GetType() == ENEMY_BULLET)
+    // destroy if bullet hits asteroid or enemy
+    if (other->GetType() == ASTEROID || other->GetType() == BASIC_ENEMY)
     {
         Destroy();
     }
-    pushVector->x = 0;
-    pushVector->y = 0;
+    (void)pushVector; // unused parameter
 }
 
 bool Bullet::IsOutOfBounds()

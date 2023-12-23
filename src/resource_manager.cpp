@@ -30,6 +30,7 @@ const std::map<SpriteTextureID, const char *> spriteTexturesPathsMap = {
 
 const std::map<UITextureID, const char *> uiTexturesPathsMap = {
     {BUTTON_PRIMARY_TEXTURE, "resources/ui/primary_button.png"},
+    {BUTTON_SECONDARY_TEXTURE, "resources/ui/secondary_button.png"},
     {LIFE_TEXTURE, "resources/ui/life.png"},
 };
 

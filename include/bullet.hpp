@@ -10,10 +10,18 @@
 class Bullet : public GameObject
 {
 private:
-    bool isPlayerBullet;
-    bool isAlive;
+    bool isPlayerBullet; /** Whether the bullet is a player bullet or not */
+    bool isAlive;        /** Whether the bullet is still alive or not */
 
 public:
+    /**
+     * @brief Construct a new Bullet object with the given origin, forward direction, speed, and whether it is a player bullet or not.
+     *
+     * @param origin Where to spawn the bullet.
+     * @param forwardDir The forward direction of the bullet.
+     * @param speed The speed of the bullet.
+     * @param isPlayerBullet Whether the bullet is a player bullet or not.
+     */
     Bullet(Vector2 origin, Vector2 forwardDir, float speed, bool isPlayerBullet);
     ~Bullet();
 

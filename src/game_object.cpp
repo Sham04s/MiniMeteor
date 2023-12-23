@@ -70,6 +70,19 @@ void GameObject::ResumeSounds()
 bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
 {
     *pushVector = {0};
+
+    // if either object has no hitbox then they are not colliding
+    if (hitbox.size() == 0 || other->GetHitbox().size() == 0)
+    {
+        return false;
+    }
+
+    // if both objects have a single point hitbox then just check if the points are colliding
+    if (hitbox.size() == 1 && other->GetHitbox().size() == 1)
+    {
+        return CheckCollisionCircles(hitbox[0], 1, other->GetHitbox()[0], 1);
+    }
+    
     // if the hitbox is a single point then just check if the point is inside the other hitbox
     if (hitbox.size() == 1)
     {
@@ -82,7 +95,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         return CheckCollisionPointPoly(other->GetHitbox()[0], hitbox.data(), hitbox.size());
     }
 
-    // object are not colliding if their bounding boxes are not colliding
+    // objects are not colliding if their bounding boxes are not colliding
     if (this->bounds.x + this->bounds.width < other->GetBounds().x || this->bounds.x > other->GetBounds().x + other->GetBounds().width || this->bounds.y + this->bounds.height < other->GetBounds().y || this->bounds.y > other->GetBounds().y + other->GetBounds().height)
     {
         return false;
@@ -102,7 +115,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         Vector2 p1 = project(axis, hitbox);
         Vector2 p2 = project(axis, other->GetHitbox());
         // do the projections overlap?
-        if (!getOverlap(p1, p2, &o))
+        if (!overlaps(p1, p2, &o))
         {
             // then we can guarantee that the shapes do not overlap
             return false;
@@ -110,7 +123,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         else
         {
             // get the overlap
-            getOverlap(p1, p2, &o);
+            overlaps(p1, p2, &o);
             // check for minimum
             if (o < overlap)
             {
@@ -128,7 +141,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         Vector2 p1 = project(axis, hitbox);
         Vector2 p2 = project(axis, other->GetHitbox());
         // do the projections overlap?
-        if (!getOverlap(p1, p2, &o))
+        if (!overlaps(p1, p2, &o))
         {
             // then we can guarantee that the shapes do not overlap
             return false;
@@ -136,7 +149,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         else
         {
             // get the overlap
-            getOverlap(p1, p2, &o);
+            overlaps(p1, p2, &o);
             // check for minimum
             if (o < overlap)
             {
@@ -162,10 +175,13 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
 
 void GameObject::Push(GameObject *other, Vector2 pushVector)
 {
+    // constant for reducing velocity after collision
     static const float e = 0.85f;
     static const float nullVelocityThreshold = 1e-9f;
 
     this->previousVelocity = this->velocity;
+
+    // if both objects are not moving then just push the other object with a velocity of 100
     if (Vector2Length(this->previousVelocity) < nullVelocityThreshold && Vector2Length(other->previousVelocity) < nullVelocityThreshold)
     {
         other->velocity = Vector2Scale(Vector2Normalize(pushVector), e * 100.0f);
@@ -178,13 +194,11 @@ void GameObject::Push(GameObject *other, Vector2 pushVector)
     {
         other->velocity = Vector2Scale(Vector2Normalize(pushVector), e * Vector2Length(this->previousVelocity));
     }
-    // other->SetVelocity(Vector2Scale(Vector2Normalize(pushVector), -e * Vector2Length(thisVelocity)));
 
     other->previousAngularVelocity = other->angularVelocity;
     other->angularVelocity = e * this->previousAngularVelocity;
-    // other->SetAngularVelocity(-e * thisAngularVelocity);
 
-    // Translate(Vector2Scale(this->velocity, GetFrameTime()));
+    // translate both objects with their new velocities so they don't get stuck
     other->Translate(Vector2Scale(other->GetVelocity(), GetFrameTime()));
     this->Translate(Vector2Scale(this->GetVelocity(), GetFrameTime()));
 }
