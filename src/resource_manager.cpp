@@ -42,6 +42,7 @@ const std::map<SoundID, const char *> soundsPathsMap = {
     {EXPLOSION_SOUND, "resources/sounds/explosion.wav"},
     {SHIP_EXPLOSION_SOUND, "resources/sounds/ship_explosion.wav"},
     {ENEMY_EXPLOSION_SOUND, "resources/sounds/enemy_explosion.wav"},
+    {POWERUP_PICKUP_SOUND, "resources/sounds/powerup_pickup.wav"},
 };
 
 std::vector<Texture2D> ResourceManager::spriteTextures;
@@ -100,6 +101,7 @@ bool ResourceManager::LoadResources()
         }
     }
 
+    // font = LoadFontEx("resources/common/SyneMono-Regular.ttf", 128, 0, 95);
     font = GetFontDefault();
 
     return true;
@@ -112,7 +114,6 @@ void ResourceManager::UnloadResources()
         UnloadTexture(spriteTextures[i]);
     }
     spriteTextures.clear();
-    UnloadFont(font);
     for (size_t i = 0; i < uiTextures.size(); i++)
     {
         UnloadTexture(uiTextures[i]);
@@ -130,6 +131,7 @@ void ResourceManager::UnloadResources()
     music.clear();
     UnloadTexture(defaultTexture);
     UnloadTexture(invalidTexture);
+    UnloadFont(font);
 }
 
 Texture2D *ResourceManager::GetSpriteTexture(SpriteTextureID id)
@@ -188,6 +190,7 @@ Sound *ResourceManager::GetSound(SoundID id)
     return &sounds[id];
 }
 
+// sound alias should be unloaded manually
 Sound ResourceManager::CreateSoundAlias(SoundID id)
 {
     if (id >= sounds.size())

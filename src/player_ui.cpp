@@ -18,7 +18,8 @@ PlayerUI::~PlayerUI()
 
 void PlayerUI::Draw()
 {
-    DrawText(TextFormat("%07i", GetTotalScore()), scoreRect.x, scoreRect.y, SCORE_FONT_SIZE, WHITE);
+    const char *scoreText = TextFormat("%08i", GetTotalScore());
+    DrawTextEx(*ResourceManager::GetFont(), scoreText, {scoreRect.x, scoreRect.y}, SCORE_FONT_SIZE, 1, WHITE);
 
     livesBar->Draw();
 }

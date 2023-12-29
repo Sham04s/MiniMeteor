@@ -4,6 +4,9 @@
 #include "resource_manager.hpp"
 #include "player_ui.hpp"
 #include "score_summary.hpp"
+#include <stdio.h>
+
+char fpsButtonText[20];
 
 UIObject *CreateMainMenu()
 {
@@ -107,9 +110,59 @@ UIObject *CreateGameOverMenu()
     return gameOver;
 }
 
+void ChangeFPSButtonFunc(Button *button)
+{
+    ChangeFPS();
+    if (gameState.fps == 0)
+    {
+        sprintf_s(fpsButtonText, "FPS: Unlimited");
+    }
+    else
+    {
+        sprintf(fpsButtonText, "FPS: %d", gameState.fps);
+    }
+    button->SetText(fpsButtonText);
+}
+
 UIObject *CreateOptionsMenu()
 {
-    return nullptr;
+    if (gameState.fps == 0)
+    {
+        sprintf_s(fpsButtonText, "FPS: Unlimited");
+    }
+    else
+    {
+        sprintf(fpsButtonText, "FPS: %d", gameState.fps);
+    }
+
+    const int optionButtonCount = 3;
+    Button *backButton = new Button(Vector2{0, 0}, nullptr, "Back", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
+    Button *fullscreenButton = new Button(Vector2{0, 0}, nullptr, "Fullscreen", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
+    Button *changeFPSButton = new Button(Vector2{0, 0}, nullptr, fpsButtonText, BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
+
+    backButton->OnClick([]()
+                        { PreviousScreen(); });
+    fullscreenButton->OnClick([]()
+                              { ToggleFullscreen(); });
+    changeFPSButton->OnClick([changeFPSButton]()
+                             { ChangeFPSButtonFunc(changeFPSButton); });
+
+    Button *buttons[optionButtonCount] = {backButton, fullscreenButton, changeFPSButton};
+
+    Rectangle optionButtonRec = createCenteredButtonRec(buttons, optionButtonCount);
+
+    UIObject *options = new UIObject(optionButtonRec, nullptr, ResourceManager::GetDefaultTexture());
+
+    Button *b;
+
+    for (int i = 0; i < optionButtonCount; i++)
+    {
+        b = buttons[i];
+        b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
+        options->AddChild(b);
+    }
+
+    return options;
 }
 
 UIObject *CreateExitUI()

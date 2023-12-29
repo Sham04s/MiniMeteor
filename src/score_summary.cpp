@@ -33,7 +33,8 @@ void ScoreSummary::Draw()
 {
     for (int i = 0; i < NUM_SCORE_TYPES + 1; i++)
     {
-        DrawText(textLines[i], bounds.x, bounds.y + (fontSize + SCORE_PADDING) * i, fontSize, WHITE);
+        // DrawText(textLines[i], bounds.x, bounds.y + (fontSize + SCORE_PADDING) * i, fontSize, WHITE);
+        DrawTextEx(*ResourceManager::GetFont(), textLines[i], {bounds.x, bounds.y + (fontSize + SCORE_PADDING) * i}, fontSize, 1, WHITE);
     }
     DrawLineEx({bounds.x, bounds.y + (fontSize + SCORE_PADDING) * NUM_SCORE_TYPES}, {bounds.x + bounds.width, bounds.y + (fontSize + SCORE_PADDING) * NUM_SCORE_TYPES}, 1, WHITE);
 }

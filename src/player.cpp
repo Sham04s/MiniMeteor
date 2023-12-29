@@ -6,21 +6,16 @@
 
 Player::Player(Vector2 origin) : Character(origin)
 {
-    this->lives = 4;
     this->initialOrigin = {(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2};
-    this->state = IDLE;
-    this->invincible = true; // invincible when spawns
-    this->usingBoost = false;
-    this->boostTime = BOOST_TIME;
-    this->lastBoostUsedTime = 0;
-    this->bullets = {};
-    this->lastShotTime = 0;
-    this->lastDeathTime = 0;
     this->type = PLAYER;
+    
+    this->Reset();
+    
     this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
     this->shootSound = ResourceManager::CreateSoundAlias(BULLET_SOUND);
     this->thrustSound = ResourceManager::CreateSoundAlias(THRUST_SOUND);
     this->explosionSound = ResourceManager::CreateSoundAlias(SHIP_EXPLOSION_SOUND);
+    this->powerupPickupSound = ResourceManager::GetSound(POWERUP_PICKUP_SOUND);
 
     SetDefaultHitBox();
 }
@@ -35,6 +30,7 @@ void Player::Update()
     if (invincible && ((state & ACCELERATING) || usingBoost || lastShotTime > 0.0f))
     {
         invincible = false;
+        hasMoved = true;
     }
 
     if (usingBoost)
@@ -306,6 +302,7 @@ void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
         PowerUp *powerup = (PowerUp *)other;
         if (AddPowerup(powerup))
         {
+            PlaySound(*powerupPickupSound);
             powerup->PickUp();
         }
         return;
@@ -320,7 +317,11 @@ bool Player::AddPowerup(PowerUp *powerup)
     }
     if (powerup->GetType() == LIFE)
     {
-        lives++;
+        if (lives >= CHARACTER_MAX_LIVES)
+        {
+            return false;
+        }
+        AddLife();
         return true;
     }
     if (powerup->GetType() == SHIELD)
@@ -425,6 +426,11 @@ bool Player::CanBeHit()
     return !invincible || HasPowerup(SHIELD) || HasPowerup(TEMPORARY_SHIELD);
 }
 
+bool Player::HasMoved()
+{
+    return hasMoved;   
+}
+
 bool Player::Kill()
 {
     if (HasPowerup(SHIELD))
@@ -445,15 +451,16 @@ void Player::Respawn()
     this->bounds = {origin.x - CHARACTER_SIZE / 2, origin.y - CHARACTER_SIZE / 2, CHARACTER_SIZE, CHARACTER_SIZE};
     this->rotation = 0;
     this->invincible = true; // invincible when spawns
+    this->hasMoved = false;
+    this->usingBoost = false;
+    this->boostTime = BOOST_TIME;
+    this->lastBoostUsedTime = 0;
     this->forwardDir = {0, -1};
     this->velocity = {0, 0};
     this->angularVelocity = 0;
     this->state = IDLE;
     this->lastDeathTime = 0;
     this->lastShotTime = 0;
-    this->lastBoostUsedTime = 0;
-    this->usingBoost = false;
-    this->boostTime = BOOST_TIME;
     this->shootCooldown = CHARACTER_SHOOT_COOLDOWN;
     this->bulletsPerShot = 1;
     this->bulletsSpeed = BULLET_SPEED;
@@ -471,7 +478,7 @@ void Player::Respawn()
 void Player::Reset()
 {
     Respawn();
-    this->lives = 1;
+    this->lives = 3;
     this->bullets.clear();
 }
 

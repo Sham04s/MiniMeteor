@@ -6,3 +6,4 @@ Makefile.*
 *.o
 *.ase
 *.aseprite
+*.cpt

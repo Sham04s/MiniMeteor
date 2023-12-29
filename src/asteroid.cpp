@@ -1,17 +1,20 @@
 #include "asteroid.hpp"
 #include "bullet.hpp"
 #include "player.hpp"
+#include "utils.hpp"
 
 #include "raymath.h"
 #include <math.h>
 
-Asteroid::Asteroid(Vector2 origin) : GameObject({0}, 0, {0, -1}, {}, ASTEROID)
+Asteroid::Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultiplier) : GameObject({0}, 0, {0, -1}, {}, ASTEROID)
 {
     this->velocity = {(float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100)};
+    this->velocity = Vector2Scale(this->velocity, velocityMultiplier);
     this->rotation = GetRandomValue(0, 360);
     this->angularVelocity = GetRandomValue(-10, 10) * 12;
-    this->variant = (AsteroidVariant)GetRandomValue(0, 1);
+    this->variant = variant;
     this->state = FLOATING;
+
     this->origin = origin;
 
     // (2x + 1) -> [1, 3, 5, 7] -> large variants
@@ -44,6 +47,11 @@ Asteroid::Asteroid(Vector2 origin) : GameObject({0}, 0, {0, -1}, {}, ASTEROID)
     }
 }
 
+Asteroid::Asteroid(AsteroidVariant variant, float velocityMultiplier)
+: Asteroid(RandomVecOutsideScreen(variant == LARGE ? ASTEROID_SIZE_LARGE : ASTEROID_SIZE_SMALL), variant, velocityMultiplier)
+{
+}
+
 Asteroid::~Asteroid()
 {
     if (explosionSound.frameCount > 0 && explosionSound.stream.buffer != NULL)
@@ -58,8 +66,8 @@ Asteroid::~Asteroid()
 
 void Asteroid::Update()
 {
-    // change state to DESTROYED after explosion animation is finished
-    if (state == EXPLODING && GetTime() - lastExplosionTime > ASTEROID_EXPLOSION_TIME)
+    // change state to DESTROYED after destroying animation is finished
+    if (state == EXPLODING && GetTime() - lastExplosionTime > ASTEROID_DESTROY_TIME)
     {
         state = DESTROYED;
     }

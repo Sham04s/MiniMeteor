@@ -69,3 +69,27 @@ bool overlaps(Vector2 a, Vector2 b, float *overlap)
     }
     return false;
 }
+
+Vector2 RandomVecOutsideScreen(float margin)
+{
+    int side = GetRandomValue(0, 3);
+    Vector2 pos;
+    switch (side)
+    {
+    case 0: // top
+        pos = {(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(-margin, 0)};
+        break;
+    case 1: // right
+        pos = {(float)GetRandomValue(GetScreenWidth(), GetScreenWidth() + margin), (float)GetRandomValue(0, GetScreenHeight())};
+        break;
+    case 2: // bottom
+        pos = {(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(GetScreenHeight(), GetScreenHeight() + margin)};
+        break;
+    case 3: // left
+        pos = {(float)GetRandomValue(-margin, 0), (float)GetRandomValue(0, GetScreenHeight())};
+        break;
+    default:
+        break;
+    }
+    return pos;
+}

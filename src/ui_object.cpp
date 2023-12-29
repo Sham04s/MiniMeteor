@@ -1,4 +1,5 @@
 #include "ui_object.hpp"
+#include "resource_manager.hpp"
 
 UIObject::UIObject(Rectangle relBounds, UIObject *parent, Texture2D *texture)
 {
@@ -36,18 +37,10 @@ void UIObject::Draw()
 {
     if (texture == nullptr)
     {
-        Rectangle dst = {bounds.x, bounds.y, bounds.width / 2, bounds.height / 2};
-        DrawRectanglePro(dst, {dst.width / 2, dst.height / 2}, 0, WHITE);
-        DrawRectanglePro({dst.x + dst.width / 2, dst.y + dst.height / 2, dst.width, dst.height}, {dst.width / 2, dst.height / 2}, 0, WHITE);
-        dst.y += dst.height;
-        DrawRectanglePro(dst, {dst.width / 2, dst.height / 2}, 0, PURPLE);
-        DrawRectanglePro({dst.x + dst.width / 2, dst.y - dst.height / 2, dst.width, dst.height}, {dst.width / 2, dst.height / 2}, 0, PURPLE);
-        return;
+        texture = ResourceManager::GetInvalidTexture();
     }
-    else
-    {
-        DrawTexturePro(*texture, {0, 0, (float)texture->width, (float)texture->height}, bounds, {0, 0}, 0, WHITE);
-    }
+    
+    DrawTexturePro(*texture, {0, 0, (float)texture->width, (float)texture->height}, bounds, {0, 0}, 0, WHITE);
 
     for (size_t i = 0; i < children.size(); i++)
     {

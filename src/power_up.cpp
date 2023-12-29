@@ -61,9 +61,21 @@ void PowerUp::Draw()
         return;
     }
 
-    if (timeToLive > POWER_UP_BLINK_TIME || fmodf(timeToLive, POWER_UP_BLINK_PERIOD) > POWER_UP_BLINK_PERIOD / 2)
+    Color colorTint = WHITE;
+    Rectangle dst = {origin.x, origin.y, bounds.width, bounds.height};
+
+    if (timeToLive > POWER_UP_BLINK_TIME) // is still good
     {
-        GameObject::Draw();
+        float alpha = 0.75f + 0.25f * sinf(2 * PI * (timeToLive / POWER_UP_PULSE_PERIOD));
+        colorTint = Fade(WHITE, alpha);
+        DrawTexturePro(*texture, {0, 0, (float)texture->width, (float)texture->height}, dst, {bounds.width / 2, bounds.height / 2}, rotation, colorTint);
+        return;
+    }
+
+    if (fmodf(timeToLive, POWER_UP_BLINK_PERIOD) < POWER_UP_BLINK_PERIOD / 2.0f) // is blinking
+    {
+        DrawTexturePro(*texture, {0, 0, (float)texture->width, (float)texture->height}, dst, {bounds.width / 2, bounds.height / 2}, rotation, colorTint);
+        return;
     }
 }
 

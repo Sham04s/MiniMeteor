@@ -6,6 +6,7 @@
 #define ASTEROID_SIZE_SMALL 64
 #define ASTEROID_SIZE_LARGE 96
 #define ASTEROID_EXPLOSION_TIME 0.2f
+#define ASTEROID_DESTROY_TIME 0.5f
 
 enum AsteroidVariant
 {
@@ -35,7 +36,13 @@ public:
      * rotation, velocity, and angular velocity for the asteroid.
      * @param origin The origin position of the asteroid.
      */
-    Asteroid(Vector2 origin);
+    Asteroid(Vector2 origin) : Asteroid(origin, GetRandomValue(0, 1) == 0 ? SMALL : LARGE, 1) {}
+
+    Asteroid(Vector2 origin, float velocityMultiplier) : Asteroid(origin, GetRandomValue(0, 1) == 0 ? SMALL : LARGE, velocityMultiplier) {}
+
+    Asteroid(AsteroidVariant variant, float velocityMultiplier);
+
+    Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultiplier);
 
     /**
      * @brief Destroys the Asteroid object.

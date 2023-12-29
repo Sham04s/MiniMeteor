@@ -97,12 +97,13 @@ void Button::Draw()
     Rectangle srcRect = ResourceManager::GetUISrcRect(variant == BUTTON_SECONDARY ? BUTTON_SECONDARY_TEXTURE : BUTTON_PRIMARY_TEXTURE, frame);
     DrawTexturePro(*texture, srcRect, bounds, {0}, 0, WHITE);
 
-    Vector2 textDst = {textBounds.x + textBounds.width / 2 - MeasureText(text, BUTTON_TEXT_SIZE) / 2, textBounds.y + textBounds.height / 2 - BUTTON_TEXT_SIZE / 2};
+    Vector2 textDst = {textBounds.x + textBounds.width / 2 - MeasureText(text, BUTTON_FONT_SIZE) / 2, textBounds.y + textBounds.height / 2 - BUTTON_FONT_SIZE / 2};
     if (pressed)
     {
         textDst.y += BUTTON_PRESSED_OFFSET;
     }
-    DrawText(text, textDst.x, textDst.y, BUTTON_TEXT_SIZE, BUTTON_TEXT_COLOR);
+    // DrawText(text, textDst.x, textDst.y, BUTTON_FONT_SIZE, BUTTON_FONT_COLOR);
+    DrawTextEx(*ResourceManager::GetFont(), text, textDst, BUTTON_FONT_SIZE, 1, BUTTON_FONT_COLOR);
 }
 
 void Button::DrawDebug()

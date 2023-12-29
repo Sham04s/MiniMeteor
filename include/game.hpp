@@ -2,6 +2,7 @@
 #define __GAME_H__
 
 #include "ui_object.hpp"
+#include "enemy.hpp"
 
 #ifdef WINDOWS_HOT_RELOAD
 #define CORE_API extern "C" __declspec(dllexport)
@@ -31,13 +32,38 @@ void DrawFrame();
 void DrawDebug();
 void ChangeScreen(ScreenID screen);
 void PreviousScreen();
+void ChangeFPS();
 void UpdateGame();
+
+enum Difficulty
+{
+    EASY,
+    MEDIUM,
+    HARD,
+    NUM_DIFFICULTIES
+};
+
+typedef struct DifficultySettings
+{
+    Difficulty difficulty;
+    int maxAsteroids;
+    int maxEnemies;
+    float asteroidsSpawnRate;
+    float enemiesSpawnRate;
+    float asteroidSpeedMultiplier;
+    EnemyAttributes enemiesAttributes;
+} DifficultySettings;
 
 typedef struct GameState
 {
     ScreenID currentScreen;
     ScreenID previousScreen;
     UIObject *screens[NUM_SCREENS];
+    int fps;
+    bool powerupSpawned;
+    int asteroidsCount;
+    int enemiesCount;
+    DifficultySettings diffSettings;
 } GameState;
 
 extern GameState gameState;

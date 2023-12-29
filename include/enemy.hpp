@@ -21,10 +21,21 @@ enum EnemyState
     ENEMY_DEAD
 };
 
+typedef struct EnemyAttributes
+{
+    float velocityMultiplier;
+    float precisionMultiplier;
+    float fireRateMultiplier;
+    float bulletSpeedMultiplier;
+    float probOfShootingToPlayer;
+} EnemySettings;
+
 class BasicEnemy : public Character
 {
 private:
     bool lookingForPlayer;
+    float lookingAtPointAngleThreshold;
+    float probOfShootingToPlayer;
     float lastTryToShootTime;
     float accelerateStartTime;
     float accelerateTime;
@@ -37,6 +48,7 @@ protected:
     
 public:
     BasicEnemy(Vector2 origin, Player *player);
+    BasicEnemy(Vector2 origin,  Player *player, EnemyAttributes attributes);
     ~BasicEnemy();    
 
     void Update();

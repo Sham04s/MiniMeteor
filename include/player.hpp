@@ -20,12 +20,14 @@ class Player : public Character
 private:
     Vector2 initialOrigin;
     bool invincible;
+    bool hasMoved;
     bool usingBoost;
     float boostTime;
     float lastBoostUsedTime;
     std::vector<PowerUp *> powerups;
 
     PowerUp *GetPowerup(PowerUpType type);
+    Sound *powerupPickupSound;
 
 protected:
     void SetDefaultHitBox();
@@ -48,6 +50,7 @@ public:
     int CountPowerup(PowerUpType type);
     bool CanBeKilled();
     bool CanBeHit();
+    bool HasMoved();
     bool Kill();
     void Respawn();
     void Reset();

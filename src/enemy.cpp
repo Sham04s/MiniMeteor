@@ -7,17 +7,20 @@ BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
     this->state = IDLE;
     this->lookingForPlayer = false;
     this->lastTryToShootTime = 0;
+    this->probOfShootingToPlayer = 0.5f; // 50% every ENEMY_TRY_TO_SHOOT_COOLDOWN seconds
     this->player = player;
     this->type = BASIC_ENEMY;
     this->accelerateStartTime = 0;
     this->accelerateTime = INFINITY;
     this->rotateStartTime = 0;
     this->rotateTime = INFINITY;
+
     // nerf enemy
     this->turnSpeed = CHARACTER_TURN_SPEED / 3;
     this->maxSpeed = CHARACTER_MAX_SPEED / 3;
     this->acceleration = CHARACTER_ACCELERATION / 3;
     this->deceleration = CHARACTER_DECELERATION / 3;
+    this->lookingAtPointAngleThreshold = 3.0f; // degrees
     this->lives = 1;
 
     this->texture = ResourceManager::GetSpriteTexture(ENEMY_BASIC_SPRITES);
@@ -29,6 +32,18 @@ BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
 
     Rotate(GetRandomValue(0, 360));
     this->velocity = Vector2Scale(forwardDir, GetRandomValue(20, CHARACTER_SIZE));
+}
+
+BasicEnemy::BasicEnemy(Vector2 origin, Player *player, EnemyAttributes attributes)
+    : BasicEnemy(origin, player)
+{
+    const float frMultiplier = attributes.fireRateMultiplier <= 0.0f ? 0.001f : attributes.fireRateMultiplier;
+    
+    this->velocity = Vector2Scale(this->velocity, attributes.velocityMultiplier);
+    this->turnSpeed *= attributes.precisionMultiplier;
+    this->shootCooldown /= frMultiplier;
+    this->bulletsSpeed *= attributes.bulletSpeedMultiplier;
+    this->lookingAtPointAngleThreshold /= attributes.precisionMultiplier;
 }
 
 BasicEnemy::~BasicEnemy()
@@ -197,14 +212,12 @@ void BasicEnemy::ShootAtPlayer()
 
 void BasicEnemy::TryToShootAtPlayer()
 {
-    if (!this->IsAlive() || player->IsDead() || lookingForPlayer || GetTime() - lastTryToShootTime < ENEMY_TRY_TO_SHOOT_COOLDOWN)
+    if (!this->IsAlive() || player->IsDead() || lookingForPlayer || !player->HasMoved() || GetTime() - lastTryToShootTime < ENEMY_TRY_TO_SHOOT_COOLDOWN)
     {
         return;
     }
 
-    // 50% chance of shooting every 2 seconds
-    const double probOfShooting = 0.5f;
-    if (GetRandomValue(0, 100) < probOfShooting * 100)
+    if (GetRandomValue(0, 100) < probOfShootingToPlayer * 100)
     {
         ShootAtPlayer();
     }
@@ -222,7 +235,7 @@ bool BasicEnemy::IsLookingAtPlayer()
 
 bool BasicEnemy::IsLookingAt(Vector2 position)
 {
-    return fabsf(Vector2Angle(forwardDir, Vector2Subtract(position, origin)) * RAD2DEG) < 3; // 3 degrees
+    return fabsf(Vector2Angle(forwardDir, Vector2Subtract(position, origin)) * RAD2DEG) < lookingAtPointAngleThreshold;
 }
 
 void BasicEnemy::SetDefaultHitBox()

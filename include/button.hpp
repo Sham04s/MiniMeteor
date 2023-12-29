@@ -6,10 +6,10 @@
 
 #define BUTTON_WIDTH (float)(size == BUTTON_SMALL ? 100 : (size == BUTTON_MEDIUM ? 200 : 300))
 #define BUTTON_HEIGHT (float)(size == BUTTON_SMALL ? 30 : (size == BUTTON_MEDIUM ? 50 : 70))
-#define BUTTON_TEXT_SIZE (float)(size == BUTTON_SMALL ? 20 : (size == BUTTON_MEDIUM ? 30 : 40))
-#define BUTTON_TEXT_SPACING (float)(size == BUTTON_SMALL ? 10 : (size == BUTTON_MEDIUM ? 15 : 20))
+#define BUTTON_FONT_SIZE (float)(size == BUTTON_SMALL ? 20 : (size == BUTTON_MEDIUM ? 30 : 40))
+#define BUTTON_FONT_SPACING (float)(size == BUTTON_SMALL ? 10 : (size == BUTTON_MEDIUM ? 15 : 20))
+#define BUTTON_FONT_COLOR (variant == BUTTON_SECONDARY ? BLACK : WHITE)
 #define BUTTON_PADDING (float)(size == BUTTON_SMALL ? 5 : (size == BUTTON_MEDIUM ? 8 : 12))
-#define BUTTON_TEXT_COLOR (variant == BUTTON_SECONDARY ? BLACK : WHITE)
 #define BUTTON_PRESSED_OFFSET (float)(size == BUTTON_SMALL ? 2 : (size == BUTTON_MEDIUM ? 3 : 4))
 
 enum ButtonVariant
@@ -57,8 +57,10 @@ public:
 
     float GetWidth() { return bounds.width; }
     float GetHeight() { return bounds.height; }
-    float GetTextSize() { return BUTTON_TEXT_SIZE; }
-    float GetTextSpacing() { return BUTTON_TEXT_SPACING; }
+    float GetTextSize() { return BUTTON_FONT_SIZE; }
+    float GetTextSpacing() { return BUTTON_FONT_SPACING; }
     float GetPadding() { return BUTTON_PADDING; }
+
+    void SetText(const char *text) { this->text = text; }
 };
 #endif // __BUTTON_H__

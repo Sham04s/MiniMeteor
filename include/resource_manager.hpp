@@ -51,6 +51,7 @@ enum SoundID
     EXPLOSION_SOUND,
     SHIP_EXPLOSION_SOUND,
     ENEMY_EXPLOSION_SOUND,
+    POWERUP_PICKUP_SOUND,
     NUM_SOUNDS
 };
 
@@ -58,12 +59,6 @@ enum MusicID
 {
     MAIN_THEME,
     NUM_MUSIC
-};
-
-enum FontID
-{
-    MAIN_FONT,
-    NUM_FONTS
 };
 
 class ResourceManager

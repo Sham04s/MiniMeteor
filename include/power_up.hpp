@@ -5,6 +5,7 @@
 
 #define POWER_UP_SIZE 40.0f
 #define POWER_UP_TIME_TO_LIVE 10.0f                      // seconds
+#define POWER_UP_PULSE_PERIOD 1.0f                       // seconds
 #define POWER_UP_BLINK_TIME 3.0f                         // seconds
 #define POWER_UP_BLINK_PERIOD POWER_UP_BLINK_TIME / 5.0f // seconds
 
