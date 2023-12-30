@@ -115,7 +115,7 @@ void ChangeFPSButtonFunc(Button *button)
     ChangeFPS();
     if (gameState.fps == 0)
     {
-        sprintf_s(fpsButtonText, "FPS: Unlimited");
+        sprintf(fpsButtonText, "FPS: Unlimited");
     }
     else
     {
@@ -128,7 +128,7 @@ UIObject *CreateOptionsMenu()
 {
     if (gameState.fps == 0)
     {
-        sprintf_s(fpsButtonText, "FPS: Unlimited");
+        sprintf(fpsButtonText, "FPS: Unlimited");
     }
     else
     {
