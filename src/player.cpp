@@ -8,9 +8,9 @@ Player::Player(Vector2 origin) : Character(origin)
 {
     this->initialOrigin = {(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2};
     this->type = PLAYER;
-    
+
     this->Reset();
-    
+
     this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
     this->shootSound = ResourceManager::CreateSoundAlias(BULLET_SOUND);
     this->thrustSound = ResourceManager::CreateSoundAlias(THRUST_SOUND);
@@ -74,54 +74,35 @@ void Player::Update()
     }
 
     Character::Update();
-    
+
     UpdatePowerups();
 }
 
 void Player::UpdatePowerups()
 {
-    int fireRateUpgradeCount = 0;
-    int bulletSpeedUpgradeCount = 0;
-    int bulletSpreadUpgradeCount = 0;
-    bulletsPerShot = 1;
-
     for (size_t i = 0; i < powerups.size(); i++)
     {
-        powerups[i]->Update();
-        powerups[i]->UpdateBounds(this->bounds);
-        switch (powerups[i]->GetType())
+        PowerUp *powerup = powerups[i];
+        powerup->Update();
+        powerup->UpdateBounds(this->bounds);
+        
+        if (powerup->GetType() == TEMPORARY_INFINITE_BOOST)
         {
-        case TEMPORARY_SHIELD:
-            invincible = powerups[i]->CanBeApplied();
-            break;
-        case TEMPORARY_INFINITE_BOOST:
-            boostTime = powerups[i]->CanBeApplied() ? BOOST_TIME : boostTime;
-            break;
-        case FIRE_RATE_UPGRADE:
-            fireRateUpgradeCount += powerups[i]->CanBeApplied() ? 1 : 0;
-            break;
-        case BULLET_SPEED_UPGRADE:
-            bulletSpeedUpgradeCount += powerups[i]->CanBeApplied() ? 1 : 0;
-            break;
-        case BULLET_SPREAD_UPGRADE:
-            bulletSpreadUpgradeCount += powerups[i]->CanBeApplied() ? 1 : 0;
-            break;
-        case EXTRA_BULLET_UPGRADE:
-            bulletsPerShot += powerups[i]->CanBeApplied() ? 1 : 0;
-            break;
-        default:
-            break;
+            boostTime = BOOST_TIME;
         }
-        if (!powerups[i]->CanBeApplied())
+        
+        if (!powerup->CanBeApplied())
         {
-            delete powerups[i];
+            powerupsCount[powerup->GetType()] -= 1;
+            delete powerup;
             powerups.erase(powerups.begin() + i);
         }
     }
-    shootCooldown = CHARACTER_SHOOT_COOLDOWN * powf(0.7f, fireRateUpgradeCount) * powf(1.2f, bulletsPerShot - 1);
-    bulletsSpeed = BULLET_SPEED * powf(1.2f, bulletSpeedUpgradeCount);
-    bulletsSpread = BULLET_SPREAD * powf(0.82f, bulletSpreadUpgradeCount);
-    powerups.shrink_to_fit();
+
+    bulletsPerShot = 1 + powerupsCount[EXTRA_BULLET_UPGRADE];
+    shootCooldown = CHARACTER_SHOOT_COOLDOWN * GetPowerupMultiplier(FIRE_RATE_UPGRADE);
+    bulletsSpeed = BULLET_SPEED * GetPowerupMultiplier(BULLET_SPEED_UPGRADE);
+    bulletsSpread = BULLET_SPREAD * GetPowerupMultiplier(BULLET_SPREAD_UPGRADE);
 }
 
 void Player::Draw()
@@ -160,9 +141,9 @@ void Player::Draw()
 
     if (IsAlive())
     {
-        for (size_t i = 0; i < powerups.size(); i++)
+        for (auto powerup : powerups)
         {
-            powerups[i]->Draw();
+            powerup->Draw();
         }
 
         // draw temporary shield timer
@@ -181,21 +162,6 @@ void Player::DrawDebug()
 {
     Character::DrawDebug();
 
-    std::string powerupsText = "Powerups: [";
-    for (size_t i = 0; i < powerups.size(); i++)
-    {
-        const char *typeText = PowerUp::GetPowerUpName(powerups[i]->GetType());
-        if (i > 0)
-        {
-            powerupsText += ", ";
-        }
-        powerupsText += typeText;
-
-        powerups[i]->DrawDebug();
-    }
-    powerupsText += "]";
-
-    DrawText(powerupsText.c_str(), 10, 60, 16, WHITE);
     DrawText(TextFormat("Speed: %.2f", Vector2Length(velocity)), 10, 80, 16, WHITE);
     DrawText(TextFormat("MAX Speed: %.2f", maxSpeed), 10, 100, 16, WHITE);
 
@@ -332,45 +298,36 @@ bool Player::AddPowerup(PowerUp *powerup)
             return false;
         }
         powerup->UpdateBounds(this->bounds);
+        powerupsCount[SHIELD] += 1;
         powerups.push_back(powerup);
         return true;
     }
 
     if (powerup->GetType() == TEMPORARY_SHIELD || powerup->GetType() == TEMPORARY_INFINITE_BOOST)
     {
-        powerup->PickUp();
         PowerUp *temporaryPowerUp = GetPowerup(powerup->GetType());
         if (temporaryPowerUp != nullptr)
         {
             temporaryPowerUp->ResetUseTime();
-        }
-        else
-        {
-            powerup->UpdateBounds(this->bounds);
-            powerups.push_back(powerup);
-        }
-        return true;
-    }
-    if (powerup->GetType() == FIRE_RATE_UPGRADE)
-    {
-        int fireRateUpgradeCount = CountPowerup(FIRE_RATE_UPGRADE);
-        if (fireRateUpgradeCount >= 3)
-        {
-            return false;
+            return true;
         }
         powerup->UpdateBounds(this->bounds);
+        powerupsCount[powerup->GetType()] = 1;
         powerups.push_back(powerup);
         return true;
     }
-    if (powerup->GetType() == BULLET_SPEED_UPGRADE || powerup->GetType() == BULLET_SPREAD_UPGRADE || powerup->GetType() == EXTRA_BULLET_UPGRADE)
+    if (powerup->GetType() == FIRE_RATE_UPGRADE || powerup->GetType() == BULLET_SPEED_UPGRADE || powerup->GetType() == BULLET_SPREAD_UPGRADE || powerup->GetType() == EXTRA_BULLET_UPGRADE)
     {
-        int bulletSpeedUpgradeCount = CountPowerup(powerup->GetType());
-        if (bulletSpeedUpgradeCount >= MAX_UPGRADES_PER_TYPE)
+        int upgradeCount = powerupsCount[powerup->GetType()];
+        if (upgradeCount >= MAX_UPGRADES_PER_TYPE)
         {
             return false;
         }
+
         powerup->UpdateBounds(this->bounds);
+        powerupsCount[powerup->GetType()] += 1;
         powerups.push_back(powerup);
+
         return true;
     }
 
@@ -383,6 +340,7 @@ bool Player::RemovePowerup(PowerUpType type)
     {
         if (powerups[i]->GetType() == type)
         {
+            powerupsCount[type] -= 1;
             delete powerups[i];
             powerups.erase(powerups.begin() + i);
             return true;
@@ -393,27 +351,19 @@ bool Player::RemovePowerup(PowerUpType type)
 
 bool Player::HasPowerup(PowerUpType type)
 {
-    for (size_t i = 0; i < powerups.size(); i++)
-    {
-        if (powerups[i]->GetType() == type)
-        {
-            return true;
-        }
-    }
-    return false;
+    return GetPowerupCount(type) > 0;
 }
 
-int Player::CountPowerup(PowerUpType type)
+PowerUp *Player::GetPowerup(PowerUpType type)
 {
-    int count = 0;
-    for (size_t i = 0; i < powerups.size(); i++)
+    for (auto powerup : powerups)
     {
-        if (powerups[i]->GetType() == type)
+        if (powerup->GetType() == type)
         {
-            count++;
+            return powerup;
         }
     }
-    return count;
+    return nullptr;
 }
 
 bool Player::CanBeKilled()
@@ -428,7 +378,7 @@ bool Player::CanBeHit()
 
 bool Player::HasMoved()
 {
-    return hasMoved;   
+    return hasMoved;
 }
 
 bool Player::Kill()
@@ -468,11 +418,11 @@ void Player::Respawn()
     // leave bullets live
     SetDefaultHitBox();
 
-    for (size_t i = 0; i < powerups.size(); i++) // TODO: maybe don't delete powerups when respawning
+    // remove one powerup of each type
+    for (size_t i = 0; i < NUM_POWER_UP_TYPES; i++)
     {
-        delete powerups[i];
+        RemovePowerup((PowerUpType)i);
     }
-    powerups.clear();
 }
 
 void Player::Reset()
@@ -480,6 +430,17 @@ void Player::Reset()
     Respawn();
     this->lives = 3;
     this->bullets.clear();
+    
+    // remove all powerups
+    for (auto powerup : powerups)
+    {
+        delete powerup;
+    }
+    powerups.clear();
+    for (size_t i = 0; i < NUM_POWER_UP_TYPES; i++)
+    {
+        powerupsCount[i] = 0;
+    }
 }
 
 Rectangle Player::GetFrameRec()
@@ -498,6 +459,23 @@ Rectangle Player::GetFrameRec()
     return ResourceManager::GetSpriteSrcRect(PLAYER_SPRITES, frame);
 }
 
+float Player::GetPowerupMultiplier(PowerUpType type)
+{
+    int count = powerupsCount[type];
+
+    switch (type)
+    {
+    case FIRE_RATE_UPGRADE:
+        return powf(FIRE_RATE_MULTIPLIER, count) * powf(BULLETS_PER_SHOT_MULTIPLIER, bulletsPerShot - 1);
+    case BULLET_SPEED_UPGRADE:
+        return powf(BULLETS_SPEED_MULTIPLIER, count);
+    case BULLET_SPREAD_UPGRADE:
+        return powf(BULLETS_SPREAD_MULTIPLIER, count);
+    default:
+        return count;
+    }
+}
+
 void Player::SetDefaultHitBox()
 {
     this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
@@ -506,16 +484,4 @@ void Player::SetDefaultHitBox()
     {
         this->hitbox[i] = Vector2Add(Vector2Scale(this->hitbox[i], CHARACTER_SIZE / 2), GetOrigin());
     }
-}
-
-PowerUp *Player::GetPowerup(PowerUpType type)
-{
-    for (size_t i = 0; i < powerups.size(); i++)
-    {
-        if (powerups[i]->GetType() == type)
-        {
-            return powerups[i];
-        }
-    }
-    return nullptr;
 }

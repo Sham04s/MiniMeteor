@@ -4,6 +4,7 @@
 #include "ui_object.hpp"
 #include "player.hpp"
 #include "lives_bar.hpp"
+#include "player_powerups.hpp"
 
 #define SCORE_FONT_SIZE 30
 
@@ -12,6 +13,7 @@ class PlayerUI : public UIObject
 private:
     Player *player;
     LivesBar *livesBar;
+    PlayerPowerups *powerups;
     Rectangle scoreRect;
 
 public:

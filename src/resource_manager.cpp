@@ -101,8 +101,12 @@ bool ResourceManager::LoadResources()
         }
     }
 
+    const char *charactersToLoad = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ ∞";
+    int count = 0;
+    int *codePoints = LoadCodepoints(charactersToLoad, &count);
+    font = LoadFontEx("resources/common/SyneMono-Regular.ttf", 128, codePoints, count);
+    UnloadCodepoints(codePoints);
     // font = LoadFontEx("resources/common/SyneMono-Regular.ttf", 128, 0, 95);
-    font = GetFontDefault();
 
     return true;
 }

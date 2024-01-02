@@ -48,9 +48,11 @@ typedef struct DifficultySettings
     Difficulty difficulty;
     int maxAsteroids;
     int maxEnemies;
-    float asteroidsSpawnRate;
-    float enemiesSpawnRate;
+    float powerupSpawnChance;
+    float asteroidsSpawnChance;
+    float enemiesSpawnChance;
     float asteroidSpeedMultiplier;
+    float scoreMultiplier;
     EnemyAttributes enemiesAttributes;
 } DifficultySettings;
 

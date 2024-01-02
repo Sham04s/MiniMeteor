@@ -13,6 +13,11 @@
 #define BOOST_BAR_FADE_TIME 0.5f                             // seconds
 #define MAX_UPGRADES_PER_TYPE 5
 
+#define FIRE_RATE_MULTIPLIER 0.7f
+#define BULLETS_PER_SHOT_MULTIPLIER 1.2f
+#define BULLETS_SPEED_MULTIPLIER 1.2f
+#define BULLETS_SPREAD_MULTIPLIER 0.82f
+
 // TODO: implement turret mode
 
 class Player : public Character
@@ -25,8 +30,8 @@ private:
     float boostTime;
     float lastBoostUsedTime;
     std::vector<PowerUp *> powerups;
+    size_t powerupsCount[NUM_POWER_UP_TYPES];
 
-    PowerUp *GetPowerup(PowerUpType type);
     Sound *powerupPickupSound;
 
 protected:
@@ -44,10 +49,10 @@ public:
     void HandleInput();
     void HandleCollision(GameObject *other, Vector2 *pushVector);
 
+    PowerUp *GetPowerup(PowerUpType type);
     bool AddPowerup(PowerUp *powerup);
     bool RemovePowerup(PowerUpType type);
     bool HasPowerup(PowerUpType type);
-    int CountPowerup(PowerUpType type);
     bool CanBeKilled();
     bool CanBeHit();
     bool HasMoved();
@@ -58,6 +63,8 @@ public:
     Rectangle GetFrameRec();
 
     std::vector<PowerUp *> GetPowerups() { return powerups; }
+    float GetPowerupMultiplier(PowerUpType type);
+    size_t GetPowerupCount(PowerUpType type) { return powerupsCount[type]; }
 
     void SetLives(int lives) { this->lives = lives; }
 };

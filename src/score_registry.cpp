@@ -43,17 +43,17 @@ void InitScoreRegistry()
     }
 }
 
-void AddScore(ScoreType type)
+void AddScore(ScoreType type, float multiplier)
 {
     if (type == TIME_ALIVE)
     {
-        scoreRegistry[TIME_ALIVE] += 1.0f * GetFrameTime();
-        totalScore += scoreValues[type] * GetFrameTime();
+        scoreRegistry[TIME_ALIVE] += 1.0f * GetFrameTime() * multiplier;
+        totalScore += scoreValues[type] * GetFrameTime() * multiplier;
         return;
     }
-    
-    scoreRegistry[type] += 1;
-    totalScore += scoreValues[type];
+
+    scoreRegistry[type] += 1.0f * multiplier;
+    totalScore += scoreValues[type] * multiplier;
 }
 
 int GetRawScore(ScoreType type)

@@ -97,7 +97,9 @@ void Button::Draw()
     Rectangle srcRect = ResourceManager::GetUISrcRect(variant == BUTTON_SECONDARY ? BUTTON_SECONDARY_TEXTURE : BUTTON_PRIMARY_TEXTURE, frame);
     DrawTexturePro(*texture, srcRect, bounds, {0}, 0, WHITE);
 
-    Vector2 textDst = {textBounds.x + textBounds.width / 2 - MeasureText(text, BUTTON_FONT_SIZE) / 2, textBounds.y + textBounds.height / 2 - BUTTON_FONT_SIZE / 2};
+    Vector2 textSize = MeasureTextEx(*ResourceManager::GetFont(), text, BUTTON_FONT_SIZE, 1);
+    Vector2 textDst = {textBounds.x + (textBounds.width - textSize.x) / 2, textBounds.y + (textBounds.height - textSize.y) / 2};
+
     if (pressed)
     {
         textDst.y += BUTTON_PRESSED_OFFSET;
@@ -109,8 +111,13 @@ void Button::Draw()
 void Button::DrawDebug()
 {
     UIObject::DrawDebug();
+
+    Vector2 textSize = MeasureTextEx(*ResourceManager::GetFont(), text, BUTTON_FONT_SIZE, 1);
+    Vector2 textDst = {textBounds.x + (textBounds.width - textSize.x) / 2, textBounds.y + (textBounds.height - textSize.y) / 2};
+    
     DrawRectangleLinesEx(bounds, 1, RED);
     DrawRectangleLinesEx(textBounds, 1, RED);
+    DrawRectangleLinesEx({textDst.x, textDst.y, textSize.x, textSize.y}, 1, BLUE);
 }
 
 void Button::SetParent(UIObject *parent)

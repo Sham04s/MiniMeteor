@@ -18,8 +18,8 @@ protected:
     virtual void SetParent(UIObject *parent);
 
 public:
-    UIObject() : bounds({0, 0, 0, 0}), relBounds({0, 0, 0, 0}), parent(nullptr), children({}){};
     UIObject(Rectangle relBounds, UIObject *parent, Texture2D *texture);
+    UIObject() : UIObject({0, 0, 0, 0}, nullptr, nullptr) {}
     virtual ~UIObject();
 
     virtual void Update();

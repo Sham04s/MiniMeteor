@@ -23,7 +23,7 @@ enum ScoreType{
 };
 
 void InitScoreRegistry();
-void AddScore(ScoreType type);
+void AddScore(ScoreType type, float multiplier);
 int GetRawScore(ScoreType type);
 int GetScore(ScoreType type);
 int GetTotalScore();

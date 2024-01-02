@@ -115,7 +115,11 @@ void ChangeFPSButtonFunc(Button *button)
     ChangeFPS();
     if (gameState.fps == 0)
     {
-        sprintf(fpsButtonText, "FPS: Unlimited");
+#ifdef PLATFORM_DESKTOP
+        sprintf(fpsButtonText, "FPS: \u221E"); // Unicode value for infinity symbol
+#else
+        sprintf(fpsButtonText, "FPS: VSync");
+#endif // PLATFORM_DESKTOP
     }
     else
     {
@@ -128,7 +132,7 @@ UIObject *CreateOptionsMenu()
 {
     if (gameState.fps == 0)
     {
-        sprintf(fpsButtonText, "FPS: Unlimited");
+        sprintf(fpsButtonText, "FPS: \u221E");
     }
     else
     {
@@ -137,7 +141,9 @@ UIObject *CreateOptionsMenu()
 
     const int optionButtonCount = 3;
     Button *backButton = new Button(Vector2{0, 0}, nullptr, "Back", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
+#ifdef PLATFORM_DESKTOP
     Button *fullscreenButton = new Button(Vector2{0, 0}, nullptr, "Fullscreen", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
+#endif // PLATFORM_DESKTOP
     Button *changeFPSButton = new Button(Vector2{0, 0}, nullptr, fpsButtonText, BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
 
     backButton->OnClick([]()
@@ -147,7 +153,11 @@ UIObject *CreateOptionsMenu()
     changeFPSButton->OnClick([changeFPSButton]()
                              { ChangeFPSButtonFunc(changeFPSButton); });
 
-    Button *buttons[optionButtonCount] = {backButton, fullscreenButton, changeFPSButton};
+#ifdef PLATFORM_DESKTOP
+    Button *buttons[optionButtonCount] = {fullscreenButton, changeFPSButton, backButton};
+#else
+    Button *buttons[optionButtonCount] = {changeFPSButton, backButton};
+#endif // PLATFORM_DESKTOP
 
     Rectangle optionButtonRec = createCenteredButtonRec(buttons, optionButtonCount);
 

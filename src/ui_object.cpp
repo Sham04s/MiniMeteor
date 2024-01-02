@@ -14,7 +14,14 @@ UIObject::UIObject(Rectangle relBounds, UIObject *parent, Texture2D *texture)
     this->relBounds = relBounds;
     this->parent = parent;
     this->children = {};
-    this->texture = texture;
+    if (texture == nullptr)
+    {
+        this->texture = ResourceManager::GetInvalidTexture();
+    }
+    else
+    {
+        this->texture = texture;
+    }
 }
 
 UIObject::~UIObject() // deleting a UIObject also deletes its children
