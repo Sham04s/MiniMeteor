@@ -222,9 +222,12 @@ void PreviousScreen()
 
 void ToggleGameFullscreen()
 {
-    gameState.fullscreen = !gameState.fullscreen;
-    TraceLog(LOG_INFO, "Toggling fullscreen: %s", gameState.fullscreen ? "true" : "false");
+#ifdef PLATFORM_WEB
+    TraceLog(LOG_WARNING, "Fullscreen is not supported on web");
+    return;
+#endif // PLATFORM_WEB
 
+    gameState.fullscreen = !gameState.fullscreen;
     if (gameState.fullscreen)
     {
         int monitor = GetCurrentMonitor();
@@ -753,11 +756,12 @@ bool GameLoop()
 
     if (gameState.currentScreen == EXITING)
     {
-#ifdef PLATFORM_DESKTOP
-        return false;
+#ifdef PLATFORM_WEB
+        ExitGame();
+        InitGame();
 #else
-        ChangeScreen(MAIN_MENU);
-#endif // PLATFORM_DESKTOP
+        return false;
+#endif // PLATFORM_WEB
     }
 
     return true;

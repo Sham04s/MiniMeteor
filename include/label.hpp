@@ -17,7 +17,7 @@ class Label : public UIObject
 private:
     const char *text;
     Color color;
-    int fontSize;
+    float fontSize;
     Rectangle textRelBounds;
     TextAlignment hAlignment, vAlignment;
 

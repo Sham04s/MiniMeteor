@@ -151,23 +151,22 @@ UIObject *CreateOptionsMenu()
         sprintf(fpsButtonText, "FPS: %d", gameState.fps);
     }
 
-    const int optionButtonCount = 3;
     Button *backButton = new Button(Vector2{0, 0}, nullptr, "Back", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
-#ifdef PLATFORM_DESKTOP
-    Button *fullscreenButton = new Button(Vector2{0, 0}, nullptr, "Fullscreen", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
-#endif // PLATFORM_DESKTOP
     Button *changeFPSButton = new Button(Vector2{0, 0}, nullptr, fpsButtonText, BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
 
     backButton->OnClick([]()
                         { PreviousScreen(); });
-    fullscreenButton->OnClick([]()
-                              { ToggleGameFullscreen(); });
     changeFPSButton->OnClick([changeFPSButton]()
                              { ChangeFPSButtonFunc(changeFPSButton); });
 
 #ifdef PLATFORM_DESKTOP
+    const int optionButtonCount = 3;
+    Button *fullscreenButton = new Button(Vector2{0, 0}, nullptr, "Fullscreen", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
+    fullscreenButton->OnClick([]()
+                              { ToggleGameFullscreen(); });
     Button *buttons[optionButtonCount] = {fullscreenButton, changeFPSButton, backButton};
 #else
+    const int optionButtonCount = 2;
     Button *buttons[optionButtonCount] = {changeFPSButton, backButton};
 #endif // PLATFORM_DESKTOP
 

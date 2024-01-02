@@ -32,7 +32,7 @@ void Label::Resize(Vector2 prevScreenSize)
 {
     UIObject::Resize(prevScreenSize);
     
-    fontSize = (int)(fontSize * (GetScreenHeight() / prevScreenSize.y));
+    fontSize = (fontSize * (GetScreenHeight() / prevScreenSize.y));
     
     // calculate text bounds
     Vector2 textSize = MeasureTextEx(GetFontDefault(), text, fontSize, 1);

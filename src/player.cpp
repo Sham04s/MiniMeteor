@@ -7,12 +7,13 @@
 Player::Player(Vector2 origin) : Character(origin)
 {
     this->initialOrigin = origin;
-    this->type = PLAYER;
-    this->camera = {0};
-    camera.target = {0, 0};
-    camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-    camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
+    this->type = PLAYER; // Add braces here
+    this->camera = {
+        .offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f},
+        .target = {0, 0},
+        .rotation = 0.0f,
+        .zoom = 1.0f
+    };
 
     this->Reset();
 
