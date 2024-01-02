@@ -42,6 +42,10 @@ void InitGame()
     gameState.fps = 60;
     SetTargetFPS(gameState.fps);
 
+    gameState.fullscreen = false;
+    gameState.windowSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
+    gameState.originalWindowSize = gameState.windowSize;
+
 #ifdef _DEBUG
     SetTraceLogLevel(LOG_ALL);
 #endif // _DEBUG
@@ -60,7 +64,7 @@ void InitGame()
     gameState.asteroidsCount = 0;
     gameState.enemiesCount = 0;
 
-    player = new Player({(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2});
+    player = new Player();
 
     CreateUIElements(player);
 }
@@ -103,10 +107,14 @@ void CreateNewGame()
     {
         UnloadTexture(*spaceBackground);
     }
-    Image spaceBackgroundImg = GenImageColor(GetScreenWidth(), GetScreenHeight(), BLANK);
+
+    // create background with max resolution
+    const int monitor = GetCurrentMonitor();
+    const Vector2 monitorSize = {(float)GetMonitorWidth(monitor), (float)GetMonitorHeight(monitor)};
+    Image spaceBackgroundImg = GenImageColor(monitorSize.x, monitorSize.y, BLANK);
 
     const int minStars = 30;
-    const int maxStars = 50;
+    const int maxStars = 70;
     const float minStarSize = 1.0f;
     const float maxStarSize = 2.0f;
     const float minStarAlpha = 0.3f;
@@ -115,7 +123,7 @@ void CreateNewGame()
     for (int i = 0; i < GetRandomValue(minStars, maxStars); i++)
     {
         Color starColor = {255, 255, 255, (unsigned char)GetRandomValue(minStarAlpha * 255, maxStarAlpha * 255)};
-        ImageDrawCircle(&spaceBackgroundImg, GetRandomValue(0, GetScreenWidth()), GetRandomValue(0, GetScreenHeight()), GetRandomValue(minStarSize, maxStarSize), starColor);
+        ImageDrawCircle(&spaceBackgroundImg, GetRandomValue(0, monitorSize.x), GetRandomValue(0, monitorSize.y), GetRandomValue(minStarSize, maxStarSize), starColor);
     }
 
     spaceBackground = new Texture2D(LoadTextureFromImage(spaceBackgroundImg));
@@ -128,7 +136,7 @@ void CreateNewGame()
     }
     else
     {
-        player = new Player({(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2});
+        player = new Player();
     }
 
     // delete all game objects
@@ -212,6 +220,41 @@ void PreviousScreen()
     }
 }
 
+void ToggleGameFullscreen()
+{
+    gameState.fullscreen = !gameState.fullscreen;
+    TraceLog(LOG_INFO, "Toggling fullscreen: %s", gameState.fullscreen ? "true" : "false");
+
+    if (gameState.fullscreen)
+    {
+        int monitor = GetCurrentMonitor();
+        SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
+        SetWindowPosition(0, 0);
+        ToggleBorderlessWindowed();
+    }
+    else
+    {
+        ToggleBorderlessWindowed();
+        SetWindowSize((int)gameState.originalWindowSize.x, (int)gameState.originalWindowSize.y);
+        SetWindowPosition((int)(GetMonitorWidth(0) - gameState.originalWindowSize.x) / 2, (int)(GetMonitorHeight(0) - gameState.originalWindowSize.y) / 2);
+    }
+}
+
+void ResizeCallback(Vector2 prevWindowSize)
+{
+    gameState.windowSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
+
+    for (size_t i = 0; i < NUM_SCREENS; i++)
+    {
+        if (gameState.screens[i] != nullptr)
+        {
+            gameState.screens[i]->Resize(prevWindowSize);
+        }
+    }
+
+    player->UpdateCamera();
+}
+
 void ChangeFPS()
 {
 #ifdef PLATFORM_DESKTOP
@@ -258,13 +301,20 @@ void DrawFrame()
 
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER || gameState.currentScreen == PAUSE_MENU)
     {
-        DrawTexture(*spaceBackground, 0, 0, WHITE);
+        // draw background centered
+        DrawTexture(*spaceBackground, (int)(GetScreenWidth() - spaceBackground->width) / 2, (int)(GetScreenHeight() - spaceBackground->height) / 2, WHITE);
+
+        BeginMode2D(player->GetCamera());
+
         for (size_t i = 0; i < gameObjects.size(); i++)
         {
             gameObjects[i]->Draw();
         }
         player->Draw();
+
+        EndMode2D();
     }
+
     if (gameState.screens[gameState.currentScreen] != nullptr)
     {
         if (gameState.currentScreen == PAUSE_MENU)
@@ -289,11 +339,19 @@ void DrawDebug()
 {
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
+        BeginMode2D(player->GetCamera());
+
         player->DrawDebug();
         for (size_t i = 0; i < gameObjects.size(); i++)
         {
             gameObjects[i]->DrawDebug();
         }
+
+        // Rectangle worldBox = {-(float)GetScreenWidth() / 2, -(float)GetScreenHeight() / 2, (float)GetScreenWidth(), (float)GetScreenHeight()};
+        // DrawRectangleLinesEx(worldBox, 4, ORANGE);
+        DrawCircleV(GetScreenToWorld2D(GetMousePosition(), player->GetCamera()), 5, PURPLE);
+
+        EndMode2D();
     }
 
     DrawFPS(10, 10);
@@ -338,8 +396,7 @@ void HandleInput()
 
     if (IsKeyPressed(KEY_F11))
     {
-        // TODO: implement fullscreen toggle with resolution change
-        ToggleFullscreen();
+        ToggleGameFullscreen();
     }
 
     if (IsKeyPressed(KEY_ESCAPE))
@@ -401,16 +458,19 @@ void HandleInput()
             HIDE_SPRITES = !HIDE_SPRITES;
         }
     }
+    // spawn an asteroid
     if (IsKeyPressed(KEY_X))
     {
         gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
         gameState.asteroidsCount++;
     }
+    // spawn an enemy
     if (IsKeyPressed(KEY_C))
     {
         gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(100), player, gameState.diffSettings.enemiesAttributes));
         gameState.enemiesCount++;
     }
+    // spawn the selected powerup in the mouse position
     if (IsKeyPressed(KEY_V))
     {
         if (gameState.powerupSpawned)
@@ -423,7 +483,7 @@ void HandleInput()
                 gameObjects.erase(powerup);
             }
         }
-        gameObjects.push_back(new PowerUp(Vector2Clamp(GetMousePosition(), {0, 0}, {(float)GetScreenWidth(), (float)GetScreenHeight()}), powerupToSpawn));
+        gameObjects.push_back(new PowerUp(GetScreenToWorld2D(GetMousePosition(), player->GetCamera()), powerupToSpawn));
         gameState.powerupSpawned = true;
     }
 
@@ -445,9 +505,12 @@ void HandleInput()
         powerupToSpawn = (PowerUpType)((powerupToSpawn - 1 + NUM_POWER_UP_TYPES) % NUM_POWER_UP_TYPES);
     }
 
+    // moving objects with mouse
     static GameObject *movingObject = nullptr;
 
-    if (player != nullptr && CheckCollisionPointRec(GetMousePosition(), player->GetBounds()))
+    Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), player->GetCamera());
+
+    if (player != nullptr && CheckCollisionPointRec(mouseWorldPos, player->GetBounds()))
     {
         if (movingObject == nullptr && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
@@ -457,7 +520,7 @@ void HandleInput()
 
     for (size_t i = 0; i < gameObjects.size(); i++)
     {
-        if (CheckCollisionPointRec(GetMousePosition(), gameObjects[i]->GetBounds()))
+        if (CheckCollisionPointRec(mouseWorldPos, gameObjects[i]->GetBounds()))
         {
             if (movingObject == nullptr && (IsMouseButtonDown(MOUSE_LEFT_BUTTON) || IsMouseButtonDown(MOUSE_RIGHT_BUTTON)))
             {
@@ -671,6 +734,13 @@ void UpdateGame()
         return;
     }
     gameState.screens[gameState.currentScreen]->Update();
+
+    static Vector2 prevWindowSize = gameState.windowSize;
+    if (IsWindowResized())
+    {
+        ResizeCallback(prevWindowSize);
+        prevWindowSize = gameState.windowSize;
+    }
 }
 
 bool GameLoop()

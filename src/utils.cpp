@@ -1,7 +1,7 @@
 #include "utils.hpp"
 #include "raymath.h"
 
-Rectangle createCenteredButtonRec(Button **mainMenuButtons, int numButtons)
+Rectangle CreateCenteredButtonRec(Button **mainMenuButtons, int numButtons)
 {
     float buttonWidth = mainMenuButtons[0]->GetWidth();
     float buttonHeight = mainMenuButtons[0]->GetHeight();
@@ -34,7 +34,7 @@ std::vector<Vector2> getAxes(std::vector<Vector2> hitbox)
     return axes;
 }
 
-Vector2 project(Vector2 axis, std::vector<Vector2> hitbox)
+Vector2 Project(Vector2 axis, std::vector<Vector2> hitbox)
 {
     float min = 0;
     float max = 0;
@@ -55,7 +55,7 @@ Vector2 project(Vector2 axis, std::vector<Vector2> hitbox)
     return {min, max};
 }
 
-bool overlaps(Vector2 a, Vector2 b, float *overlap)
+bool Overlaps(Vector2 a, Vector2 b, float *overlap)
 {
     float minA = a.x;
     float maxA = a.y;
@@ -72,21 +72,44 @@ bool overlaps(Vector2 a, Vector2 b, float *overlap)
 
 Vector2 RandomVecOutsideScreen(float margin)
 {
+    // y-axis is inverted in raylib
+    // x-axis is normal
+    
+    const int top = -GetScreenHeight() / 2 - margin; 
+    const int right = GetScreenWidth() / 2 + margin;
+    const int bottom = GetScreenHeight() / 2 + margin;
+    const int left = -GetScreenWidth() / 2 - margin;
+
+    //   top ->  ----------------------------------------
+    //           |                                      |
+    //           |  ----------------------------------  |
+    //           |  |                                |  |
+    //           |  |             VISIBLE            |  |
+    //           |  |              WORLD             |  |
+    //           |  |                                |  |
+    //           |  ----------------------------------  |
+    //           |                                      |
+    // bottom -> ----------------------------------------
+    //           ^                                      ^
+    //           |                                      |
+    //          left                                  right
+
+    // pick a random side and a random position on that side
     int side = GetRandomValue(0, 3);
     Vector2 pos;
     switch (side)
     {
     case 0: // top
-        pos = {(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(-margin, 0)};
+        pos = {(float)GetRandomValue(left, right), top + margin / 2};
         break;
     case 1: // right
-        pos = {(float)GetRandomValue(GetScreenWidth(), GetScreenWidth() + margin), (float)GetRandomValue(0, GetScreenHeight())};
+        pos = {right - margin / 2, (float)GetRandomValue(top, bottom)};
         break;
     case 2: // bottom
-        pos = {(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(GetScreenHeight(), GetScreenHeight() + margin)};
+        pos = {(float)GetRandomValue(left, right), bottom - margin / 2};
         break;
     case 3: // left
-        pos = {(float)GetRandomValue(-margin, 0), (float)GetRandomValue(0, GetScreenHeight())};
+        pos = {left + margin / 2, (float)GetRandomValue(top, bottom)};
         break;
     default:
         break;

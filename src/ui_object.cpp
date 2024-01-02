@@ -46,7 +46,7 @@ void UIObject::Draw()
     {
         texture = ResourceManager::GetInvalidTexture();
     }
-    
+
     DrawTexturePro(*texture, {0, 0, (float)texture->width, (float)texture->height}, bounds, {0, 0}, 0, WHITE);
 
     for (size_t i = 0; i < children.size(); i++)
@@ -73,6 +73,38 @@ void UIObject::AddChild(UIObject *child)
 void UIObject::RemoveChild(UIObject *child)
 {
     children.erase(std::remove(children.begin(), children.end(), child), children.end());
+}
+
+void UIObject::SetRelBounds(Rectangle relBounds)
+{
+    if (this->relBounds.x == relBounds.x && this->relBounds.y == relBounds.y && this->relBounds.width == relBounds.width && this->relBounds.height == relBounds.height)
+    {
+        return;
+    }
+    
+    this->relBounds = relBounds;
+    Resize({(float)GetScreenWidth(), (float)GetScreenHeight()});
+}
+
+void UIObject::Resize(Vector2 prevScreenSize)
+{
+    Vector2 scale = {(float)GetScreenWidth() / prevScreenSize.x, (float)GetScreenHeight() / prevScreenSize.y};
+
+    if (parent == nullptr)
+    {
+        bounds = {bounds.x * scale.x, bounds.y * scale.y, bounds.width * scale.x, bounds.height * scale.y};
+    }
+    else
+    {
+        bounds = {parent->GetBounds().x + relBounds.x * scale.x, parent->GetBounds().y + relBounds.y * scale.y, relBounds.width * scale.x, relBounds.height * scale.y};
+    }
+
+    for (size_t i = 0; i < children.size(); i++)
+    {
+        children[i]->Resize(prevScreenSize);
+    }
+
+    relBounds = {relBounds.x * scale.x, relBounds.y * scale.y, relBounds.width * scale.x, relBounds.height * scale.y};
 }
 
 void UIObject::SetParent(UIObject *parent)

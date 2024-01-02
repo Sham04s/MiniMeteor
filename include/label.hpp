@@ -18,7 +18,8 @@ private:
     const char *text;
     Color color;
     int fontSize;
-    Rectangle textBounds;
+    Rectangle textRelBounds;
+    TextAlignment hAlignment, vAlignment;
 
 public:
     Label(Rectangle relBounds, const char *text, bool title, UIObject *parent)
@@ -28,6 +29,7 @@ public:
 
     void Draw() override;
     void DrawDebug() override;
+    void Resize(Vector2 prevScreenSize);
 
     void SetText(const char *text) { this->text = text; }
     void SetColor(Color color) { this->color = color; }

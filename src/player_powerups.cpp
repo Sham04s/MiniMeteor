@@ -104,7 +104,7 @@ void PlayerPowerups::Draw()
     Texture2D *powerupTexture = ResourceManager::GetInvalidTexture();
     Vector2 textPos = {dstRect.x + ICONS_SIZE + ICONS_SPACING, dstRect.y + ICONS_SIZE / 2};
 
-    Vector2 playerPos = player->GetOrigin();
+    Vector2 playerPos = GetWorldToScreen2D(player->GetOrigin(), player->GetCamera());
     float distanceToPlayer;
     if (position == TOP || position == BOTTOM)
     {

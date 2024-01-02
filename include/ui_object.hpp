@@ -35,6 +35,8 @@ public:
     std::vector<UIObject *> *GetChildren() { return &children; }
 
     void SetRelPos(Vector2 relPos) { relBounds.x = relPos.x; relBounds.y = relPos.y; }
-    void SetRelBounds(Rectangle relBounds) { this->relBounds = relBounds; }
+    void SetRelBounds(Rectangle relBounds);
+
+    virtual void Resize(Vector2 prevScreenSize);
 };
 #endif // __UI_OBJECT_H__

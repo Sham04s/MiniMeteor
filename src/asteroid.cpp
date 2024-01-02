@@ -48,7 +48,7 @@ Asteroid::Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultip
 }
 
 Asteroid::Asteroid(AsteroidVariant variant, float velocityMultiplier)
-: Asteroid(RandomVecOutsideScreen(variant == LARGE ? ASTEROID_SIZE_LARGE : ASTEROID_SIZE_SMALL), variant, velocityMultiplier)
+    : Asteroid(RandomVecOutsideScreen(variant == LARGE ? ASTEROID_SIZE_LARGE : ASTEROID_SIZE_SMALL), variant, velocityMultiplier)
 {
 }
 
@@ -80,22 +80,40 @@ void Asteroid::Update()
     GameObject::Update();
 
     // Teleport to the other side of the screen if the asteroid goes off-screen
-    if (origin.x > GetScreenWidth() + size / 2)
+    const Rectangle worldBox = {-(float)GetScreenWidth() / 2, -(float)GetScreenHeight() / 2, (float)GetScreenWidth(), (float)GetScreenHeight()};
+    if (origin.x > worldBox.x + worldBox.width + size / 2)
     {
-        Translate({-GetScreenWidth() - size, 0});
+        Translate({-worldBox.width - size, 0});
     }
-    else if (origin.x < -size / 2)
+    else if (origin.x < worldBox.x - size / 2)
     {
-        Translate({GetScreenWidth() + size, 0});
+        Translate({worldBox.width + size, 0});
     }
-    if (origin.y > GetScreenHeight() + size / 2)
+    if (origin.y > worldBox.y + worldBox.height + size / 2)
     {
-        Translate({0, -GetScreenHeight() - size});
+        Translate({0, -worldBox.height - size});
     }
-    else if (origin.y < -size / 2)
+    else if (origin.y < worldBox.y - size / 2)
     {
-        Translate({0, GetScreenHeight() + size});
+        Translate({0, worldBox.height + size});
     }
+
+    // if (origin.x > GetScreenWidth() + size / 2)
+    // {
+    //     Translate({-GetScreenWidth() - size, 0});
+    // }
+    // else if (origin.x < -size / 2)
+    // {
+    //     Translate({GetScreenWidth() + size, 0});
+    // }
+    // if (origin.y > GetScreenHeight() + size / 2)
+    // {
+    //     Translate({0, -GetScreenHeight() - size});
+    // }
+    // else if (origin.y < -size / 2)
+    // {
+    //     Translate({0, GetScreenHeight() + size});
+    // }
 
     // Play explosion sound if asteroid is exploding
     if (state == EXPLODING && !IsSoundPlaying(explosionSound))

@@ -156,23 +156,42 @@ void Character::Update()
         angularVelocity = 0;
     }
 
-    // wrap around screen
-    if (origin.x > GetScreenWidth() + CHARACTER_SIZE / 4)
+    // Teleport to the other side of the screen if the character goes off-screen
+    const Rectangle worldBox = {-(float)GetScreenWidth() / 2, -(float)GetScreenHeight() / 2, (float)GetScreenWidth(), (float)GetScreenHeight()};
+    
+    if (origin.x > worldBox.x + worldBox.width + CHARACTER_SIZE / 4)
     {
-        Translate({-(float)GetScreenWidth() - CHARACTER_SIZE / 2, 0});
+        Translate({-(float)worldBox.width - CHARACTER_SIZE / 2, 0});
     }
-    else if (origin.x < -CHARACTER_SIZE / 4)
+    else if (origin.x < worldBox.x - CHARACTER_SIZE / 4)
     {
-        Translate({(float)GetScreenWidth() + CHARACTER_SIZE / 2, 0});
+        Translate({(float)worldBox.width + CHARACTER_SIZE / 2, 0});
     }
-    if (origin.y > GetScreenHeight() + CHARACTER_SIZE / 4)
+    if (origin.y > worldBox.y + worldBox.height + CHARACTER_SIZE / 4)
     {
-        Translate({0, -(float)GetScreenHeight() - CHARACTER_SIZE / 2});
+        Translate({0, -(float)worldBox.height - CHARACTER_SIZE / 2});
     }
-    else if (origin.y < -CHARACTER_SIZE / 4)
+    else if (origin.y < worldBox.y - CHARACTER_SIZE / 4)
     {
-        Translate({0, (float)GetScreenHeight() + CHARACTER_SIZE / 2});
+        Translate({0, (float)worldBox.height + CHARACTER_SIZE / 2});
     }
+    
+    // if (origin.x > GetScreenWidth() + CHARACTER_SIZE / 4)
+    // {
+    //     Translate({-(float)GetScreenWidth() - CHARACTER_SIZE / 2, 0});
+    // }
+    // else if (origin.x < -CHARACTER_SIZE / 4)
+    // {
+    //     Translate({(float)GetScreenWidth() + CHARACTER_SIZE / 2, 0});
+    // }
+    // if (origin.y > GetScreenHeight() + CHARACTER_SIZE / 4)
+    // {
+    //     Translate({0, -(float)GetScreenHeight() - CHARACTER_SIZE / 2});
+    // }
+    // else if (origin.y < -CHARACTER_SIZE / 4)
+    // {
+    //     Translate({0, (float)GetScreenHeight() + CHARACTER_SIZE / 2});
+    // }
 }
 
 void Character::Draw()

@@ -8,7 +8,8 @@ Button::Button(Rectangle relBounds, UIObject *parent, const char *text, ButtonVa
     this->pressed = false;
     this->hovered = false;
     this->clicked = false;
-    this->text = text;
+    this->label = new Label({0, 0, bounds.width, bounds.height}, text, variant == BUTTON_SECONDARY ? BLACK : WHITE, ALIGN_CENTER, ALIGN_CENTER, BUTTON_FONT_SIZE, this);
+    AddChild(label);
     this->onClickFunc = nullptr;
     this->variant = variant;
     this->size = size;
@@ -20,7 +21,7 @@ Button::Button(Rectangle relBounds, UIObject *parent, const char *text, ButtonVa
     {
         this->texture = ResourceManager::GetUITexture(BUTTON_PRIMARY_TEXTURE);
     }
-    this->textBounds = {bounds.x + BUTTON_PADDING, bounds.y + BUTTON_PADDING, bounds.width - BUTTON_PADDING * 2, bounds.height - BUTTON_PADDING * 2};
+    // this->textBounds = {bounds.x + BUTTON_PADDING, bounds.y + BUTTON_PADDING, bounds.width - BUTTON_PADDING * 2, bounds.height - BUTTON_PADDING * 2};
 }
 
 Button::Button(Vector2 relPos, UIObject *parent, const char *text, ButtonVariant variant, ButtonSize size, std::function<void()> onClick)
@@ -29,7 +30,8 @@ Button::Button(Vector2 relPos, UIObject *parent, const char *text, ButtonVariant
     this->pressed = false;
     this->hovered = false;
     this->clicked = false;
-    this->text = text;
+    this->label = new Label({0, 0, bounds.width, bounds.height}, text, variant == BUTTON_SECONDARY ? BLACK : WHITE, ALIGN_CENTER, ALIGN_CENTER, BUTTON_FONT_SIZE, this);
+    AddChild(label);
     this->onClickFunc = onClick;
     this->variant = variant;
     this->size = size;
@@ -41,12 +43,11 @@ Button::Button(Vector2 relPos, UIObject *parent, const char *text, ButtonVariant
     {
         this->texture = ResourceManager::GetUITexture(BUTTON_PRIMARY_TEXTURE);
     }
-    this->textBounds = {bounds.x + BUTTON_PADDING, bounds.y + BUTTON_PADDING, bounds.width - BUTTON_PADDING * 2, bounds.height - BUTTON_PADDING * 2};
+    // this->textBounds = {bounds.x + BUTTON_PADDING, bounds.y + BUTTON_PADDING, bounds.width - BUTTON_PADDING * 2, bounds.height - BUTTON_PADDING * 2};
 }
 
 Button::~Button()
 {
-    UIObject::~UIObject();
 }
 
 void Button::Update()
@@ -81,6 +82,15 @@ void Button::Update()
     {
         pressed = false;
     }
+
+    Rectangle textRelBounds = {BUTTON_PADDING, BUTTON_PADDING, relBounds.width - BUTTON_PADDING * 2, relBounds.height - BUTTON_PADDING * 2};
+    if (pressed)
+    {
+        textRelBounds.y += BUTTON_PRESSED_OFFSET;
+        textRelBounds.height -= BUTTON_PRESSED_OFFSET;
+    }
+
+    label->SetRelBounds(textRelBounds);
 }
 
 void Button::Draw()
@@ -97,31 +107,25 @@ void Button::Draw()
     Rectangle srcRect = ResourceManager::GetUISrcRect(variant == BUTTON_SECONDARY ? BUTTON_SECONDARY_TEXTURE : BUTTON_PRIMARY_TEXTURE, frame);
     DrawTexturePro(*texture, srcRect, bounds, {0}, 0, WHITE);
 
-    Vector2 textSize = MeasureTextEx(*ResourceManager::GetFont(), text, BUTTON_FONT_SIZE, 1);
-    Vector2 textDst = {textBounds.x + (textBounds.width - textSize.x) / 2, textBounds.y + (textBounds.height - textSize.y) / 2};
-
-    if (pressed)
-    {
-        textDst.y += BUTTON_PRESSED_OFFSET;
-    }
     // DrawText(text, textDst.x, textDst.y, BUTTON_FONT_SIZE, BUTTON_FONT_COLOR);
-    DrawTextEx(*ResourceManager::GetFont(), text, textDst, BUTTON_FONT_SIZE, 1, BUTTON_FONT_COLOR);
+    // DrawTextEx(*ResourceManager::GetFont(), text, textDst, BUTTON_FONT_SIZE, 1, BUTTON_FONT_COLOR);
+
+    label->Draw();
 }
 
 void Button::DrawDebug()
 {
     UIObject::DrawDebug();
 
-    Vector2 textSize = MeasureTextEx(*ResourceManager::GetFont(), text, BUTTON_FONT_SIZE, 1);
-    Vector2 textDst = {textBounds.x + (textBounds.width - textSize.x) / 2, textBounds.y + (textBounds.height - textSize.y) / 2};
-    
     DrawRectangleLinesEx(bounds, 1, RED);
-    DrawRectangleLinesEx(textBounds, 1, RED);
-    DrawRectangleLinesEx({textDst.x, textDst.y, textSize.x, textSize.y}, 1, BLUE);
+}
+
+void Button::Resize(Vector2 prevScreenSize)
+{
+    UIObject::Resize(prevScreenSize);
 }
 
 void Button::SetParent(UIObject *parent)
 {
     UIObject::SetParent(parent);
-    this->textBounds = {bounds.x + BUTTON_PADDING, bounds.y + BUTTON_PADDING, bounds.width - BUTTON_PADDING * 2, bounds.height - BUTTON_PADDING * 2};
 }

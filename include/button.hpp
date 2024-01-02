@@ -2,6 +2,7 @@
 #define __BUTTON_H__
 
 #include "ui_object.hpp"
+#include "label.hpp"
 #include "functional"
 
 #define BUTTON_WIDTH (float)(size == BUTTON_SMALL ? 100 : (size == BUTTON_MEDIUM ? 200 : 300))
@@ -32,11 +33,10 @@ private:
     bool pressed;
     bool hovered;
     bool clicked;
-    const char *text;
     std::function<void()> onClickFunc;
     ButtonVariant variant;
     ButtonSize size;
-    Rectangle textBounds;
+    Label *label;
 
     void SetParent(UIObject *parent);
 
@@ -48,6 +48,7 @@ public:
     void Update();
     void Draw();
     void DrawDebug();
+    void Resize(Vector2 prevScreenSize);
 
     void OnClick(std::function<void()> func) { onClickFunc = func; }
 
@@ -61,6 +62,6 @@ public:
     float GetTextSpacing() { return BUTTON_FONT_SPACING; }
     float GetPadding() { return BUTTON_PADDING; }
 
-    void SetText(const char *text) { this->text = text; }
+    void SetText(const char *text) { this->label->SetText(text); }
 };
 #endif // __BUTTON_H__

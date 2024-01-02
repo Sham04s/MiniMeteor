@@ -67,6 +67,7 @@ void DeleteTempDLL()
 
 void InitRaylib()
 {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "MiniMeteor");
 }
 void LoadGame()

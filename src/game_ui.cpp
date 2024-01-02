@@ -28,7 +28,7 @@ UIObject *CreateMainMenu()
     Button *mainMenuButtons[mainMenuButtonCount] = {playButton, optionsButton, quitButton};
 
     // main menu
-    Rectangle mainMenuButtonRec = createCenteredButtonRec(mainMenuButtons, mainMenuButtonCount);
+    Rectangle mainMenuButtonRec = CreateCenteredButtonRec(mainMenuButtons, mainMenuButtonCount);
     UIObject *mainMenuContainer = new UIObject(mainMenuButtonRec, nullptr, ResourceManager::GetDefaultTexture());
 
     Button *b;
@@ -73,7 +73,7 @@ UIObject *CreatePauseMenu()
     };
 
     // pause menu
-    UIObject *pauseMenu = new UIObject(createCenteredButtonRec(pauseButtons, pauseButtonCount), nullptr, ResourceManager::GetDefaultTexture());
+    UIObject *pauseMenu = new UIObject(CreateCenteredButtonRec(pauseButtons, pauseButtonCount), nullptr, ResourceManager::GetDefaultTexture());
 
     Button *b;
     for (int i = 0; i < pauseButtonCount; i++)
@@ -97,7 +97,7 @@ UIObject *CreateGameOverMenu()
                    { ChangeScreen(MAIN_MENU); }),
     };
 
-    Rectangle gameOverButtonRec = createCenteredButtonRec(gameOverButtons, gameOverButtonCount);
+    Rectangle gameOverButtonRec = CreateCenteredButtonRec(gameOverButtons, gameOverButtonCount);
     gameOverButtonRec.y += gameOverButtonRec.height * 2;
     UIObject *buttons = new UIObject(gameOverButtonRec, nullptr, ResourceManager::GetDefaultTexture());
 
@@ -161,7 +161,7 @@ UIObject *CreateOptionsMenu()
     backButton->OnClick([]()
                         { PreviousScreen(); });
     fullscreenButton->OnClick([]()
-                              { ToggleFullscreen(); });
+                              { ToggleGameFullscreen(); });
     changeFPSButton->OnClick([changeFPSButton]()
                              { ChangeFPSButtonFunc(changeFPSButton); });
 
@@ -171,7 +171,7 @@ UIObject *CreateOptionsMenu()
     Button *buttons[optionButtonCount] = {changeFPSButton, backButton};
 #endif // PLATFORM_DESKTOP
 
-    Rectangle optionButtonRec = createCenteredButtonRec(buttons, optionButtonCount);
+    Rectangle optionButtonRec = CreateCenteredButtonRec(buttons, optionButtonCount);
 
     UIObject *options = new UIObject(optionButtonRec, nullptr, ResourceManager::GetDefaultTexture());
 

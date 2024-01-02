@@ -5,6 +5,7 @@
 #include "player.hpp"
 #include "lives_bar.hpp"
 #include "player_powerups.hpp"
+#include "label.hpp"
 
 #define SCORE_FONT_SIZE 30
 
@@ -14,12 +15,14 @@ private:
     Player *player;
     LivesBar *livesBar;
     PlayerPowerups *powerups;
-    Rectangle scoreRect;
+    Label *scoreLabel;
+    char scoreText[32];
 
 public:
     PlayerUI(Player *player);
     ~PlayerUI();
 
+    void Update();
     void Draw();
     void DrawDebug();
 };

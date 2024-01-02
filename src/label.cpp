@@ -7,7 +7,33 @@ Label::Label(Rectangle relBounds, const char *text, Color color, TextAlignment h
     this->text = text;
     this->color = color;
     this->fontSize = fontSize;
+    this->hAlignment = hAlignment;
+    this->vAlignment = vAlignment;
+    this->Resize({(float)GetScreenWidth(), (float)GetScreenHeight()});
+}
 
+Label::~Label()
+{
+}
+
+void Label::Draw()
+{
+    UIObject::Draw();
+    DrawTextEx(*ResourceManager::GetFont(), text, {bounds.x + textRelBounds.x, bounds.y + textRelBounds.y}, fontSize, 1, color);
+}
+
+void Label::DrawDebug()
+{
+    UIObject::DrawDebug();
+    DrawRectangleLinesEx({bounds.x + textRelBounds.x, bounds.y + textRelBounds.y, textRelBounds.width, textRelBounds.height}, 1, BLUE);
+}
+
+void Label::Resize(Vector2 prevScreenSize)
+{
+    UIObject::Resize(prevScreenSize);
+    
+    fontSize = (int)(fontSize * (GetScreenHeight() / prevScreenSize.y));
+    
     // calculate text bounds
     Vector2 textSize = MeasureTextEx(GetFontDefault(), text, fontSize, 1);
     float x = 0, y = 0;
@@ -33,22 +59,7 @@ Label::Label(Rectangle relBounds, const char *text, Color color, TextAlignment h
     default:
         break;
     }
-    
-    textBounds = {x, y, textSize.x, textSize.y};
-}
 
-Label::~Label()
-{
-}
 
-void Label::Draw()
-{
-    UIObject::Draw();
-    DrawTextEx(*ResourceManager::GetFont(), text, {bounds.x + textBounds.x, bounds.y + textBounds.y}, fontSize, 1, color);
-}
-
-void Label::DrawDebug()
-{
-    UIObject::DrawDebug();
-    DrawRectangleLinesEx({bounds.x + textBounds.x, bounds.y + textBounds.y, textBounds.width, textBounds.height}, 1, BLUE);
+    textRelBounds = {x, y, textSize.x, textSize.y};
 }

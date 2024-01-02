@@ -32,6 +32,8 @@ void DrawFrame();
 void DrawDebug();
 void ChangeScreen(ScreenID screen);
 void PreviousScreen();
+void ToggleGameFullscreen();
+void ResizeCallback(Vector2 prevWindowSize);
 void ChangeFPS();
 void UpdateGame();
 
@@ -62,6 +64,9 @@ typedef struct GameState
     ScreenID previousScreen;
     UIObject *screens[NUM_SCREENS];
     int fps;
+    bool fullscreen;
+    Vector2 originalWindowSize;
+    Vector2 windowSize;
     bool powerupSpawned;
     int asteroidsCount;
     int enemiesCount;

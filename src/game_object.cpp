@@ -38,7 +38,10 @@ void GameObject::Draw()
 
 void GameObject::DrawDebug()
 {
+    // draw bounding box
     DrawRectangleLinesEx(bounds, 1, RED);
+
+    // draw hitbox
     for (size_t i = 0; i < hitbox.size(); i++)
     {
         Vector2 point = {hitbox[i].x, hitbox[i].y};
@@ -46,9 +49,16 @@ void GameObject::DrawDebug()
         DrawCircleV(point, 2, GREEN);
         DrawLineV(point, nextPoint, GREEN);
     }
+
+    // draw forward direction
     Vector2 forwardEndPoint = {origin.x + forwardDir.x * 50, origin.y + forwardDir.y * 50};
     DrawLineEx(origin, forwardEndPoint, 2, BLUE);
+
+    // draw velocity
     DrawLineEx(origin, Vector2Add(origin, Vector2Scale(velocity, 0.25f)), 2, GREEN);
+
+    Vector2 textPos = {bounds.x, bounds.y + bounds.height + 5};
+    DrawTextEx(*ResourceManager::GetFont(), TextFormat("pos: (%.2f, %.2f)", origin.x, origin.y), textPos, 16, 1, WHITE);
 }
 
 void GameObject::HandleCollision(GameObject *other, Vector2 *pushVector)
@@ -82,7 +92,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
     {
         return CheckCollisionCircles(hitbox[0], 1, other->GetHitbox()[0], 1);
     }
-    
+
     // if the hitbox is a single point then just check if the point is inside the other hitbox
     if (hitbox.size() == 1)
     {
@@ -112,10 +122,10 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
     {
         Vector2 axis = axes1[i];
         // project both shapes onto the axis
-        Vector2 p1 = project(axis, hitbox);
-        Vector2 p2 = project(axis, other->GetHitbox());
+        Vector2 p1 = Project(axis, hitbox);
+        Vector2 p2 = Project(axis, other->GetHitbox());
         // do the projections overlap?
-        if (!overlaps(p1, p2, &o))
+        if (!Overlaps(p1, p2, &o))
         {
             // then we can guarantee that the shapes do not overlap
             return false;
@@ -123,7 +133,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         else
         {
             // get the overlap
-            overlaps(p1, p2, &o);
+            Overlaps(p1, p2, &o);
             // check for minimum
             if (o < overlap)
             {
@@ -138,10 +148,10 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
     {
         Vector2 axis = axes2[i];
         // project both shapes onto the axis
-        Vector2 p1 = project(axis, hitbox);
-        Vector2 p2 = project(axis, other->GetHitbox());
+        Vector2 p1 = Project(axis, hitbox);
+        Vector2 p2 = Project(axis, other->GetHitbox());
         // do the projections overlap?
-        if (!overlaps(p1, p2, &o))
+        if (!Overlaps(p1, p2, &o))
         {
             // then we can guarantee that the shapes do not overlap
             return false;
@@ -149,7 +159,7 @@ bool GameObject::CheckCollision(GameObject *other, Vector2 *pushVector)
         else
         {
             // get the overlap
-            overlaps(p1, p2, &o);
+            Overlaps(p1, p2, &o);
             // check for minimum
             if (o < overlap)
             {

@@ -5,12 +5,11 @@
 #include "ui_object.hpp"
 #include <vector>
 
-Rectangle createCenteredButtonRec(Button **mainMenuButtons, int numButtons);
+Rectangle CreateCenteredButtonRec(Button **mainMenuButtons, int numButtons);
 
 std::vector<Vector2> getAxes(std::vector<Vector2> hitbox);
-Vector2 project(Vector2 axis, std::vector<Vector2> hitbox);
-bool overlaps(Vector2 a, Vector2 b, float *overlap);
+Vector2 Project(Vector2 axis, std::vector<Vector2> hitbox);
+bool Overlaps(Vector2 a, Vector2 b, float *overlap);
 Vector2 RandomVecOutsideScreen(float margin);
-
 
 #endif // __UTILS_H__

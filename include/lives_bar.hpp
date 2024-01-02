@@ -21,5 +21,6 @@ public:
 
     void Draw();
     void DrawDebug();
+    void Resize(Vector2 prevScreenSize);
 };
 #endif // __LIVES_BAR_H__

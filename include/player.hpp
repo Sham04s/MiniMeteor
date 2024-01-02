@@ -24,6 +24,7 @@ class Player : public Character
 {
 private:
     Vector2 initialOrigin;
+    Camera2D camera;
     bool invincible;
     bool hasMoved;
     bool usingBoost;
@@ -65,6 +66,8 @@ public:
     std::vector<PowerUp *> GetPowerups() { return powerups; }
     float GetPowerupMultiplier(PowerUpType type);
     size_t GetPowerupCount(PowerUpType type) { return powerupsCount[type]; }
+    Camera2D GetCamera() { return camera; }
+    void UpdateCamera();
 
     void SetLives(int lives) { this->lives = lives; }
 };

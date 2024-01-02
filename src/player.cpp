@@ -6,8 +6,13 @@
 
 Player::Player(Vector2 origin) : Character(origin)
 {
-    this->initialOrigin = {(float)GetScreenWidth() / 2, (float)GetScreenHeight() / 2};
+    this->initialOrigin = origin;
     this->type = PLAYER;
+    this->camera = {0};
+    camera.target = {0, 0};
+    camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+    camera.rotation = 0.0f;
+    camera.zoom = 1.0f;
 
     this->Reset();
 
@@ -85,12 +90,12 @@ void Player::UpdatePowerups()
         PowerUp *powerup = powerups[i];
         powerup->Update();
         powerup->UpdateBounds(this->bounds);
-        
+
         if (powerup->GetType() == TEMPORARY_INFINITE_BOOST)
         {
             boostTime = BOOST_TIME;
         }
-        
+
         if (!powerup->CanBeApplied())
         {
             powerupsCount[powerup->GetType()] -= 1;
@@ -161,12 +166,6 @@ void Player::Draw()
 void Player::DrawDebug()
 {
     Character::DrawDebug();
-
-    DrawText(TextFormat("Speed: %.2f", Vector2Length(velocity)), 10, 80, 16, WHITE);
-    DrawText(TextFormat("MAX Speed: %.2f", maxSpeed), 10, 100, 16, WHITE);
-
-    Rectangle belowBounds = {bounds.x, bounds.y + bounds.height, bounds.width, 20};
-    DrawText(TextFormat("Invincible: %s", invincible ? "true" : "false"), belowBounds.x, belowBounds.y, 16, invincible ? GREEN : RED);
 }
 
 void Player::HandleInput()
@@ -430,7 +429,7 @@ void Player::Reset()
     Respawn();
     this->lives = 3;
     this->bullets.clear();
-    
+
     // remove all powerups
     for (auto powerup : powerups)
     {
@@ -474,6 +473,11 @@ float Player::GetPowerupMultiplier(PowerUpType type)
     default:
         return count;
     }
+}
+
+void Player::UpdateCamera()
+{
+    camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
 }
 
 void Player::SetDefaultHitBox()

@@ -63,5 +63,6 @@ void Bullet::HandleCollision(GameObject *other, Vector2 *pushVector)
 
 bool Bullet::IsOutOfBounds()
 {
-    return (bounds.x < -BULLET_SIZE || bounds.x > GetScreenWidth() + BULLET_SIZE || bounds.y < -BULLET_SIZE || bounds.y > GetScreenHeight() + BULLET_SIZE);
+    const Rectangle worldBox = {-(float)GetScreenWidth() / 2, -(float)GetScreenHeight() / 2, (float)GetScreenWidth(), (float)GetScreenHeight()};
+    return !CheckCollisionPointRec(origin, worldBox);   
 }
