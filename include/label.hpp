@@ -29,7 +29,7 @@ public:
 
     void Draw() override;
     void DrawDebug() override;
-    void Resize(Vector2 prevScreenSize);
+    void Resize(Vector2 prevScreenSize) override;
 
     void SetText(const char *text) { this->text = text; }
     void SetColor(Color color) { this->color = color; }
