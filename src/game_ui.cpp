@@ -5,33 +5,45 @@
 #include "player_ui.hpp"
 #include "score_summary.hpp"
 #include <stdio.h>
+#include "label.hpp"
 
 char fpsButtonText[20];
 
 UIObject *CreateMainMenu()
 {
+    // main menu title
+    Label *title = new Label({0, (float)GetScreenHeight() / 8, (float)GetScreenWidth(), (float)GetScreenHeight() / 4}, "MiniMeteor", WHITE, ALIGN_CENTER, ALIGN_CENTER, 64, nullptr);
+
     // main menu buttons
     const int mainMenuButtonCount = 3;
-    Button *mainMenuButtons[mainMenuButtonCount] = {
-        new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { CreateNewGame(); }),
-        new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { ChangeScreen(OPTIONS); }),
-        new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { ChangeScreen(EXITING); }),
-    };
+    Button *playButton = new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                                    { CreateNewGame(); });
+
+    Button *optionsButton = new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                                       { ChangeScreen(OPTIONS); });
+
+    Button *quitButton = new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                                    { ChangeScreen(EXITING); });
+
+    Button *mainMenuButtons[mainMenuButtonCount] = {playButton, optionsButton, quitButton};
 
     // main menu
-    UIObject *mainMenu = new UIObject(createCenteredButtonRec(mainMenuButtons, mainMenuButtonCount),
-                                      nullptr, ResourceManager::GetDefaultTexture());
+    Rectangle mainMenuButtonRec = createCenteredButtonRec(mainMenuButtons, mainMenuButtonCount);
+    UIObject *mainMenuContainer = new UIObject(mainMenuButtonRec, nullptr, ResourceManager::GetDefaultTexture());
 
     Button *b;
     for (int i = 0; i < mainMenuButtonCount; i++)
     {
         b = mainMenuButtons[i];
         b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
-        mainMenu->AddChild(b);
+        mainMenuContainer->AddChild(b);
     }
+
+    UIObject *mainMenu = new UIObject({0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()},
+                                      nullptr, ResourceManager::GetDefaultTexture());
+
+    mainMenu->AddChild(title);
+    mainMenu->AddChild(mainMenuContainer);
 
     return mainMenu;
 }

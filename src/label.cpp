@@ -19,6 +19,8 @@ Label::Label(Rectangle relBounds, const char *text, Color color, TextAlignment h
     case ALIGN_END:
         x = relBounds.width - textSize.x;
         break;
+    default:
+        break;
     }
     switch (vAlignment)
     {
@@ -27,6 +29,8 @@ Label::Label(Rectangle relBounds, const char *text, Color color, TextAlignment h
         break;
     case ALIGN_END:
         y = relBounds.height - textSize.y;
+        break;
+    default:
         break;
     }
     
@@ -46,5 +50,5 @@ void Label::Draw()
 void Label::DrawDebug()
 {
     UIObject::DrawDebug();
-    DrawRectangleLinesEx(textBounds, 1, RED);
+    DrawRectangleLinesEx({bounds.x + textBounds.x, bounds.y + textBounds.y, textBounds.width, textBounds.height}, 1, BLUE);
 }
