@@ -13,13 +13,13 @@ const std::map<SpriteTextureID, const char *> spriteTexturesPathsMap = {
     {ASTEROID_SQUARED_DETAILED_SMALL_SPRITE, "resources/environment/asteroid_squared_detailed_small.png"},
     {ASTEROID_SQUARED_LARGE_SPRITE, "resources/environment/asteroid_squared_large.png"},
     {ASTEROID_SQUARED_SMALL_SPRITE, "resources/environment/asteroid_squared_small.png"},
+    {CROSSHAIR_SPRITE, "resources/characters/player/crosshair.png"},
     {BULLET_SPRITE, "resources/characters/player/bullet.png"},
     {ENEMY_BULLET_SPRITE, "resources/characters/enemies/bullet.png"},
     {ENEMY_BASIC_SPRITES, "resources/characters/enemies/basic_enemy.png"},
     {POWERUP_LIFE_ITEM_SPRITE, "resources/powerups/life_item.png"},
-    {POWERUP_TEMPORARY_SHIELD_SPRITE, "resources/powerups/shield.png"},
     {POWERUP_SHIELD_ITEM_SPRITE, "resources/powerups/shield_item.png"},
-    {POWERUP_SHIELD_SPRITE, "resources/powerups/temporary_shield.png"},
+    {POWERUP_SHIELD_SPRITE, "resources/powerups/shield.png"},
     {POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE, "resources/powerups/temporary_shield_item.png"},
     {POWERUP_FIRE_RATE_UPGRADE_ITEM_SPRITE, "resources/powerups/fire_rate_upgrade_item.png"},
     {POWERUP_BULLET_SPREAD_UPGRADE_ITEM_SPRITE, "resources/powerups/bullet_spread_upgrade_item.png"},
@@ -32,6 +32,7 @@ const std::map<UITextureID, const char *> uiTexturesPathsMap = {
     {BUTTON_PRIMARY_TEXTURE, "resources/ui/primary_button.png"},
     {BUTTON_SECONDARY_TEXTURE, "resources/ui/secondary_button.png"},
     {LIFE_TEXTURE, "resources/ui/life.png"},
+    {DIRECTIONAL_SHIP_TEXTURE, "resources/ui/directional_ship.png"},
 };
 
 const std::map<SoundID, const char *> soundsPathsMap = {
@@ -145,31 +146,33 @@ Texture2D *ResourceManager::GetSpriteTexture(SpriteTextureID id)
 
 Rectangle ResourceManager::GetSpriteSrcRect(SpriteTextureID id, unsigned int frame)
 {
-    int totalFrames;
+    int rows = 1;
+    int columns = 1;
 
-    // horizontal spritesheet
     switch (id)
     {
 
     case PLAYER_SPRITES:
-        totalFrames = 3;
-        break;
-
-    case BULLET_SPRITE:
-        totalFrames = 1;
+        rows = 4;
+        columns = 3;
         break;
 
     case ENEMY_BASIC_SPRITES:
-        totalFrames = 3;
+        rows = 1;
+        columns = 3;
         break;
 
     default:
         return {0, 0, (float)spriteTextures[id].width, (float)spriteTextures[id].height}; // default
     }
 
-    int frameWidth = spriteTextures[id].width / totalFrames;
-    int frameHeight = spriteTextures[id].height;
-    return {(float)(frameWidth * frame), 0, (float)frameWidth, (float)frameHeight};
+    int frameWidth = spriteTextures[id].width / columns;
+    int frameHeight = spriteTextures[id].height / rows;
+
+    int row = frame / columns;
+    int column = frame % columns;
+    
+    return {(float)(frameWidth * column), (float)(frameHeight * row), (float)frameWidth, (float)frameHeight};
 }
 
 Texture2D *ResourceManager::GetUITexture(UITextureID id)

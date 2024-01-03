@@ -9,6 +9,7 @@ Character::Character(Vector2 origin)
     this->lastShotTime = 0;
     this->lastDeathTime = 0;
     this->maxSpeed = CHARACTER_MAX_SPEED;
+    this->accelDir = forwardDir;
     this->acceleration = CHARACTER_ACCELERATION;
     this->deceleration = CHARACTER_DECELERATION;
     this->turnSpeed = CHARACTER_TURN_SPEED;
@@ -102,12 +103,12 @@ void Character::Update()
         const float pitch = fmaxf(THRUST_MIN_PITCH, 1.0f - timeAccelerating / THRUST_PITCH_DECAYING_TIME);
         SetSoundPitch(thrustSound, Clamp(pitch, 0, 1) * pitchAndVolumeScale);
 
-        // move sound from right to left proportional to player position in x axis
-        const float pan = (THRUST_MAX_PAN - TRHUST_MIN_PAN) * (1.0f - origin.x / GetScreenWidth()) + TRHUST_MIN_PAN;
+        // move sound from right to left proportional to character position in x axis
+        const float pan = 1.0f - Lerp(THRUST_MIN_PAN, THRUST_MAX_PAN, (origin.x + GetScreenWidth() / 2) / GetScreenWidth());
         SetSoundPan(thrustSound, Clamp(pan, 0, 1));
 
-        // decrease volume proportional to player position in y axis
-        const float volume = 1.0f - 2.0f * (1.0f - THRUST_MIN_VOLUME) * fabsf(0.5f - origin.y / GetScreenHeight());
+        // decrease volume proportional to character position in y axis
+        const float volume = 1.0f - fabsf(origin.y / GetScreenHeight());
         SetSoundVolume(thrustSound, Clamp(volume, 0, 1) * pitchAndVolumeScale);
     }
     else
@@ -146,10 +147,12 @@ void Character::Update()
     if (state & TURNING_LEFT)
     {
         angularVelocity = -turnSpeed;
+        accelDir = Vector2Rotate(accelDir, -turnSpeed * DEG2RAD * GetFrameTime());
     }
     else if (state & TURNING_RIGHT)
     {
         angularVelocity = turnSpeed;
+        accelDir = Vector2Rotate(accelDir, turnSpeed * DEG2RAD * GetFrameTime());
     }
     else
     {
@@ -232,6 +235,7 @@ void Character::Draw()
 void Character::DrawDebug()
 {
     GameObject::DrawDebug();
+    DrawLineV(origin, Vector2Add(origin, Vector2Scale(accelDir, 50)), ORANGE);
     for (size_t i = 0; i < bullets.size(); i++)
     {
         bullets[i].DrawDebug();
@@ -245,7 +249,7 @@ void Character::HandleCollision(GameObject *other, Vector2 *pushVector)
 
 void Character::Accelerate(float acceleration)
 {
-    this->velocity = Vector2Add(this->velocity, Vector2Scale(this->forwardDir, acceleration * GetFrameTime()));
+    this->velocity = Vector2Add(this->velocity, Vector2Scale(this->accelDir, acceleration * GetFrameTime()));
 }
 
 Rectangle Character::GetFrameRec()

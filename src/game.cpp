@@ -29,10 +29,9 @@ bool HIDE_SPRITES = false;
 
 GameState gameState;
 
-Player *player;
-std::vector<GameObject *> gameObjects;
-
-Texture2D *spaceBackground = nullptr;
+// TODO: add raylib logo when first loading
+// TODO: add credits screen (kenney.nl, raylib, openfonts?)
+// TODO: adjust difficulty settings
 
 float oneSecondTimer = 0.0f;
 
@@ -41,6 +40,8 @@ void InitGame()
     SetExitKey(KEY_NULL);
     gameState.fps = 60;
     SetTargetFPS(gameState.fps);
+    EnableCursor();
+    ShowCursor();
 
     gameState.fullscreen = false;
     gameState.windowSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
@@ -54,7 +55,7 @@ void InitGame()
 
     if (!ResourceManager::LoadResources())
     {
-        printf("Failed to load resources!\n");
+        TraceLog(LOG_ERROR, "Failed to load resources!\n");
     }
 
     gameState.previousScreen = MAIN_MENU;
@@ -64,9 +65,9 @@ void InitGame()
     gameState.asteroidsCount = 0;
     gameState.enemiesCount = 0;
 
-    player = new Player();
+    gameState.player = new Player();
 
-    CreateUIElements(player);
+    CreateUIElements(gameState.player);
 }
 
 void UpdateDifficultySettings(Difficulty diff)
@@ -95,6 +96,11 @@ void CreateNewGame()
 {
     ChangeScreen(GAME);
 
+#ifndef _DEBUG
+    DisableCursor();
+    HideCursor();
+#endif // !_DEBUG
+
     gameState.asteroidsCount = 0;
     gameState.enemiesCount = 0;
     gameState.powerupSpawned = false;
@@ -103,18 +109,16 @@ void CreateNewGame()
 
     ResetScoreRegistry();
 
-    if (spaceBackground != nullptr)
+    if (gameState.spaceBackground != nullptr)
     {
-        UnloadTexture(*spaceBackground);
+        UnloadTexture(*gameState.spaceBackground);
     }
 
-    // create background with max resolution
-    const int monitor = GetCurrentMonitor();
-    const Vector2 monitorSize = {(float)GetMonitorWidth(monitor), (float)GetMonitorHeight(monitor)};
-    Image spaceBackgroundImg = GenImageColor(monitorSize.x, monitorSize.y, BLANK);
+    // create background with 4k resolution
+    Image spaceBackgroundImg = GenImageColor(4096, 4096, BLANK);
 
-    const int minStars = 30;
-    const int maxStars = 70;
+    const int minStars = 400;
+    const int maxStars = 1000;
     const float minStarSize = 1.0f;
     const float maxStarSize = 2.0f;
     const float minStarAlpha = 0.3f;
@@ -123,28 +127,29 @@ void CreateNewGame()
     for (int i = 0; i < GetRandomValue(minStars, maxStars); i++)
     {
         Color starColor = {255, 255, 255, (unsigned char)GetRandomValue(minStarAlpha * 255, maxStarAlpha * 255)};
-        ImageDrawCircle(&spaceBackgroundImg, GetRandomValue(0, monitorSize.x), GetRandomValue(0, monitorSize.y), GetRandomValue(minStarSize, maxStarSize), starColor);
+        ImageDrawCircle(&spaceBackgroundImg, GetRandomValue(0, spaceBackgroundImg.width - maxStarSize),
+                        GetRandomValue(0, spaceBackgroundImg.height - maxStarSize), GetRandomValue(minStarSize, maxStarSize), starColor);
     }
 
-    spaceBackground = new Texture2D(LoadTextureFromImage(spaceBackgroundImg));
+    gameState.spaceBackground = new Texture2D(LoadTextureFromImage(spaceBackgroundImg));
     UnloadImage(spaceBackgroundImg);
 
-    // reset player
-    if (player != nullptr)
+    // reset gameState.player
+    if (gameState.player != nullptr)
     {
-        player->Reset();
+        gameState.player->Reset();
     }
     else
     {
-        player = new Player();
+        gameState.player = new Player();
     }
 
     // delete all game objects
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        delete gameObjects[i];
+        delete gameState.gameObjects[i];
     }
-    gameObjects.clear();
+    gameState.gameObjects.clear();
 
     const size_t numAsteroids = 3;
     const size_t numEnemies = 1;
@@ -152,18 +157,18 @@ void CreateNewGame()
     // create new game objects
     for (size_t i = 0; i < numAsteroids + numEnemies; i++)
     {
-        // generate random position exluding the player's position and other objects positions
+        // generate random position exluding the gameState.player's position and other objects positions
         Vector2 pos;
         bool insidePlayer;
         bool insideGameObject;
         do
         {
             pos = {(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())};
-            insidePlayer = Vector2Distance(pos, player->GetOrigin()) < 100;
+            insidePlayer = Vector2Distance(pos, gameState.player->GetOrigin()) < 100;
             insideGameObject = false;
-            for (size_t j = 0; j < gameObjects.size(); j++)
+            for (size_t j = 0; j < gameState.gameObjects.size(); j++)
             {
-                if (Vector2Distance(pos, gameObjects[j]->GetOrigin()) < 100)
+                if (Vector2Distance(pos, gameState.gameObjects[j]->GetOrigin()) < 100)
                 {
                     insideGameObject = true;
                     break;
@@ -173,12 +178,12 @@ void CreateNewGame()
 
         if (i < numAsteroids)
         {
-            gameObjects.push_back(new Asteroid(pos, gameState.diffSettings.asteroidSpeedMultiplier));
+            gameState.gameObjects.push_back(new Asteroid(pos, gameState.diffSettings.asteroidSpeedMultiplier));
             gameState.asteroidsCount++;
         }
         else
         {
-            gameObjects.push_back(new BasicEnemy(pos, player, gameState.diffSettings.enemiesAttributes));
+            gameState.gameObjects.push_back(new BasicEnemy(pos, gameState.player, gameState.diffSettings.enemiesAttributes));
             gameState.enemiesCount++;
         }
     }
@@ -195,12 +200,12 @@ void ChangeScreen(ScreenID screen)
 
     if (screen == MAIN_MENU)
     {
-        for (size_t i = 0; i < gameObjects.size(); i++)
+        for (size_t i = 0; i < gameState.gameObjects.size(); i++)
         {
-            delete gameObjects[i];
+            delete gameState.gameObjects[i];
         }
-        gameObjects.clear();
-        player->Reset();
+        gameState.gameObjects.clear();
+        gameState.player->Reset();
     }
 }
 
@@ -227,6 +232,7 @@ void ToggleGameFullscreen()
     return;
 #endif // PLATFORM_WEB
 
+#ifdef PLATFORM_DESKTOP
     gameState.fullscreen = !gameState.fullscreen;
     if (gameState.fullscreen)
     {
@@ -241,6 +247,7 @@ void ToggleGameFullscreen()
         SetWindowSize((int)gameState.originalWindowSize.x, (int)gameState.originalWindowSize.y);
         SetWindowPosition((int)(GetMonitorWidth(0) - gameState.originalWindowSize.x) / 2, (int)(GetMonitorHeight(0) - gameState.originalWindowSize.y) / 2);
     }
+#endif // PLATFORM_DESKTOP
 }
 
 void ResizeCallback(Vector2 prevWindowSize)
@@ -255,7 +262,7 @@ void ResizeCallback(Vector2 prevWindowSize)
         }
     }
 
-    player->UpdateCamera();
+    gameState.player->UpdateCamera();
 }
 
 void ChangeFPS()
@@ -275,12 +282,13 @@ void PauseGame()
 {
     ChangeScreen(PAUSE_MENU);
 #ifndef WINDOWS_HOT_RELOAD
+    EnableCursor();
     ShowCursor(); // this doesn't work when linking raylib as a shared library to the core
 #endif            // !WINDOWS_HOT_RELOAD
-    player->PauseSounds();
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    gameState.player->PauseSounds();
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        gameObjects[i]->PauseSounds();
+        gameState.gameObjects[i]->PauseSounds();
     }
 }
 
@@ -288,12 +296,13 @@ void ResumeGame()
 {
     ChangeScreen(GAME);
 #ifndef WINDOWS_HOT_RELOAD
+    DisableCursor();
     HideCursor();
 #endif // !WINDOWS_HOT_RELOAD
-    player->ResumeSounds();
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    gameState.player->ResumeSounds();
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        gameObjects[i]->ResumeSounds();
+        gameState.gameObjects[i]->ResumeSounds();
     }
 }
 
@@ -305,15 +314,15 @@ void DrawFrame()
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER || gameState.currentScreen == PAUSE_MENU)
     {
         // draw background centered
-        DrawTexture(*spaceBackground, (int)(GetScreenWidth() - spaceBackground->width) / 2, (int)(GetScreenHeight() - spaceBackground->height) / 2, WHITE);
+        DrawTexture(*gameState.spaceBackground, (int)(GetScreenWidth() - gameState.spaceBackground->width) / 2, (int)(GetScreenHeight() - gameState.spaceBackground->height) / 2, WHITE);
 
-        BeginMode2D(player->GetCamera());
+        BeginMode2D(gameState.player->GetCamera());
 
-        for (size_t i = 0; i < gameObjects.size(); i++)
+        for (size_t i = 0; i < gameState.gameObjects.size(); i++)
         {
-            gameObjects[i]->Draw();
+            gameState.gameObjects[i]->Draw();
         }
-        player->Draw();
+        gameState.player->Draw();
 
         EndMode2D();
     }
@@ -342,17 +351,13 @@ void DrawDebug()
 {
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
-        BeginMode2D(player->GetCamera());
+        BeginMode2D(gameState.player->GetCamera());
 
-        player->DrawDebug();
-        for (size_t i = 0; i < gameObjects.size(); i++)
+        gameState.player->DrawDebug();
+        for (size_t i = 0; i < gameState.gameObjects.size(); i++)
         {
-            gameObjects[i]->DrawDebug();
+            gameState.gameObjects[i]->DrawDebug();
         }
-
-        // Rectangle worldBox = {-(float)GetScreenWidth() / 2, -(float)GetScreenHeight() / 2, (float)GetScreenWidth(), (float)GetScreenHeight()};
-        // DrawRectangleLinesEx(worldBox, 4, ORANGE);
-        DrawCircleV(GetScreenToWorld2D(GetMousePosition(), player->GetCamera()), 5, PURPLE);
 
         EndMode2D();
     }
@@ -378,7 +383,7 @@ void DrawDebug()
     DrawText(TextFormat("Enemy precision multiplier:  %.2f", gameState.diffSettings.enemiesAttributes.precisionMultiplier), 10, GetScreenHeight() - 200, 20, WHITE);
     DrawText(TextFormat("Enemy fire rate multiplier:  %.2f", gameState.diffSettings.enemiesAttributes.fireRateMultiplier), 10, GetScreenHeight() - 220, 20, WHITE);
     DrawText(TextFormat("Enemy bullet speed multiplier:  %.2f", gameState.diffSettings.enemiesAttributes.bulletSpeedMultiplier), 10, GetScreenHeight() - 240, 20, WHITE);
-    DrawText(TextFormat("Enemy prob of shooting to player:  %.2f", gameState.diffSettings.enemiesAttributes.probOfShootingToPlayer), 10, GetScreenHeight() - 260, 20, WHITE);
+    DrawText(TextFormat("Enemy prob of shooting to gameState.player:  %.2f", gameState.diffSettings.enemiesAttributes.probOfShootingToPlayer), 10, GetScreenHeight() - 260, 20, WHITE);
     DrawText(TextFormat("Powerup spawn chance: %.2f", gameState.diffSettings.powerupSpawnChance), 10, GetScreenHeight() - 280, 20, WHITE);
     DrawText(TextFormat("Asteroids count: %d", gameState.asteroidsCount), 10, GetScreenHeight() - 300, 20, WHITE);
     DrawText(TextFormat("Enemies count: %d", gameState.enemiesCount), 10, GetScreenHeight() - 320, 20, WHITE);
@@ -464,13 +469,13 @@ void HandleInput()
     // spawn an asteroid
     if (IsKeyPressed(KEY_X))
     {
-        gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
+        gameState.gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
         gameState.asteroidsCount++;
     }
     // spawn an enemy
     if (IsKeyPressed(KEY_C))
     {
-        gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(100), player, gameState.diffSettings.enemiesAttributes));
+        gameState.gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(100), gameState.player, gameState.diffSettings.enemiesAttributes));
         gameState.enemiesCount++;
     }
     // spawn the selected powerup in the mouse position
@@ -478,25 +483,30 @@ void HandleInput()
     {
         if (gameState.powerupSpawned)
         {
-            auto powerup = std::find_if(gameObjects.begin(), gameObjects.end(), [](GameObject *obj)
+            auto powerup = std::find_if(gameState.gameObjects.begin(), gameState.gameObjects.end(), [](GameObject *obj)
                                         { return obj->GetType() == POWER_UP; });
-            if (powerup != gameObjects.end())
+            if (powerup != gameState.gameObjects.end())
             {
                 delete *powerup;
-                gameObjects.erase(powerup);
+                gameState.gameObjects.erase(powerup);
             }
         }
-        gameObjects.push_back(new PowerUp(GetScreenToWorld2D(GetMousePosition(), player->GetCamera()), powerupToSpawn));
+        gameState.gameObjects.push_back(new PowerUp(GetScreenToWorld2D(GetMousePosition(), gameState.player->GetCamera()), powerupToSpawn));
         gameState.powerupSpawned = true;
     }
 
     if (IsKeyPressed(KEY_KP_ADD))
     {
-        player->AddLife();
+        gameState.player->AddLife();
     }
     if (IsKeyPressed(KEY_KP_SUBTRACT))
     {
-        player->Kill();
+        gameState.player->Kill();
+    }
+
+    if (IsKeyPressed(KEY_P))
+    {
+        gameState.player->ToggleDirectionalShip();
     }
 
     if (GetMouseWheelMove() > 0)
@@ -511,23 +521,23 @@ void HandleInput()
     // moving objects with mouse
     static GameObject *movingObject = nullptr;
 
-    Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), player->GetCamera());
+    Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), gameState.player->GetCamera());
 
-    if (player != nullptr && CheckCollisionPointRec(mouseWorldPos, player->GetBounds()))
+    if (gameState.player != nullptr && CheckCollisionPointRec(mouseWorldPos, gameState.player->GetBounds()))
     {
-        if (movingObject == nullptr && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+        if (movingObject == nullptr && IsKeyDown(KEY_LEFT_CONTROL) && IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
-            movingObject = player;
+            movingObject = gameState.player;
         }
     }
 
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        if (CheckCollisionPointRec(mouseWorldPos, gameObjects[i]->GetBounds()))
+        if (CheckCollisionPointRec(mouseWorldPos, gameState.gameObjects[i]->GetBounds()))
         {
-            if (movingObject == nullptr && (IsMouseButtonDown(MOUSE_LEFT_BUTTON) || IsMouseButtonDown(MOUSE_RIGHT_BUTTON)))
+            if (movingObject == nullptr && IsKeyDown(KEY_LEFT_CONTROL) && (IsMouseButtonDown(MOUSE_LEFT_BUTTON) || IsMouseButtonDown(MOUSE_RIGHT_BUTTON)))
             {
-                movingObject = gameObjects[i];
+                movingObject = gameState.gameObjects[i];
             }
         }
     }
@@ -558,58 +568,58 @@ void UpdateGameObjects()
 {
     const float scoreMultiplier = gameState.diffSettings.scoreMultiplier;
 
-    player->Update();
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    gameState.player->Update();
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        gameObjects[i]->Update();
+        gameState.gameObjects[i]->Update();
 
-        if (gameObjects[i]->GetType() == ASTEROID)
+        if (gameState.gameObjects[i]->GetType() == ASTEROID)
         {
-            Asteroid *asteroid = (Asteroid *)gameObjects[i];
+            Asteroid *asteroid = (Asteroid *)gameState.gameObjects[i];
             if (asteroid->IsDestroyed())
             {
                 AddScore(asteroid->GetVariant() == LARGE ? LARGE_ASTEROID_DESTROYED : SMALL_ASTEROID_DESTROYED, scoreMultiplier);
                 delete asteroid;
-                gameObjects.erase(gameObjects.begin() + i);
+                gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
                 gameState.asteroidsCount--;
             }
         }
-        else if (gameObjects[i]->GetType() == BASIC_ENEMY)
+        else if (gameState.gameObjects[i]->GetType() == BASIC_ENEMY)
         {
-            BasicEnemy *enemy = (BasicEnemy *)gameObjects[i];
+            BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
             if (enemy->IsDead() && enemy->GetBullets()->size() == 0)
             {
                 AddScore(BASIC_ENEMY_KILLED, scoreMultiplier);
                 delete enemy;
-                gameObjects.erase(gameObjects.begin() + i);
+                gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
                 gameState.enemiesCount--;
             }
         }
-        else if (gameObjects[i]->GetType() == POWER_UP)
+        else if (gameState.gameObjects[i]->GetType() == POWER_UP)
         {
-            PowerUp *powerup = (PowerUp *)gameObjects[i];
+            PowerUp *powerup = (PowerUp *)gameState.gameObjects[i];
             if (powerup->IsExpired())
             {
                 delete powerup;
-                gameObjects.erase(gameObjects.begin() + i);
+                gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
                 gameState.powerupSpawned = false;
             }
             else if (powerup->IsPickedUp())
             {
                 AddScore((ScoreType)powerup->GetType(), scoreMultiplier);
-                gameObjects.erase(gameObjects.begin() + i);
+                gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
                 gameState.powerupSpawned = false;
             }
         }
     }
-    gameObjects.shrink_to_fit();
+    gameState.gameObjects.shrink_to_fit();
 
-    player->CleanBullets();
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    gameState.player->CleanBullets();
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        if (gameObjects[i]->GetType() == BASIC_ENEMY)
+        if (gameState.gameObjects[i]->GetType() == BASIC_ENEMY)
         {
-            BasicEnemy *enemy = (BasicEnemy *)gameObjects[i];
+            BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
             enemy->CleanBullets();
         }
     }
@@ -618,55 +628,58 @@ void UpdateGameObjects()
 void HandleCollisions()
 {
     Vector2 pushVector = {0, 0};
-    auto bullets = player->GetBullets();
+    auto bullets = gameState.player->GetBullets();
 
-    // check collisions between player and all main game objects
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    // check collisions between gameState.player and all main game objects
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        if (player->CheckCollision(gameObjects[i], &pushVector))
+        if (gameState.player->CheckCollision(gameState.gameObjects[i], &pushVector))
         {
-            player->HandleCollision(gameObjects[i], &pushVector);
+            gameState.player->HandleCollision(gameState.gameObjects[i], &pushVector);
             pushVector = Vector2Negate(pushVector);
-            gameObjects[i]->HandleCollision(player, &pushVector);
+            gameState.gameObjects[i]->HandleCollision(gameState.player, &pushVector);
         }
-        for (size_t j = 0; j < gameObjects.size(); j++)
+        for (size_t j = 0; j < gameState.gameObjects.size(); j++)
         {
             if (i < j) // check each pair only once
             {
-                if (gameObjects[i]->CheckCollision(gameObjects[j], &pushVector))
+                if (gameState.gameObjects[i]->CheckCollision(gameState.gameObjects[j], &pushVector))
                 {
-                    gameObjects[i]->HandleCollision(gameObjects[j], &pushVector);
+                    gameState.gameObjects[i]->HandleCollision(gameState.gameObjects[j], &pushVector);
                     pushVector = Vector2Negate(pushVector);
-                    gameObjects[j]->HandleCollision(gameObjects[i], &pushVector);
+                    gameState.gameObjects[j]->HandleCollision(gameState.gameObjects[i], &pushVector);
                 }
             }
         }
     }
 
     // check collision between bullets and all main game objects
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
+        // player bullets
         for (size_t b = 0; b < bullets->size(); b++)
         {
-            if ((*bullets)[b].CheckCollision(gameObjects[i], &pushVector))
+            if ((*bullets)[b].CheckCollision(gameState.gameObjects[i], &pushVector))
             {
-                (*bullets)[b].HandleCollision(gameObjects[i], &pushVector);
+                // (*bullets)[b].HandleCollision(gameState.gameObjects[i], &pushVector);
+                gameState.player->HandleBulletCollision(&(*bullets)[b], gameState.gameObjects[i], &pushVector);
                 pushVector = Vector2Negate(pushVector);
-                gameObjects[i]->HandleCollision(&(*bullets)[b], &pushVector);
+                gameState.gameObjects[i]->HandleCollision(&(*bullets)[b], &pushVector);
             }
         }
 
-        if (gameObjects[i]->GetType() == BASIC_ENEMY)
+        // enemy bullets
+        if (gameState.gameObjects[i]->GetType() == BASIC_ENEMY)
         {
-            BasicEnemy *enemy = (BasicEnemy *)gameObjects[i];
+            BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
             auto enemyBullets = enemy->GetBullets();
             for (size_t b = 0; b < enemyBullets->size(); b++)
             {
-                if ((*enemyBullets)[b].CheckCollision(player, &pushVector))
+                if ((*enemyBullets)[b].CheckCollision(gameState.player, &pushVector))
                 {
-                    (*enemyBullets)[b].HandleCollision(player, &pushVector);
+                    (*enemyBullets)[b].HandleCollision(gameState.player, &pushVector);
                     pushVector = Vector2Negate(pushVector);
-                    player->HandleCollision(&(*enemyBullets)[b], &pushVector);
+                    gameState.player->HandleCollision(&(*enemyBullets)[b], &pushVector);
                 }
             }
         }
@@ -685,14 +698,14 @@ void UpdateGame()
         float enemiesSpawnChance = gameState.diffSettings.enemiesSpawnChance;
         float powerUpSpawnChance = gameState.diffSettings.powerupSpawnChance;
 
-        if (player->IsAlive() && player->HasMoved())
+        if (gameState.player->IsAlive() && gameState.player->HasMoved())
         {
             if (gameState.asteroidsCount < gameState.diffSettings.maxAsteroids)
             {
                 // spawn an asteroid
                 if (oneSecondTimer > 1.0f && GetRandomValue(0, 100) < asteroidsSpawnChance * 100)
                 {
-                    gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
+                    gameState.gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
                     gameState.asteroidsCount++;
                 }
             }
@@ -702,7 +715,7 @@ void UpdateGame()
                 // spawn an enemy
                 if (oneSecondTimer > 1.0f && GetRandomValue(0, 100) < enemiesSpawnChance * 100)
                 {
-                    gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(100), player, gameState.diffSettings.enemiesAttributes));
+                    gameState.gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(100), gameState.player, gameState.diffSettings.enemiesAttributes));
                     gameState.enemiesCount++;
                 }
             }
@@ -712,15 +725,15 @@ void UpdateGame()
                 // spawn a power up
                 if (oneSecondTimer > 1.0f && GetRandomValue(0, 100) < powerUpSpawnChance * 100)
                 {
-                    gameObjects.push_back(new PowerUp((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())},
-                                                      (PowerUpType)GetRandomValue(0, NUM_POWER_UP_TYPES - 1)));
+                    gameState.gameObjects.push_back(new PowerUp((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())},
+                                                                (PowerUpType)GetRandomValue(0, NUM_POWER_UP_TYPES - 1)));
                     gameState.powerupSpawned = true;
                 }
             }
 
             AddScore(TIME_ALIVE, 1.0f);
         }
-        if (player->IsDead() && player->GetLives() <= 0)
+        if (gameState.player->IsDead() && gameState.player->GetLives() <= 0)
         {
             gameState.previousScreen = gameState.currentScreen;
             gameState.currentScreen = GAME_OVER;
@@ -769,13 +782,13 @@ bool GameLoop()
 
 void ExitGame()
 {
-    delete player;
+    delete gameState.player;
 
-    for (size_t i = 0; i < gameObjects.size(); i++)
+    for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        delete gameObjects[i];
+        delete gameState.gameObjects[i];
     }
-    gameObjects.clear();
+    gameState.gameObjects.clear();
 
     for (size_t i = 0; i < NUM_SCREENS; i++)
     {
@@ -785,9 +798,9 @@ void ExitGame()
         }
     }
 
-    if (spaceBackground != nullptr)
+    if (gameState.spaceBackground != nullptr)
     {
-        UnloadTexture(*spaceBackground);
+        UnloadTexture(*gameState.spaceBackground);
     }
     ResourceManager::UnloadResources();
     CloseAudioDevice();

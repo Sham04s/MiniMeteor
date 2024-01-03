@@ -35,6 +35,14 @@ Button::Button(Vector2 relPos, UIObject *parent, const char *text, ButtonVariant
     this->onClickFunc = onClick;
     this->variant = variant;
     this->size = size;
+
+    if (label->GetTextSize().x > BUTTON_WIDTH - BUTTON_PADDING * 2)
+    {
+        this->relBounds.width = label->GetTextSize().x + BUTTON_PADDING * 2;
+        Resize({(float)GetScreenWidth(), (float)GetScreenHeight()});
+    }
+    
+
     if (variant == BUTTON_SECONDARY)
     {
         this->texture = ResourceManager::GetUITexture(BUTTON_SECONDARY_TEXTURE);

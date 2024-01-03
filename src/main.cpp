@@ -45,7 +45,7 @@ void CreateTempDLL()
     std::ifstream src(dllName, std::ios::binary);
     if (!src.is_open())
     {
-        printf("Failed to open original DLL, are you in the same folder as the executable?\n");
+        TraceLog(LOG_ERROR, "Failed to open original DLL, are you in the same folder as the executable?\n");
         return;
     }
     std::ofstream dst(tempDllName, std::ios::binary);
@@ -78,26 +78,26 @@ void LoadGame()
     GameDLL = LoadLibraryA(tempDllName);
     if (!GameDLL)
     {
-        printf("Failed to load DLL\n");
+        TraceLog(LOG_ERROR, "Failed to load DLL\n");
         return;
     }
 
     InitGame = (CoreFunc)GetProcAddress(GameDLL, "InitGame");
     if (!InitGame)
     {
-        printf("Failed to load InitGame\n");
+        TraceLog(LOG_ERROR, "Failed to load InitGame\n");
         return;
     }
     GameLoop = reinterpret_cast<CoreFuncBool>(GetProcAddress(GameDLL, "GameLoop"));
     if (!GameLoop)
     {
-        printf("Failed to load GameLoop\n");
+        TraceLog(LOG_ERROR, "Failed to load GameLoop\n");
         return;
     }
     ExitGame = (CoreFunc)GetProcAddress(GameDLL, "ExitGame");
     if (!ExitGame)
     {
-        printf("Failed to load ExitGame\n");
+        TraceLog(LOG_ERROR, "Failed to load ExitGame\n");
         return;
     }
     // game dll loaded successfully
@@ -139,7 +139,7 @@ int main()
 #ifdef WINDOWS_HOT_RELOAD
     if (!lastLoadSuccess)
     {
-        printf("Failed to load game\n");
+        TraceLog(LOG_ERROR, "Failed to load game\n");
         ExitRaylib();
         return 1;
     }
@@ -179,7 +179,7 @@ int main()
         }
         if (!lastLoadSuccess)
         {
-            printf("Failed to reload game\n");
+            TraceLog(LOG_ERROR, "Failed to reload game\n");
             ExitRaylib();
             return 1;
         }

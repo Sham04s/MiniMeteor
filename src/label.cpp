@@ -31,9 +31,9 @@ void Label::DrawDebug()
 void Label::Resize(Vector2 prevScreenSize)
 {
     UIObject::Resize(prevScreenSize);
-    
+
     fontSize = (fontSize * (GetScreenHeight() / prevScreenSize.y));
-    
+
     // calculate text bounds
     Vector2 textSize = MeasureTextEx(GetFontDefault(), text, fontSize, 1);
     float x = 0, y = 0;
@@ -60,6 +60,10 @@ void Label::Resize(Vector2 prevScreenSize)
         break;
     }
 
-
     textRelBounds = {x, y, textSize.x, textSize.y};
+}
+
+Vector2 Label::GetTextSize()
+{
+    return MeasureTextEx(*ResourceManager::GetFont(), text, fontSize, 1);
 }

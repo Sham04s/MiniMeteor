@@ -129,7 +129,7 @@ void Asteroid::Draw()
         return;
     }
 
-    // draw explosion animation if asteroid is exploding
+    // draw explosion animation if asteroid is exploding 
     // the asteroid grows in size and fades out
     if (state == EXPLODING)
     {

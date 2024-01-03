@@ -118,7 +118,7 @@ public:
 
     /**
      * @brief Rotate the game object by a given angle.
-     * @param angle The angle to rotate by.
+     * @param angle The angle to rotate by (in degrees).
      */
     void Rotate(float angle);
 

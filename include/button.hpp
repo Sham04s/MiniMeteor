@@ -5,6 +5,9 @@
 #include "label.hpp"
 #include "functional"
 
+#define BUTTON_DEFAULT_WIDTH 200
+#define BUTTON_DEFAULT_HEIGHT 50
+
 #define BUTTON_WIDTH (float)(size == BUTTON_SMALL ? 100 : (size == BUTTON_MEDIUM ? 200 : 300))
 #define BUTTON_HEIGHT (float)(size == BUTTON_SMALL ? 30 : (size == BUTTON_MEDIUM ? 50 : 70))
 #define BUTTON_FONT_SIZE (float)(size == BUTTON_SMALL ? 20 : (size == BUTTON_MEDIUM ? 30 : 40))

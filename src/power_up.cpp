@@ -111,7 +111,7 @@ void PowerUp::PickUp()
         drawable = true;
         break;
     case TEMPORARY_SHIELD:
-        this->texture = ResourceManager::GetSpriteTexture(POWERUP_TEMPORARY_SHIELD_SPRITE);
+        this->texture = ResourceManager::GetSpriteTexture(POWERUP_SHIELD_SPRITE);
         drawable = true;
         break;
     case TEMPORARY_INFINITE_BOOST:

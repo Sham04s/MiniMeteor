@@ -33,6 +33,8 @@ public:
 
     void SetText(const char *text) { this->text = text; }
     void SetColor(Color color) { this->color = color; }
+
+    Vector2 GetTextSize();
 };
 
 #endif // __LABEL_H__

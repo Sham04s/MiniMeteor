@@ -12,12 +12,12 @@ Player::Player(Vector2 origin) : Character(origin)
         .offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f},
         .target = {0, 0},
         .rotation = 0.0f,
-        .zoom = 1.0f
-    };
+        .zoom = 1.0f};
 
     this->Reset();
 
     this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
+    this->crosshair = ResourceManager::GetSpriteTexture(CROSSHAIR_SPRITE);
     this->shootSound = ResourceManager::CreateSoundAlias(BULLET_SOUND);
     this->thrustSound = ResourceManager::CreateSoundAlias(THRUST_SOUND);
     this->explosionSound = ResourceManager::CreateSoundAlias(SHIP_EXPLOSION_SOUND);
@@ -79,6 +79,45 @@ void Player::Update()
         Respawn();
     }
 
+    if (directionalShip && IsAlive())
+    {
+        directionalShipMeter -= 10.0f * GetFrameTime(); // (MAX / 10) seconds
+
+        // disable directional ship if meter is empty
+        if (directionalShipMeter <= 0.0f)
+        {
+            directionalShipMeter = 0.0f;
+            ToggleDirectionalShip();
+        }
+    }
+
+    if (changingShip)
+    {
+        static bool changed = false;
+        changingShipTime += GetFrameTime();
+        if (changingShipTime >= CHANGING_SHIP_TIME && !changed)
+        {
+            directionalShip = !directionalShip;
+            changed = true;
+        }
+        if (changingShipTime >= CHANGING_SHIP_TIME * 2)
+        {
+            changingShip = false;
+            changingShipTime = 0.0f;
+            changed = false;
+            if (!directionalShip)
+            {
+                accelDir = forwardDir;
+                SetDefaultHitBox();
+            }
+            else
+            {
+                SetDirectionalShipHitBox();
+            }
+            state &= ~ACCELERATING;
+        }
+    }
+
     Character::Update();
 
     UpdatePowerups();
@@ -115,14 +154,20 @@ void Player::Draw()
 {
     Character::Draw();
 
+    const float widthScaleFactor = 0.8f;
+    Rectangle bar = {bounds.x + bounds.width * (1.0f - widthScaleFactor) / 2, bounds.y + bounds.width - 20,
+                     bounds.width * widthScaleFactor, 5};
+
     // draw boost bar
     PowerUp *temporaryInfiniteBoost = GetPowerup(TEMPORARY_INFINITE_BOOST);
     const float timeSinceBoost = GetTime() - lastBoostUsedTime;
     if (IsAlive() && (temporaryInfiniteBoost != nullptr || timeSinceBoost < BOOST_BAR_HIDE_TIME + BOOST_BAR_FADE_TIME))
     {
-        Rectangle boostBar = {bounds.x + 10, bounds.y + bounds.height - 10, bounds.width - 20, 5};
+        Rectangle boostBar = bar;
+        bar.y += bar.height + 5;
         if (temporaryInfiniteBoost == nullptr)
         {
+            // draw temporary infinite boost bar
             boostBar.width = boostBar.width * boostTime / BOOST_TIME;
             float alpha = 1.0f;
             if (timeSinceBoost >= BOOST_BAR_HIDE_TIME)
@@ -145,8 +190,41 @@ void Player::Draw()
         }
     }
 
+    // draw directional ship meter
+    if (IsAlive() && directionalShip)
+    {
+        Rectangle directionalShipMeterRect = bar;
+        bar.y += bar.height + 5;
+        directionalShipMeterRect.width = directionalShipMeterRect.width * directionalShipMeter / DIRECTIONAL_SHIP_METER_MAX;
+        DrawRectangleRounded(directionalShipMeterRect, 0.5f, 0, WHITE);
+    }
+
     if (IsAlive())
     {
+        if (changingShip)
+        {
+            static Vector2 originalSize = {0, 0};
+            if (originalSize.x == 0 && originalSize.y == 0)
+            {
+                originalSize = {bounds.width, bounds.height};
+            }
+
+            // changingShipTime <= CHANGING_SHIP_TIME -> shrinking
+            // changingShipTime > CHANGING_SHIP_TIME -> growing
+            float scaleFactor = 1 + (changingShipTime <= CHANGING_SHIP_TIME ? -1.0f : 1.0f) * GetFrameTime() / (CHANGING_SHIP_TIME);
+
+            this->Scale(scaleFactor);
+        }
+
+        if (directionalShip)
+        {
+            // draw mouse crosshair
+            Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+            Vector2 size = {32, 32};
+            DrawTexturePro(*crosshair, {0, 0, (float)crosshair->width, (float)crosshair->height},
+                           {mousePos.x - size.x / 2, mousePos.y - size.y / 2, size.x, size.y}, {0, 0}, 0, WHITE);
+        }
+
         for (auto powerup : powerups)
         {
             powerup->Draw();
@@ -157,9 +235,10 @@ void Player::Draw()
         if (temporaryShield != nullptr)
         {
             const float timeLeft = temporaryShield->GetEffectiveUseTime();
-            Rectangle shieldTimer = {bounds.x + 10, bounds.y + bounds.height - 20, bounds.width - 20, 5};
+            Rectangle shieldTimer = bar;
+            bar.y += bar.height + 5;
             shieldTimer.width = shieldTimer.width * timeLeft / TEMPORARY_SHIELD_TIME;
-            DrawRectangleRounded(shieldTimer, 0.5f, 0, WHITE);
+            DrawRectangleRounded(shieldTimer, 0.5f, 0, SKYBLUE);
         }
     }
 }
@@ -171,15 +250,53 @@ void Player::DrawDebug()
 
 void Player::HandleInput()
 {
-    if (IsKeyPressed(KEY_W))
+    if (directionalShip)
     {
-        this->state |= ACCELERATING;
+        int wasdMask = IsKeyDown(KEY_D) << 0 | IsKeyDown(KEY_S) << 1 | IsKeyDown(KEY_A) << 2 | IsKeyDown(KEY_W) << 3;
+        accelDir = {0, 0};
+        if (wasdMask)
+        {
+            state |= ACCELERATING;
+            accelDir.x = (bool)(wasdMask & 1) - (bool)(wasdMask & 4); // 1 if D, -1 if A, 0 otherwise
+            accelDir.y = (bool)(wasdMask & 2) - (bool)(wasdMask & 8); // 1 if S, -1 if W, 0 otherwise
+        }
+        else
+        {
+            state &= ~ACCELERATING;
+            usingBoost = false;
+        }
+
+        Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), camera);
+        float angle = Vector2Angle(forwardDir, Vector2Subtract(mousePos, origin));
+        Rotate(angle * RAD2DEG);
     }
-    if (IsKeyReleased(KEY_W))
+    else
     {
-        this->state &= ~ACCELERATING;
-        usingBoost = false;
+        if (IsKeyPressed(KEY_W))
+        {
+            this->state |= ACCELERATING;
+        }
+        if (IsKeyReleased(KEY_W))
+        {
+            this->state &= ~ACCELERATING;
+            usingBoost = false;
+        }
+        if (IsKeyDown(KEY_A))
+        {
+            state &= ~TURNING_RIGHT;
+            state |= TURNING_LEFT;
+        }
+        else if (IsKeyDown(KEY_D))
+        {
+            state &= ~TURNING_LEFT;
+            state |= TURNING_RIGHT;
+        }
+        else
+        {
+            state &= ~(TURNING_LEFT | TURNING_RIGHT);
+        }
     }
+
     if (IsKeyDown(KEY_LEFT_SHIFT) && this->state & ACCELERATING)
     {
         usingBoost = true;
@@ -189,23 +306,13 @@ void Player::HandleInput()
         usingBoost = false;
     }
 
-    if (IsKeyDown(KEY_A))
-    {
-        state &= ~TURNING_RIGHT;
-        state |= TURNING_LEFT;
-    }
-    else if (IsKeyDown(KEY_D))
-    {
-        state &= ~TURNING_LEFT;
-        state |= TURNING_RIGHT;
-    }
-    else
-    {
-        state &= ~(TURNING_LEFT | TURNING_RIGHT);
-    }
-    if (IsKeyDown(KEY_SPACE))
+    if (IsKeyDown(KEY_SPACE) || IsMouseButtonDown(MOUSE_LEFT_BUTTON))
     {
         Shoot();
+    }
+    if (IsKeyPressed(KEY_Q))
+    {
+        ToggleDirectionalShip();
     }
 }
 
@@ -230,6 +337,7 @@ void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
         if (this->CanBeKilled() || this->HasPowerup(SHIELD))
         {
             enemy->Kill();
+            IncreaseDirectionalShipMeter(BASIC_ENEMY_KILLED);
         }
         return;
     }
@@ -243,6 +351,7 @@ void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
         if (this->HasPowerup(SHIELD))
         {
             asteroid->Destroy();
+            IncreaseDirectionalShipMeter(asteroid->GetVariant() == LARGE ? LARGE_ASTEROID_DESTROYED : SMALL_ASTEROID_DESTROYED);
         }
         if (this->CanBeKilled())
         {
@@ -272,6 +381,20 @@ void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
             powerup->PickUp();
         }
         return;
+    }
+}
+
+void Player::HandleBulletCollision(Bullet *bullet, GameObject *other, Vector2 *pushVector)
+{
+    bullet->HandleCollision(other, pushVector);
+    if (other->GetType() == ASTEROID)
+    {
+        Asteroid *asteroid = (Asteroid *)other;
+        IncreaseDirectionalShipMeter(asteroid->GetVariant() == LARGE ? LARGE_ASTEROID_DESTROYED : SMALL_ASTEROID_DESTROYED);
+    }
+    if (other->GetType() == BASIC_ENEMY)
+    {
+        IncreaseDirectionalShipMeter(BASIC_ENEMY_KILLED);
     }
 }
 
@@ -406,6 +529,8 @@ void Player::Respawn()
     this->boostTime = BOOST_TIME;
     this->lastBoostUsedTime = 0;
     this->forwardDir = {0, -1};
+    this->accelDir = forwardDir;
+    this->directionalShip = false;
     this->velocity = {0, 0};
     this->angularVelocity = 0;
     this->state = IDLE;
@@ -430,6 +555,9 @@ void Player::Reset()
     Respawn();
     this->lives = 3;
     this->bullets.clear();
+    this->directionalShipMeter = DIRECTIONAL_SHIP_METER_MAX / 3;
+    this->changingShip = false;
+    this->changingShipTime = 0.0f;
 
     // remove all powerups
     for (auto powerup : powerups)
@@ -443,17 +571,85 @@ void Player::Reset()
     }
 }
 
+void Player::ToggleDirectionalShip()
+{
+    if (changingShip || !IsAlive())
+    {
+        return;
+    }
+    if (!directionalShip && directionalShipMeter <= 0.0f)
+    {
+        return;
+    }
+    changingShip = true;
+}
+
+void Player::IncreaseDirectionalShipMeter(ScoreType scoreType)
+{
+    switch (scoreType)
+    {
+    case BASIC_ENEMY_KILLED:
+        directionalShipMeter += 10.0f;
+        break;
+    case LARGE_ASTEROID_DESTROYED:
+        directionalShipMeter += 6.0f;
+        break;
+    case SMALL_ASTEROID_DESTROYED:
+        directionalShipMeter += 3.0f;
+        break;
+    default:
+        return;
+    }
+
+    directionalShipMeter = fminf(directionalShipMeter, DIRECTIONAL_SHIP_METER_MAX);
+}
+
 Rectangle Player::GetFrameRec()
 {
+    // see resources/characters/player/player.png  [0..11]
+    // [0..2] -> default ship -> idle, accelerating, boost
+    // [3..11] -> directional ship -> idle, accelerating * 4 dirs, boost * 4 dirs
+    // dir -> up, left, down, right (the thrust is in the opposite direction)
+    // angle ranges -> [-45, 45], [45, 135], [135..180, -180..-135], [-135, -45]
+
     int frame = 0;
-    if (state & ACCELERATING)
+
+    if (!directionalShip)
     {
-        frame = (usingBoost && boostTime > 0) ? 2 : 1;
+        if (state & ACCELERATING)
+        {
+            frame = (usingBoost && boostTime > 0) ? 2 : 1;
+        }
     }
-    else if (state & DYING)
+    else
     {
-        // frame = (int)((GetTime() - lastDeathTime) / CHARACTER_DYING_TIME * 4) + 3; // for sprites
-        frame = 0; // idle
+        frame = 3; // idle
+        if (state & ACCELERATING)
+        {
+            float angle = -Vector2Angle(forwardDir, accelDir) * RAD2DEG;
+            int dir = 0;
+            if (angle >= -45 && angle < 45)
+            {
+                dir = 0;
+            }
+            else if (angle >= 45 && angle < 135)
+            {
+                dir = 1;
+            }
+            else if (angle >= 135 || angle < -135)
+            {
+                dir = 2;
+            }
+            else if (angle >= -135 && angle < -45)
+            {
+                dir = 3;
+            }
+            else
+            {
+                dir = -1; // error
+            }
+            frame = 4 + dir + (usingBoost && boostTime > 0 ? 4 : 0);
+        }
     }
 
     return ResourceManager::GetSpriteSrcRect(PLAYER_SPRITES, frame);
@@ -462,6 +658,7 @@ Rectangle Player::GetFrameRec()
 float Player::GetPowerupMultiplier(PowerUpType type)
 {
     int count = powerupsCount[type];
+    count += directionalShip; // directional ship increments multiplier effect
 
     switch (type)
     {
@@ -485,8 +682,22 @@ void Player::SetDefaultHitBox()
 {
     this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
 
+    // scale to size -> rotate -> translate
     for (size_t i = 0; i < hitbox.size(); i++)
     {
-        this->hitbox[i] = Vector2Add(Vector2Scale(this->hitbox[i], CHARACTER_SIZE / 2), GetOrigin());
+        this->hitbox[i] = Vector2Add(Vector2Rotate(Vector2Scale(this->hitbox[i], CHARACTER_SIZE / 2), rotation * DEG2RAD), GetOrigin());
+    }
+}
+
+void Player::SetDirectionalShipHitBox()
+{
+    // TODO: change this
+
+    this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
+
+    // scale to size -> rotate -> translate
+    for (size_t i = 0; i < hitbox.size(); i++)
+    {
+        this->hitbox[i] = Vector2Add(Vector2Rotate(Vector2Scale(this->hitbox[i], CHARACTER_SIZE / 2), rotation * DEG2RAD), GetOrigin());
     }
 }

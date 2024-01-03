@@ -150,9 +150,9 @@ UIObject *CreateOptionsMenu()
     {
         sprintf(fpsButtonText, "FPS: %d", gameState.fps);
     }
-
-    Button *backButton = new Button(Vector2{0, 0}, nullptr, "Back", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
+ 
     Button *changeFPSButton = new Button(Vector2{0, 0}, nullptr, fpsButtonText, BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
+    Button *backButton = new Button(Vector2{0, 0}, nullptr, "Back", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
 
     backButton->OnClick([]()
                         { PreviousScreen(); });

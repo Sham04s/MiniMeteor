@@ -145,7 +145,7 @@ public:
      *
      * @return The variant of the asteroid.
      */
-    bool GetVariant() { return variant; }
+    AsteroidVariant GetVariant() { return variant; }
 };
 
 #endif // __ASTEROID_H__

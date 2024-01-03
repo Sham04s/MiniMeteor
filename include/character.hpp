@@ -16,8 +16,8 @@
 #define THRUST_MIN_PITCH 0.5f         // max pitch is 1.0f
 #define THRUST_MIN_VOLUME 0.5f        // max volume is 1.0f
 // equal pan is 0.5f
-#define TRHUST_MIN_PAN 0.4f // min is right channel
-#define THRUST_MAX_PAN 0.7f // max is left channel
+#define THRUST_MIN_PAN 0.25f // min is right channel
+#define THRUST_MAX_PAN 0.75f // max is left channel
 #define THRUST_PITCH_DECAYING_TIME 4.0f
 
 // we declare the enum as a bit mask so we can combine turning states with other states
@@ -40,6 +40,7 @@ protected:
     float lastShotTime;
     float lastDeathTime;
     float maxSpeed;
+    Vector2 accelDir;
     float acceleration;
     float deceleration;
     float turnSpeed;
