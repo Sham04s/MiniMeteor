@@ -14,8 +14,6 @@ Player::Player(Vector2 origin) : Character(origin)
         .rotation = 0.0f,
         .zoom = 1.0f};
 
-    this->Reset();
-
     this->texture = ResourceManager::GetSpriteTexture(PLAYER_SPRITES);
     this->crosshair = ResourceManager::GetSpriteTexture(CROSSHAIR_SPRITE);
     this->shootSound = ResourceManager::CreateSoundAlias(BULLET_SOUND);
@@ -23,7 +21,7 @@ Player::Player(Vector2 origin) : Character(origin)
     this->explosionSound = ResourceManager::CreateSoundAlias(SHIP_EXPLOSION_SOUND);
     this->powerupPickupSound = ResourceManager::GetSound(POWERUP_PICKUP_SOUND);
 
-    SetDefaultHitBox();
+    Despawn();
 }
 
 Player::~Player()
@@ -152,6 +150,11 @@ void Player::UpdatePowerups()
 
 void Player::Draw()
 {
+    if (hidden)
+    {
+        return;
+    }
+
     Character::Draw();
 
     const float widthScaleFactor = 0.8f;
@@ -518,6 +521,17 @@ bool Player::Kill()
     return Character::Kill();
 }
 
+void Player::Spawn()
+{
+    this->lives = 3;
+    this->bullets.clear();
+    this->directionalShipMeter = DIRECTIONAL_SHIP_METER_MAX / 3;
+    this->changingShip = false;
+    this->changingShipTime = 0.0f;
+    SetDefaultHitBox();
+    this->hidden = false;
+}
+
 void Player::Respawn()
 {
     this->origin = this->initialOrigin;
@@ -541,23 +555,54 @@ void Player::Respawn()
     this->bulletsSpeed = BULLET_SPEED;
     this->bulletsSpread = BULLET_SPREAD;
     // leave bullets live
-    SetDefaultHitBox();
 
     // remove one powerup of each type
     for (size_t i = 0; i < NUM_POWER_UP_TYPES; i++)
     {
         RemovePowerup((PowerUpType)i);
     }
+
+    Spawn();
+}
+
+void Player::Despawn()
+{
+    Reset();
+
+    this->lives = 0;
+    this->bullets.clear();
+    this->powerups.clear();
+    this->directionalShipMeter = 0.0f;
+    this->changingShip = false;
+    this->changingShipTime = 0.0f;
+
+    this->hitbox.clear();
+    this->hidden = true;
 }
 
 void Player::Reset()
 {
-    Respawn();
-    this->lives = 3;
-    this->bullets.clear();
-    this->directionalShipMeter = DIRECTIONAL_SHIP_METER_MAX / 3;
-    this->changingShip = false;
-    this->changingShipTime = 0.0f;
+    // Respawn();
+    this->origin = this->initialOrigin;
+    this->bounds = {origin.x - CHARACTER_SIZE / 2, origin.y - CHARACTER_SIZE / 2, CHARACTER_SIZE, CHARACTER_SIZE};
+    this->rotation = 0;
+    this->invincible = true; // invincible when spawns
+    this->hasMoved = false;
+    this->usingBoost = false;
+    this->boostTime = BOOST_TIME;
+    this->lastBoostUsedTime = 0;
+    this->forwardDir = {0, -1};
+    this->accelDir = forwardDir;
+    this->directionalShip = false;
+    this->velocity = {0, 0};
+    this->angularVelocity = 0;
+    this->state = IDLE;
+    this->lastDeathTime = 0;
+    this->lastShotTime = 0;
+    this->shootCooldown = CHARACTER_SHOOT_COOLDOWN;
+    this->bulletsPerShot = 1;
+    this->bulletsSpeed = BULLET_SPEED;
+    this->bulletsSpread = BULLET_SPREAD;
 
     // remove all powerups
     for (auto powerup : powerups)

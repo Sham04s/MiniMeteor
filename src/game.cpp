@@ -23,9 +23,8 @@ bool SHOW_DEBUG = false;
 
 bool HIDE_SPRITES = false;
 
-// TODO: make spawning animations for asteroids and enemies
-#define ASTEROIDS_SPAWN_RATE 0.4f // 40% chance of spawning an asteroid every second when asteroidsCount < maxAsteroids
-#define ENEMIES_SPAWN_RATE 0.2f   // 20% chance of spawning an enemy every second when enemiesCount < maxEnemies
+#define INITIAL_ASTEROIDS 5
+#define INITIAL_ENEMIES 1
 
 GameState gameState;
 
@@ -52,6 +51,7 @@ void InitGame()
 #endif // _DEBUG
 
     InitAudioDevice();
+    SetMasterVolume(0);
 
     if (!ResourceManager::LoadResources())
     {
@@ -68,6 +68,7 @@ void InitGame()
     gameState.player = new Player();
 
     CreateUIElements(gameState.player);
+    CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY); // create asteroids at main menu
 }
 
 void UpdateDifficultySettings(Difficulty diff)
@@ -75,12 +76,12 @@ void UpdateDifficultySettings(Difficulty diff)
     DifficultySettings *diffSettings = &gameState.diffSettings;
 
     diffSettings->difficulty = diff;
-    diffSettings->maxAsteroids = powf(3, diff + 1);                                                                // 3, 9, 27
-    diffSettings->maxEnemies = powf(2, diff + 1);                                                                  // 2, 4, 8
-    diffSettings->asteroidsSpawnChance = ASTEROIDS_SPAWN_RATE + (float)(gameState.diffSettings.difficulty) * 0.2f; // 0.4, 0.6, 0.8
-    diffSettings->enemiesSpawnChance = ENEMIES_SPAWN_RATE + (float)(gameState.diffSettings.difficulty + 1) * 0.1f; // 0.2, 0.3, 0.4
-    diffSettings->powerupSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty) * 0.1f;                   // 0.2, 0.3, 0.4
-    diffSettings->asteroidSpeedMultiplier = 1.0f + (float)(gameState.diffSettings.difficulty) * 0.5f;              // 1.0, 1.5, 2.0
+    diffSettings->maxAsteroids = powf(3, diff + 1);                                                   // 3, 9, 27
+    diffSettings->maxEnemies = powf(2, diff + 1);                                                     // 2, 4, 8
+    diffSettings->asteroidsSpawnChance = 0.25f + (float)(gameState.diffSettings.difficulty) * 0.25f;  // 0.25, 0.5, 0.75
+    diffSettings->enemiesSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty + 1) * 0.1f;  // 0.2, 0.3, 0.4
+    diffSettings->powerupSpawnChance = 0.3f + (float)(gameState.diffSettings.difficulty) * 0.15f;     // 0.3, 0.45, 0.6
+    diffSettings->asteroidSpeedMultiplier = 1.0f + (float)(gameState.diffSettings.difficulty) * 0.5f; // 1.0, 1.5, 2.0
     diffSettings->scoreMultiplier = powf(1.2f, gameState.diffSettings.difficulty);
 
     EnemyAttributes *enemiesAttr = &gameState.diffSettings.enemiesAttributes;
@@ -92,10 +93,8 @@ void UpdateDifficultySettings(Difficulty diff)
     enemiesAttr->probOfShootingToPlayer = 0.35f + (float)(gameState.diffSettings.difficulty) * 0.25f; // 0.35, 0.6, 0.85
 }
 
-void CreateNewGame()
+void CreateNewGame(size_t numAsteroids, size_t numEnemies, Difficulty difficulty)
 {
-    ChangeScreen(GAME);
-
 #ifndef _DEBUG
     DisableCursor();
     HideCursor();
@@ -105,7 +104,7 @@ void CreateNewGame()
     gameState.enemiesCount = 0;
     gameState.powerupSpawned = false;
 
-    UpdateDifficultySettings(EASY);
+    UpdateDifficultySettings(difficulty);
 
     ResetScoreRegistry();
 
@@ -113,26 +112,7 @@ void CreateNewGame()
     {
         UnloadTexture(*gameState.spaceBackground);
     }
-
-    // create background with 4k resolution
-    Image spaceBackgroundImg = GenImageColor(4096, 4096, BLANK);
-
-    const int minStars = 400;
-    const int maxStars = 1000;
-    const float minStarSize = 1.0f;
-    const float maxStarSize = 2.0f;
-    const float minStarAlpha = 0.3f;
-    const float maxStarAlpha = 0.6f;
-
-    for (int i = 0; i < GetRandomValue(minStars, maxStars); i++)
-    {
-        Color starColor = {255, 255, 255, (unsigned char)GetRandomValue(minStarAlpha * 255, maxStarAlpha * 255)};
-        ImageDrawCircle(&spaceBackgroundImg, GetRandomValue(0, spaceBackgroundImg.width - maxStarSize),
-                        GetRandomValue(0, spaceBackgroundImg.height - maxStarSize), GetRandomValue(minStarSize, maxStarSize), starColor);
-    }
-
-    gameState.spaceBackground = new Texture2D(LoadTextureFromImage(spaceBackgroundImg));
-    UnloadImage(spaceBackgroundImg);
+    gameState.spaceBackground = GenerateStarsBackground(4096, 4096, GetRandomValue(1000, 2000), 1, 2);
 
     // reset gameState.player
     if (gameState.player != nullptr)
@@ -150,9 +130,6 @@ void CreateNewGame()
         delete gameState.gameObjects[i];
     }
     gameState.gameObjects.clear();
-
-    const size_t numAsteroids = 3;
-    const size_t numEnemies = 1;
 
     // create new game objects
     for (size_t i = 0; i < numAsteroids + numEnemies; i++)
@@ -198,14 +175,28 @@ void ChangeScreen(ScreenID screen)
     gameState.previousScreen = gameState.currentScreen;
     gameState.currentScreen = screen;
 
+    if (gameState.screens[gameState.currentScreen] != nullptr)
+    {
+        gameState.screens[gameState.currentScreen]->Update();
+    }
+
     if (screen == MAIN_MENU)
     {
-        for (size_t i = 0; i < gameState.gameObjects.size(); i++)
-        {
-            delete gameState.gameObjects[i];
-        }
-        gameState.gameObjects.clear();
-        gameState.player->Reset();
+        gameState.player->Despawn();
+        CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY);
+    }
+    if (gameState.previousScreen == MAIN_MENU && screen == GAME)
+    {
+        gameState.player->Spawn();
+    }
+
+    if (screen == GAME)
+    {
+        SetMasterVolume(1);
+    }
+    else
+    {
+        SetMasterVolume(0);
     }
 }
 
@@ -306,12 +297,18 @@ void ResumeGame()
     }
 }
 
+void RestartGame()
+{
+    CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY);
+    ChangeScreen(GAME);
+}
+
 void DrawFrame()
 {
     BeginDrawing();
     ClearBackground(BACKGROUND_COLOR);
 
-    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER || gameState.currentScreen == PAUSE_MENU)
+    if (gameState.currentScreen != EXITING)
     {
         // draw background centered
         DrawTexture(*gameState.spaceBackground, (int)(GetScreenWidth() - gameState.spaceBackground->width) / 2, (int)(GetScreenHeight() - gameState.spaceBackground->height) / 2, WHITE);
@@ -327,12 +324,13 @@ void DrawFrame()
         EndMode2D();
     }
 
+    if (gameState.currentScreen != GAME)
+    {
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.25f));
+    }
+
     if (gameState.screens[gameState.currentScreen] != nullptr)
     {
-        if (gameState.currentScreen == PAUSE_MENU)
-        {
-            DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.25f));
-        }
 
         gameState.screens[gameState.currentScreen]->Draw();
     }
@@ -395,7 +393,7 @@ void HandleInput()
 {
     if (IsKeyPressed(KEY_R))
     {
-        CreateNewGame();
+        CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY);
     }
     if (IsKeyPressed(KEY_L))
     {
@@ -568,7 +566,10 @@ void UpdateGameObjects()
 {
     const float scoreMultiplier = gameState.diffSettings.scoreMultiplier;
 
-    gameState.player->Update();
+    if (gameState.currentScreen == GAME)
+    {
+        gameState.player->Update();
+    }
     for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
         gameState.gameObjects[i]->Update();
@@ -686,65 +687,88 @@ void HandleCollisions()
     }
 }
 
+void TryToSpawnObject(GameObjectType type)
+{
+    if (oneSecondTimer < 1.0f)
+    {
+        return;
+    }
+
+    float spawnChance = 0.0f;
+    switch (type)
+    {
+    case ASTEROID:
+        spawnChance = gameState.diffSettings.asteroidsSpawnChance;
+        break;
+    case BASIC_ENEMY:
+        spawnChance = gameState.diffSettings.enemiesSpawnChance;
+        break;
+    case POWER_UP:
+        spawnChance = gameState.powerupSpawned ? 0.0f : gameState.diffSettings.powerupSpawnChance;
+        break;
+    default:
+        return;
+    }
+
+    if (GetRandomValue(0, 100) >= spawnChance * 100)
+    {
+        return;
+    }
+
+    switch (type)
+    {
+    case ASTEROID:
+        gameState.gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
+        gameState.asteroidsCount++;
+        break;
+    case BASIC_ENEMY:
+        gameState.gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(CHARACTER_SIZE), gameState.player, gameState.diffSettings.enemiesAttributes));
+        gameState.enemiesCount++;
+        break;
+    case POWER_UP:
+        gameState.gameObjects.push_back(new PowerUp(RandomVecInsideScreen(POWER_UP_SIZE),
+                                                    (PowerUpType)GetRandomValue(0, NUM_POWER_UP_TYPES - 1)));
+        gameState.powerupSpawned = true;
+        break;
+    default:
+        break;
+    }
+}
+
 void UpdateGame()
 {
-    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
+    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER ||
+        gameState.currentScreen == MAIN_MENU || (gameState.currentScreen == OPTIONS && gameState.previousScreen == MAIN_MENU))
     {
         UpdateGameObjects();
 
         HandleCollisions();
 
-        float asteroidsSpawnChance = gameState.diffSettings.asteroidsSpawnChance;
-        float enemiesSpawnChance = gameState.diffSettings.enemiesSpawnChance;
-        float powerUpSpawnChance = gameState.diffSettings.powerupSpawnChance;
-
-        if (gameState.player->IsAlive() && gameState.player->HasMoved())
+        if (gameState.currentScreen == GAME && gameState.player->IsAlive() && gameState.player->HasMoved())
         {
-            if (gameState.asteroidsCount < gameState.diffSettings.maxAsteroids)
-            {
-                // spawn an asteroid
-                if (oneSecondTimer > 1.0f && GetRandomValue(0, 100) < asteroidsSpawnChance * 100)
-                {
-                    gameState.gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
-                    gameState.asteroidsCount++;
-                }
-            }
+            TryToSpawnObject(ASTEROID);
+            TryToSpawnObject(BASIC_ENEMY);
+            TryToSpawnObject(POWER_UP);
 
-            if (gameState.enemiesCount < gameState.diffSettings.maxEnemies)
-            {
-                // spawn an enemy
-                if (oneSecondTimer > 1.0f && GetRandomValue(0, 100) < enemiesSpawnChance * 100)
-                {
-                    gameState.gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(100), gameState.player, gameState.diffSettings.enemiesAttributes));
-                    gameState.enemiesCount++;
-                }
-            }
-
-            if (!gameState.powerupSpawned)
-            {
-                // spawn a power up
-                if (oneSecondTimer > 1.0f && GetRandomValue(0, 100) < powerUpSpawnChance * 100)
-                {
-                    gameState.gameObjects.push_back(new PowerUp((Vector2){(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())},
-                                                                (PowerUpType)GetRandomValue(0, NUM_POWER_UP_TYPES - 1)));
-                    gameState.powerupSpawned = true;
-                }
-            }
-
+            // this score is scaled relative to frame time
             AddScore(TIME_ALIVE, 1.0f);
         }
+
+        // game over
         if (gameState.player->IsDead() && gameState.player->GetLives() <= 0)
         {
             gameState.previousScreen = gameState.currentScreen;
             gameState.currentScreen = GAME_OVER;
         }
 
+        // reset oneSecondTimer
         if (oneSecondTimer > 1.0f)
         {
             oneSecondTimer = 0.0f;
         }
         oneSecondTimer += GetFrameTime();
     }
+
     if (gameState.screens[gameState.currentScreen] == nullptr)
     {
         return;

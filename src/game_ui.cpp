@@ -17,7 +17,7 @@ UIObject *CreateMainMenu()
     // main menu buttons
     const int mainMenuButtonCount = 3;
     Button *playButton = new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                                    { CreateNewGame(); });
+                                    { ChangeScreen(GAME); });
 
     Button *optionsButton = new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                        { ChangeScreen(OPTIONS); });
@@ -63,7 +63,7 @@ UIObject *CreatePauseMenu()
         new Button(Vector2{0, 0}, nullptr, "Resume", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { ResumeGame(); }),
         new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { CreateNewGame(); }),
+                   { RestartGame(); }),
         new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { ChangeScreen(MAIN_MENU); }),
         new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
@@ -92,7 +92,7 @@ UIObject *CreateGameOverMenu()
     const int gameOverButtonCount = 2;
     Button *gameOverButtons[gameOverButtonCount] = {
         new Button(Vector2{0, 0}, nullptr, "Restart", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { CreateNewGame(); }),
+                   { RestartGame(); }),
         new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { ChangeScreen(MAIN_MENU); }),
     };

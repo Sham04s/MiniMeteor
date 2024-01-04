@@ -74,15 +74,17 @@ Vector2 RandomVecOutsideScreen(float margin)
 {
     // y-axis is inverted in raylib
     // x-axis is normal
-    
-    const int top = -GetScreenHeight() / 2 - margin; 
+
+    const int top = -GetScreenHeight() / 2 - margin;
     const int right = GetScreenWidth() / 2 + margin;
     const int bottom = GetScreenHeight() / 2 + margin;
     const int left = -GetScreenWidth() / 2 - margin;
 
-    //   top ->  ----------------------------------------
-    //           |                                      |
-    //           |  ----------------------------------  |
+    //            margin
+    //           |--|
+    //   top ->  ----------------------------------------  -
+    //           |                                      |  | margin
+    //           |  ----------------------------------  |  -
     //           |  |                                |  |
     //           |  |             VISIBLE            |  |
     //           |  |              WORLD             |  |
@@ -93,6 +95,8 @@ Vector2 RandomVecOutsideScreen(float margin)
     //           ^                                      ^
     //           |                                      |
     //          left                                  right
+    //
+    // Visible world is Rectangle{-screenWidth/2, -screenHeight/2, screenWidth, screenHeight} (the center of the screen is the world's origin)
 
     // pick a random side and a random position on that side
     int side = GetRandomValue(0, 3);
@@ -115,4 +119,32 @@ Vector2 RandomVecOutsideScreen(float margin)
         break;
     }
     return pos;
+}
+
+// "InsideScreen" refers to the visible world
+Vector2 RandomVecInsideScreen(float margin)
+{
+    // margin is the distance from the edge of the screen
+    return {(float)GetRandomValue(-GetScreenWidth() / 2 + margin, GetScreenWidth() / 2 - margin),
+            (float)GetRandomValue(-GetScreenHeight() / 2 + margin, GetScreenHeight() / 2 - margin)};
+}
+
+Texture2D *GenerateStarsBackground(int width, int height, int numStars, int minRadius, int maxRadius)
+{
+    Texture2D starsBackground = {0};
+    Image spaceBackgroundImg = GenImageColor(width, height, BLANK);
+
+    const float minStarAlpha = 0.3f;
+    const float maxStarAlpha = 0.6f;
+
+    for (int i = 0; i < numStars; i++)
+    {
+        Color starColor = {255, 255, 255, (unsigned char)GetRandomValue(minStarAlpha * 255, maxStarAlpha * 255)};
+        ImageDrawCircle(&spaceBackgroundImg, GetRandomValue(0, width - maxRadius * 2),
+                        GetRandomValue(0, height - maxRadius * 2), GetRandomValue(minRadius, maxRadius), starColor);
+    }
+
+    starsBackground = LoadTextureFromImage(spaceBackgroundImg);
+    UnloadImage(spaceBackgroundImg);
+    return new Texture2D(starsBackground);
 }

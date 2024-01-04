@@ -25,18 +25,6 @@ enum ScreenID
     NUM_SCREENS
 };
 
-void CreateNewGame();
-void PauseGame();
-void ResumeGame();
-void DrawFrame();
-void DrawDebug();
-void ChangeScreen(ScreenID screen);
-void PreviousScreen();
-void ToggleGameFullscreen();
-void ResizeCallback(Vector2 prevWindowSize);
-void ChangeFPS();
-void UpdateGame();
-
 enum Difficulty
 {
     EASY,
@@ -77,6 +65,20 @@ typedef struct GameState
 } GameState;
 
 extern GameState gameState;
+
+void CreateNewGame(size_t numAsteroids, size_t numEnemies, Difficulty difficulty);
+void PauseGame();
+void ResumeGame();
+void RestartGame();
+void DrawFrame();
+void DrawDebug();
+void ChangeScreen(ScreenID screen);
+void PreviousScreen();
+void ToggleGameFullscreen();
+void ResizeCallback(Vector2 prevWindowSize);
+void ChangeFPS();
+void TryToSpawnObject(GameObjectType type);
+void UpdateGame();
 
 // blue variants
 #define PRIMARY_COLOR GetColor(0x3c9dd7ff)

@@ -103,6 +103,8 @@ void LoadGame()
     // game dll loaded successfully
     notifyShowTime = 2.0f;
     lastLoadSuccess = true;
+    SetWindowSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    SetWindowPosition(GetMonitorWidth(0) / 2 - DEFAULT_WIDTH / 2, GetMonitorHeight(0) / 2 - DEFAULT_HEIGHT / 2);
 
 #endif // WINDOWS_HOT_RELOAD
 

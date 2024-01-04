@@ -39,6 +39,8 @@ private:
     bool directionalShip;
     float directionalShipMeter;
 
+    bool hidden;
+
     std::vector<PowerUp *> powerups;
     size_t powerupsCount[NUM_POWER_UP_TYPES];
 
@@ -70,7 +72,9 @@ public:
     bool CanBeHit();
     bool HasMoved();
     bool Kill();
+    void Spawn();
     void Respawn();
+    void Despawn();
     void Reset();
     void ToggleDirectionalShip();
     void IncreaseDirectionalShipMeter(ScoreType scoreType);
