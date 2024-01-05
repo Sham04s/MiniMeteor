@@ -80,7 +80,7 @@ void UpdateDifficultySettings(Difficulty diff)
     diffSettings->maxEnemies = powf(2, diff + 1);                                                     // 2, 4, 8
     diffSettings->asteroidsSpawnChance = 0.25f + (float)(gameState.diffSettings.difficulty) * 0.25f;  // 0.25, 0.5, 0.75
     diffSettings->enemiesSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty + 1) * 0.1f;  // 0.2, 0.3, 0.4
-    diffSettings->powerupSpawnChance = 0.3f + (float)(gameState.diffSettings.difficulty) * 0.15f;     // 0.3, 0.45, 0.6
+    diffSettings->powerupSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty) * 0.15f;    // 0.2 0.35, 0.5
     diffSettings->asteroidSpeedMultiplier = 1.0f + (float)(gameState.diffSettings.difficulty) * 0.5f; // 1.0, 1.5, 2.0
     diffSettings->scoreMultiplier = powf(1.2f, gameState.diffSettings.difficulty);
 
@@ -95,10 +95,6 @@ void UpdateDifficultySettings(Difficulty diff)
 
 void CreateNewGame(size_t numAsteroids, size_t numEnemies, Difficulty difficulty)
 {
-#ifndef _DEBUG
-    DisableCursor();
-    HideCursor();
-#endif // !_DEBUG
 
     gameState.asteroidsCount = 0;
     gameState.enemiesCount = 0;
@@ -182,21 +178,31 @@ void ChangeScreen(ScreenID screen)
 
     if (screen == MAIN_MENU)
     {
-        gameState.player->Despawn();
+        gameState.player->Hide();
         CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY);
     }
     if (gameState.previousScreen == MAIN_MENU && screen == GAME)
     {
-        gameState.player->Spawn();
+        gameState.player->Show();
     }
 
     if (screen == GAME)
     {
         SetMasterVolume(1);
+
+#ifndef _DEBUG
+        DisableCursor();
+        HideCursor();
+#endif // !_DEBUG
     }
     else
     {
         SetMasterVolume(0);
+
+#ifndef _DEBUG
+        EnableCursor();
+        ShowCursor();
+#endif // !_DEBUG
     }
 }
 
@@ -272,10 +278,6 @@ void ChangeFPS()
 void PauseGame()
 {
     ChangeScreen(PAUSE_MENU);
-#ifndef WINDOWS_HOT_RELOAD
-    EnableCursor();
-    ShowCursor(); // this doesn't work when linking raylib as a shared library to the core
-#endif            // !WINDOWS_HOT_RELOAD
     gameState.player->PauseSounds();
     for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
@@ -286,10 +288,6 @@ void PauseGame()
 void ResumeGame()
 {
     ChangeScreen(GAME);
-#ifndef WINDOWS_HOT_RELOAD
-    DisableCursor();
-    HideCursor();
-#endif // !WINDOWS_HOT_RELOAD
     gameState.player->ResumeSounds();
     for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
@@ -585,7 +583,7 @@ void UpdateGameObjects()
                 gameState.asteroidsCount--;
             }
         }
-        else if (gameState.gameObjects[i]->GetType() == BASIC_ENEMY)
+        else if (gameState.gameObjects[i]->GetType() == ENEMY)
         {
             BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
             if (enemy->IsDead() && enemy->GetBullets()->size() == 0)
@@ -618,7 +616,7 @@ void UpdateGameObjects()
     gameState.player->CleanBullets();
     for (size_t i = 0; i < gameState.gameObjects.size(); i++)
     {
-        if (gameState.gameObjects[i]->GetType() == BASIC_ENEMY)
+        if (gameState.gameObjects[i]->GetType() == ENEMY)
         {
             BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
             enemy->CleanBullets();
@@ -670,7 +668,7 @@ void HandleCollisions()
         }
 
         // enemy bullets
-        if (gameState.gameObjects[i]->GetType() == BASIC_ENEMY)
+        if (gameState.gameObjects[i]->GetType() == ENEMY)
         {
             BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
             auto enemyBullets = enemy->GetBullets();
@@ -698,13 +696,19 @@ void TryToSpawnObject(GameObjectType type)
     switch (type)
     {
     case ASTEROID:
-        spawnChance = gameState.diffSettings.asteroidsSpawnChance;
+        spawnChance = gameState.asteroidsCount == gameState.diffSettings.maxAsteroids
+                          ? 0.0f
+                          : gameState.diffSettings.asteroidsSpawnChance;
         break;
-    case BASIC_ENEMY:
-        spawnChance = gameState.diffSettings.enemiesSpawnChance;
+    case ENEMY:
+        spawnChance = gameState.enemiesCount == gameState.diffSettings.maxEnemies
+                          ? 0.0f
+                          : gameState.diffSettings.enemiesSpawnChance;
         break;
     case POWER_UP:
-        spawnChance = gameState.powerupSpawned ? 0.0f : gameState.diffSettings.powerupSpawnChance;
+        spawnChance = gameState.powerupSpawned
+                          ? 0.0f
+                          : gameState.diffSettings.powerupSpawnChance;
         break;
     default:
         return;
@@ -721,7 +725,7 @@ void TryToSpawnObject(GameObjectType type)
         gameState.gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
         gameState.asteroidsCount++;
         break;
-    case BASIC_ENEMY:
+    case ENEMY:
         gameState.gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(CHARACTER_SIZE), gameState.player, gameState.diffSettings.enemiesAttributes));
         gameState.enemiesCount++;
         break;
@@ -747,11 +751,19 @@ void UpdateGame()
         if (gameState.currentScreen == GAME && gameState.player->IsAlive() && gameState.player->HasMoved())
         {
             TryToSpawnObject(ASTEROID);
-            TryToSpawnObject(BASIC_ENEMY);
+            TryToSpawnObject(ENEMY);
             TryToSpawnObject(POWER_UP);
 
             // this score is scaled relative to frame time
             AddScore(TIME_ALIVE, 1.0f);
+            if (GetTotalScore() >= 60000 && gameState.diffSettings.difficulty == EASY)
+            {
+                UpdateDifficultySettings(MEDIUM);
+            }
+            else if (GetTotalScore() >= 120000 && gameState.diffSettings.difficulty == MEDIUM)
+            {
+                UpdateDifficultySettings(HARD);
+            }
         }
 
         // game over

@@ -19,9 +19,9 @@ Player::Player(Vector2 origin) : Character(origin)
     this->shootSound = ResourceManager::CreateSoundAlias(BULLET_SOUND);
     this->thrustSound = ResourceManager::CreateSoundAlias(THRUST_SOUND);
     this->explosionSound = ResourceManager::CreateSoundAlias(SHIP_EXPLOSION_SOUND);
-    this->powerupPickupSound = ResourceManager::GetSound(POWERUP_PICKUP_SOUND);
 
-    Despawn();
+    Reset();
+    Hide();
 }
 
 Player::~Player()
@@ -143,7 +143,7 @@ void Player::UpdatePowerups()
     }
 
     bulletsPerShot = 1 + powerupsCount[EXTRA_BULLET_UPGRADE];
-    shootCooldown = CHARACTER_SHOOT_COOLDOWN * GetPowerupMultiplier(FIRE_RATE_UPGRADE);
+    shootCooldown = CHARACTER_SHOOT_COOLDOWN * GetPowerupMultiplier(SHOOT_COOLDOWN_UPGRADE);
     bulletsSpeed = BULLET_SPEED * GetPowerupMultiplier(BULLET_SPEED_UPGRADE);
     bulletsSpread = BULLET_SPREAD * GetPowerupMultiplier(BULLET_SPREAD_UPGRADE);
 }
@@ -248,11 +248,34 @@ void Player::Draw()
 
 void Player::DrawDebug()
 {
+    if (hidden)
+    {
+        auto originalHitbox = hitbox;
+        hitbox.clear();
+        Character::DrawDebug();
+        hitbox = originalHitbox;
+        return;
+    }
     Character::DrawDebug();
+
+    DrawText(TextFormat("Invincible: %s", invincible ? "true" : "false"), 10, 10, 20, invincible ? GREEN : RED);
+    DrawText(TextFormat("Has moved: %s", hasMoved ? "true" : "false"), 10, 30, 20, hasMoved ? GREEN : RED);
+    DrawText(TextFormat("hidden: %s", hidden ? "true" : "false"), 10, 50, 20, hidden ? GREEN : RED);
 }
 
 void Player::HandleInput()
 {
+    if (!IsAlive() || hidden)
+    {
+        return;
+    }
+#ifdef _DEBUG
+    if (IsMouseButtonPressed(MOUSE_BUTTON_SIDE))
+    {
+        directionalShipMeter = DIRECTIONAL_SHIP_METER_MAX;
+    }
+#endif
+
     if (directionalShip)
     {
         int wasdMask = IsKeyDown(KEY_D) << 0 | IsKeyDown(KEY_S) << 1 | IsKeyDown(KEY_A) << 2 | IsKeyDown(KEY_W) << 3;
@@ -319,13 +342,22 @@ void Player::HandleInput()
     }
 }
 
+bool Player::CheckCollision(GameObject *other, Vector2 *pushVector)
+{
+    if (hidden)
+    {
+        return false;
+    }
+    return Character::CheckCollision(other, pushVector);
+}
+
 void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
 {
     if (!IsAlive())
     {
         return;
     }
-    if (other->GetType() == BASIC_ENEMY)
+    if (other->GetType() == ENEMY)
     {
         BasicEnemy *enemy = (BasicEnemy *)other;
         Push(enemy, *pushVector);
@@ -380,8 +412,11 @@ void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
         PowerUp *powerup = (PowerUp *)other;
         if (AddPowerup(powerup))
         {
-            PlaySound(*powerupPickupSound);
             powerup->PickUp();
+        }
+        else
+        {
+            powerup->AnimateCantPickup();
         }
         return;
     }
@@ -395,7 +430,7 @@ void Player::HandleBulletCollision(Bullet *bullet, GameObject *other, Vector2 *p
         Asteroid *asteroid = (Asteroid *)other;
         IncreaseDirectionalShipMeter(asteroid->GetVariant() == LARGE ? LARGE_ASTEROID_DESTROYED : SMALL_ASTEROID_DESTROYED);
     }
-    if (other->GetType() == BASIC_ENEMY)
+    if (other->GetType() == ENEMY)
     {
         IncreaseDirectionalShipMeter(BASIC_ENEMY_KILLED);
     }
@@ -419,7 +454,7 @@ bool Player::AddPowerup(PowerUp *powerup)
     if (powerup->GetType() == SHIELD)
     {
         // if already has shield, don't pick up
-        if (HasPowerup(SHIELD))
+        if (HasPowerup(SHIELD) || HasPowerup(TEMPORARY_SHIELD))
         {
             return false;
         }
@@ -431,6 +466,11 @@ bool Player::AddPowerup(PowerUp *powerup)
 
     if (powerup->GetType() == TEMPORARY_SHIELD || powerup->GetType() == TEMPORARY_INFINITE_BOOST)
     {
+        if (powerup->GetType() == TEMPORARY_SHIELD && HasPowerup(SHIELD))
+        {
+            return false;
+        }
+
         PowerUp *temporaryPowerUp = GetPowerup(powerup->GetType());
         if (temporaryPowerUp != nullptr)
         {
@@ -442,7 +482,7 @@ bool Player::AddPowerup(PowerUp *powerup)
         powerups.push_back(powerup);
         return true;
     }
-    if (powerup->GetType() == FIRE_RATE_UPGRADE || powerup->GetType() == BULLET_SPEED_UPGRADE || powerup->GetType() == BULLET_SPREAD_UPGRADE || powerup->GetType() == EXTRA_BULLET_UPGRADE)
+    if (powerup->GetType() == SHOOT_COOLDOWN_UPGRADE || powerup->GetType() == BULLET_SPEED_UPGRADE || powerup->GetType() == BULLET_SPREAD_UPGRADE || powerup->GetType() == EXTRA_BULLET_UPGRADE)
     {
         int upgradeCount = powerupsCount[powerup->GetType()];
         if (upgradeCount >= MAX_UPGRADES_PER_TYPE)
@@ -521,14 +561,8 @@ bool Player::Kill()
     return Character::Kill();
 }
 
-void Player::Spawn()
+void Player::Show()
 {
-    this->lives = 3;
-    this->bullets.clear();
-    this->directionalShipMeter = DIRECTIONAL_SHIP_METER_MAX / 3;
-    this->changingShip = false;
-    this->changingShipTime = 0.0f;
-    SetDefaultHitBox();
     this->hidden = false;
 }
 
@@ -537,7 +571,7 @@ void Player::Respawn()
     this->origin = this->initialOrigin;
     this->bounds = {origin.x - CHARACTER_SIZE / 2, origin.y - CHARACTER_SIZE / 2, CHARACTER_SIZE, CHARACTER_SIZE};
     this->rotation = 0;
-    this->invincible = true; // invincible when spawns
+    this->invincible = true; // invincible when respawns
     this->hasMoved = false;
     this->usingBoost = false;
     this->boostTime = BOOST_TIME;
@@ -555,54 +589,29 @@ void Player::Respawn()
     this->bulletsSpeed = BULLET_SPEED;
     this->bulletsSpread = BULLET_SPREAD;
     // leave bullets live
+    SetDefaultHitBox();
 
     // remove one powerup of each type
     for (size_t i = 0; i < NUM_POWER_UP_TYPES; i++)
     {
         RemovePowerup((PowerUpType)i);
     }
-
-    Spawn();
 }
 
-void Player::Despawn()
+void Player::Hide()
 {
-    Reset();
-
-    this->lives = 0;
-    this->bullets.clear();
-    this->powerups.clear();
-    this->directionalShipMeter = 0.0f;
-    this->changingShip = false;
-    this->changingShipTime = 0.0f;
-
-    this->hitbox.clear();
     this->hidden = true;
 }
 
 void Player::Reset()
 {
-    // Respawn();
-    this->origin = this->initialOrigin;
-    this->bounds = {origin.x - CHARACTER_SIZE / 2, origin.y - CHARACTER_SIZE / 2, CHARACTER_SIZE, CHARACTER_SIZE};
-    this->rotation = 0;
-    this->invincible = true; // invincible when spawns
-    this->hasMoved = false;
-    this->usingBoost = false;
-    this->boostTime = BOOST_TIME;
-    this->lastBoostUsedTime = 0;
-    this->forwardDir = {0, -1};
-    this->accelDir = forwardDir;
+    // Reset all variables to default values
+    Respawn();
+    this->lives = PLAYER_INITIAL_LIVES;
+    this->directionalShipMeter = DIRECTIONAL_SHIP_METER_MAX / 3;
     this->directionalShip = false;
-    this->velocity = {0, 0};
-    this->angularVelocity = 0;
-    this->state = IDLE;
-    this->lastDeathTime = 0;
-    this->lastShotTime = 0;
-    this->shootCooldown = CHARACTER_SHOOT_COOLDOWN;
-    this->bulletsPerShot = 1;
-    this->bulletsSpeed = BULLET_SPEED;
-    this->bulletsSpread = BULLET_SPREAD;
+    this->changingShip = false;
+    this->changingShipTime = 0.0f;
 
     // remove all powerups
     for (auto powerup : powerups)
@@ -703,12 +712,12 @@ Rectangle Player::GetFrameRec()
 float Player::GetPowerupMultiplier(PowerUpType type)
 {
     int count = powerupsCount[type];
-    count += directionalShip; // directional ship increments multiplier effect
+    count += directionalShip * 2; // directional ship slightly increases powerup multiplier but not bullet per shot
 
     switch (type)
     {
-    case FIRE_RATE_UPGRADE:
-        return powf(FIRE_RATE_MULTIPLIER, count) * powf(BULLETS_PER_SHOT_MULTIPLIER, bulletsPerShot - 1);
+    case SHOOT_COOLDOWN_UPGRADE:
+        return powf(SHOOT_COOLDOWN_MULTIPLIER, count) * powf(BULLETS_PER_SHOT_MULTIPLIER, bulletsPerShot - 1);
     case BULLET_SPEED_UPGRADE:
         return powf(BULLETS_SPEED_MULTIPLIER, count);
     case BULLET_SPREAD_UPGRADE:
@@ -738,7 +747,17 @@ void Player::SetDirectionalShipHitBox()
 {
     // TODO: change this
 
-    this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
+    // this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
+    this->hitbox = {
+        {-0.25f, -0.4f},
+        {0.25f, -0.4f},
+        {0.4f, -0.1f},
+        {0.4f, 0.25},
+        {0.1f, 0.4f},
+        {-0.122f, 0.4f},
+        {-0.4f, 0.25f},
+        {-0.4f, -0.1f},
+    };
 
     // scale to size -> rotate -> translate
     for (size_t i = 0; i < hitbox.size(); i++)

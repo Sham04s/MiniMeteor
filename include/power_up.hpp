@@ -8,9 +8,10 @@
 #define POWER_UP_PULSE_PERIOD 1.0f                       // seconds
 #define POWER_UP_BLINK_TIME 3.0f                         // seconds
 #define POWER_UP_BLINK_PERIOD POWER_UP_BLINK_TIME / 5.0f // seconds
+#define POWER_UP_SHAKE_TIME 0.5f                         // seconds
 
-#define TEMPORARY_SHIELD_TIME 5.0f // seconds
-#define TEMPORARY_INFINITE_BOOST_TIME 5.0f  // seconds
+#define TEMPORARY_SHIELD_TIME 5.0f         // seconds
+#define TEMPORARY_INFINITE_BOOST_TIME 5.0f // seconds
 #define FIRE_RATE_UPGRADE_MULTIPLIER 2.0f
 
 enum PowerUpType
@@ -18,7 +19,7 @@ enum PowerUpType
     SHIELD,
     TEMPORARY_SHIELD,
     TEMPORARY_INFINITE_BOOST,
-    FIRE_RATE_UPGRADE,
+    SHOOT_COOLDOWN_UPGRADE,
     BULLET_SPEED_UPGRADE,
     BULLET_SPREAD_UPGRADE,
     EXTRA_BULLET_UPGRADE,
@@ -32,8 +33,15 @@ private:
     PowerUpType powerupType;
     bool pickedUp;
     bool drawable;
+    bool shaking;
+    float shakingTime;
+    float lastShakeTime;
     float timeToLive;
     float effectiveUseTime;
+
+    Sound *spawnSound;
+    Sound *pickupSound;
+    Sound *cantPickupSound;
 
 public:
     PowerUp() : PowerUp({0, 0}, SHIELD) {}
@@ -44,8 +52,11 @@ public:
     virtual void Draw();
     virtual void DrawDebug();
     virtual void HandleCollision(GameObject *other, Vector2 *pushVector);
+    virtual void PauseSounds();
+    virtual void ResumeSounds();
 
     void PickUp();
+    void AnimateCantPickup();
     void UpdateBounds(Rectangle playerBounds);
     void ResetUseTime();
 

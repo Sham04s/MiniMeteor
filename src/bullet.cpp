@@ -54,7 +54,7 @@ void Bullet::HandleCollision(GameObject *other, Vector2 *pushVector)
         return;
     }
     // destroy if bullet hits asteroid or enemy
-    if (other->GetType() == ASTEROID || other->GetType() == BASIC_ENEMY)
+    if (other->GetType() == ASTEROID || other->GetType() == ENEMY)
     {
         Destroy();
     }

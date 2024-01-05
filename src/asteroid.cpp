@@ -6,6 +6,59 @@
 #include "raymath.h"
 #include <math.h>
 
+#include "map"
+
+const Vector2 large[] = {
+    {0.000f, -0.378f},
+    {0.250f, -0.252f},
+    {0.375f, 0.000f},
+    {0.250f, 0.252f},
+    {0.000f, 0.375f},
+    {-0.250f, 0.250f},
+    {-0.378f, 0.002f},
+    {-0.253f, -0.250f},
+};
+
+const Vector2 small[] = {
+    {0.002f, -0.245f},
+    {0.185f, -0.188f},
+    {0.250f, -0.003f},
+    {0.187f, 0.180f},
+    {-0.002f, 0.245f},
+    {-0.183f, 0.187f},
+    {-0.253f, -0.003f},
+    {-0.188f, -0.188f},
+};
+
+const Vector2 sqr_large[] = {
+    {0.022f, -0.380f},
+    {0.378f, -0.127f},
+    {0.375f, 0.003f},
+    {0.125f, 0.372f},
+    {-0.002f, 0.373f},
+    {-0.378f, 0.123f},
+    {-0.382f, 0.000f},
+    {-0.123f, -0.375f},
+};
+
+const Vector2 sqr_small[] = {
+    {-0.002f, -0.253f},
+    {0.252f, -0.123f},
+    {0.250f, 0.002f},
+    {0.128f, 0.250f},
+    {-0.003f, 0.253f},
+    {-0.250f, 0.123f},
+    {-0.253f, 0.002f},
+    {-0.128f, -0.252f},
+};
+
+const Vector2 *asteroid_shapes[] = {
+    large,
+    small,
+    sqr_large,
+    sqr_small,
+};
+
 Asteroid::Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultiplier) : GameObject({0}, 0, {0, -1}, {}, ASTEROID)
 {
     this->velocity = {(float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100)};
@@ -23,7 +76,7 @@ Asteroid::Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultip
     SpriteTextureID randomAsteroidTexture = (SpriteTextureID)(2 * GetRandomValue(0, 3) + 1); // load large variants
     if (variant == SMALL)
     {
-        randomAsteroidTexture = (SpriteTextureID)(randomAsteroidTexture + 1); // load small variants
+        randomAsteroidTexture = (SpriteTextureID)(randomAsteroidTexture + ASTEROID_DETAILED_LARGE_SPRITE); // load small variants
     }
 
     this->texture = ResourceManager::GetSpriteTexture(randomAsteroidTexture);
@@ -31,20 +84,28 @@ Asteroid::Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultip
     SetSoundVolume(explosionSound, size / ASTEROID_SIZE_LARGE); // set volume according to size
     this->bounds = {origin.x - size / 2, origin.y - size / 2, size, size};
 
-    // TODO: maybe use a predefined hitbox for each variant?
+    int shape = randomAsteroidTexture - ASTEROID_DETAILED_LARGE_SPRITE;
 
-    // create hitbox as a regular polygon with 8 sides
-    const int sides = 8;
-    const float radius = variant == LARGE ? size / 3 : size / 4;
-    const float angleIncrement = 2 * PI / sides;
+    //    normal/squared  large/small
+    shape = 2 * (shape / 4) + shape % 2;
 
-    for (int i = 0; i < sides; i++)
+    for (int i = 0; i < 8; i++)
     {
-        float angle = i * angleIncrement;
-        float x = radius * cos(angle);
-        float y = radius * sin(angle);
-        this->hitbox.push_back(Vector2Add(origin, {x, y}));
+        this->hitbox.push_back(Vector2Add(origin, Vector2Scale(Vector2Rotate(asteroid_shapes[shape][i], rotation * DEG2RAD), size)));
     }
+
+    // // create hitbox as a regular polygon with 8 sides
+    // const int sides = 8;
+    // const float radius = variant == LARGE ? size / 3 : size / 4;
+    // const float angleIncrement = 2 * PI / sides;
+
+    // for (int i = 0; i < sides; i++)
+    // {
+    //     float angle = i * angleIncrement;
+    //     float x = radius * cos(angle);
+    //     float y = radius * sin(angle);
+    //     this->hitbox.push_back(Vector2Add(origin, {x, y}));
+    // }
 }
 
 Asteroid::Asteroid(AsteroidVariant variant, float velocityMultiplier)
@@ -129,7 +190,7 @@ void Asteroid::Draw()
         return;
     }
 
-    // draw explosion animation if asteroid is exploding 
+    // draw explosion animation if asteroid is exploding
     // the asteroid grows in size and fades out
     if (state == EXPLODING)
     {

@@ -70,7 +70,8 @@ void Character::Update()
     if (state & ~IDLE)
     {
         state &= ~IDLE;
-    } else
+    }
+    else
     {
         state = IDLE;
     }
@@ -161,7 +162,7 @@ void Character::Update()
 
     // Teleport to the other side of the screen if the character goes off-screen
     const Rectangle worldBox = {-(float)GetScreenWidth() / 2, -(float)GetScreenHeight() / 2, (float)GetScreenWidth(), (float)GetScreenHeight()};
-    
+
     if (origin.x > worldBox.x + worldBox.width + CHARACTER_SIZE / 4)
     {
         Translate({-(float)worldBox.width - CHARACTER_SIZE / 2, 0});
@@ -178,7 +179,7 @@ void Character::Update()
     {
         Translate({0, (float)worldBox.height + CHARACTER_SIZE / 2});
     }
-    
+
     // if (origin.x > GetScreenWidth() + CHARACTER_SIZE / 4)
     // {
     //     Translate({-(float)GetScreenWidth() - CHARACTER_SIZE / 2, 0});
@@ -240,6 +241,16 @@ void Character::DrawDebug()
     {
         bullets[i].DrawDebug();
     }
+}
+
+bool Character::CheckCollision(GameObject *other, Vector2 *pushVector)
+{
+    if (!IsAlive())
+    {
+        return false;
+    }
+
+    return GameObject::CheckCollision(other, pushVector);
 }
 
 void Character::HandleCollision(GameObject *other, Vector2 *pushVector)

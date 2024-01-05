@@ -8,6 +8,8 @@
 
 #include <vector>
 
+#define PLAYER_INITIAL_LIVES 3
+
 #define DIRECTIONAL_SHIP_METER_MAX 100.0f
 #define CHANGING_SHIP_TIME 0.2f // seconds (needs 2 times this to disappear current ship and appear the other one)
 
@@ -17,7 +19,7 @@
 #define BOOST_BAR_FADE_TIME 0.5f                             // seconds
 #define MAX_UPGRADES_PER_TYPE 5
 
-#define FIRE_RATE_MULTIPLIER 0.79f
+#define SHOOT_COOLDOWN_MULTIPLIER 0.79f
 #define BULLETS_PER_SHOT_MULTIPLIER 1.2f
 #define BULLETS_SPEED_MULTIPLIER 1.2f
 #define BULLETS_SPREAD_MULTIPLIER 0.82f
@@ -45,7 +47,6 @@ private:
     size_t powerupsCount[NUM_POWER_UP_TYPES];
 
     Texture2D *crosshair;
-    Sound *powerupPickupSound;
 
 protected:
     void SetDefaultHitBox();
@@ -61,6 +62,7 @@ public:
     void Draw();
     void DrawDebug();
     void HandleInput();
+    bool CheckCollision(GameObject *other, Vector2 *pushVector);
     void HandleCollision(GameObject *other, Vector2 *pushVector);
     void HandleBulletCollision(Bullet *bullet, GameObject *other, Vector2 *pushVector);
 
@@ -72,9 +74,9 @@ public:
     bool CanBeHit();
     bool HasMoved();
     bool Kill();
-    void Spawn();
+    void Show();
     void Respawn();
-    void Despawn();
+    void Hide();
     void Reset();
     void ToggleDirectionalShip();
     void IncreaseDirectionalShipMeter(ScoreType scoreType);

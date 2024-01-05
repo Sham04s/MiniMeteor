@@ -9,7 +9,7 @@ BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
     this->lastTryToShootTime = 0;
     this->probOfShootingToPlayer = 0.5f; // 50% every ENEMY_TRY_TO_SHOOT_COOLDOWN seconds
     this->player = player;
-    this->type = BASIC_ENEMY;
+    this->type = ENEMY;
     this->accelerateStartTime = 0;
     this->accelerateTime = INFINITY;
     this->rotateStartTime = 0;
@@ -184,7 +184,7 @@ void BasicEnemy::HandleCollision(GameObject *other, Vector2 *pushVector)
         }
         return;
     }
-    if (other->GetType() == ASTEROID || other->GetType() == BASIC_ENEMY)
+    if (other->GetType() == ASTEROID || other->GetType() == ENEMY)
     {
         Push(other, *pushVector);
     }

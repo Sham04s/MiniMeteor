@@ -8,7 +8,7 @@
 const std::map<PowerUpType, SpriteTextureID> powerUpSpriteItemMap = {
     {SHIELD, POWERUP_SHIELD_ITEM_SPRITE},
     {TEMPORARY_SHIELD, POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE},
-    {FIRE_RATE_UPGRADE, POWERUP_FIRE_RATE_UPGRADE_ITEM_SPRITE},
+    {SHOOT_COOLDOWN_UPGRADE, POWERUP_SHOOT_COOLDOWN_UPGRADE_ITEM_SPRITE},
     {BULLET_SPREAD_UPGRADE, POWERUP_BULLET_SPREAD_UPGRADE_ITEM_SPRITE},
     {EXTRA_BULLET_UPGRADE, POWERUP_EXTRA_BULLET_UPGRADE_ITEM_SPRITE},
     {BULLET_SPEED_UPGRADE, POWERUP_BULLET_SPEED_UPGRADE_ITEM_SPRITE},
@@ -25,13 +25,21 @@ PowerUp::PowerUp(Vector2 origin, PowerUpType type) : GameObject()
     this->type = POWER_UP;
     this->pickedUp = false;
     this->drawable = true;
+    this->shaking = false;
+    this->shakingTime = 0.0f;
+    this->lastShakeTime = 0.0f;
     this->timeToLive = POWER_UP_TIME_TO_LIVE;
     this->effectiveUseTime = 0.0f;
+
+    this->spawnSound = ResourceManager::GetSound(POWERUP_SPAWN_SOUND);
+    this->pickupSound = ResourceManager::GetSound(POWERUP_PICKUP_SOUND);
+    this->cantPickupSound = ResourceManager::GetSound(POWERUP_CANT_PICKUP_SOUND);
     this->texture = ResourceManager::GetInvalidTexture();
     if (powerUpSpriteItemMap.find(type) != powerUpSpriteItemMap.end())
     {
         this->texture = ResourceManager::GetSpriteTexture(powerUpSpriteItemMap.at(type));
     }
+    PlaySound(*spawnSound);
 }
 
 PowerUp::~PowerUp()
@@ -44,6 +52,16 @@ void PowerUp::Update()
     {
         effectiveUseTime = fmaxf(effectiveUseTime - GetFrameTime(), 0.0f);
         return;
+    }
+    if (shaking)
+    {
+        Translate({(float)GetRandomValue(-1, 1), 0});
+        shakingTime += GetFrameTime();
+        if (shakingTime >= POWER_UP_SHAKE_TIME)
+        {
+            shaking = false;
+            shakingTime = 0.0f;
+        }
     }
     GameObject::Update();
     timeToLive = fmaxf(timeToLive - GetFrameTime(), 0.0f);
@@ -97,9 +115,23 @@ void PowerUp::HandleCollision(GameObject *other, Vector2 *pushVector)
     *pushVector = {0};
 }
 
+void PowerUp::PauseSounds()
+{
+    PauseSound(*spawnSound);
+    PauseSound(*pickupSound);
+    PauseSound(*cantPickupSound);
+}
+
+void PowerUp::ResumeSounds()
+{
+    ResumeSound(*spawnSound);
+    ResumeSound(*pickupSound);
+    ResumeSound(*cantPickupSound);
+}
+
 void PowerUp::PickUp()
 {
-    // TODO: add sound effect
+    PlaySound(*pickupSound);
     pickedUp = true;
     drawable = false;
     timeToLive = 0.0f;
@@ -116,7 +148,7 @@ void PowerUp::PickUp()
         break;
     case TEMPORARY_INFINITE_BOOST:
         break;
-    case FIRE_RATE_UPGRADE:
+    case SHOOT_COOLDOWN_UPGRADE:
         break;
     case BULLET_SPEED_UPGRADE:
         break;
@@ -131,6 +163,17 @@ void PowerUp::PickUp()
     }
 
     ResetUseTime();
+}
+
+void PowerUp::AnimateCantPickup()
+{
+    if (shaking || pickedUp || GetTime() - lastShakeTime < POWER_UP_SHAKE_TIME * 10)
+    {
+        return;
+    }
+    PlaySound(*cantPickupSound);
+    this->shaking = true;
+    this->lastShakeTime = GetTime();
 }
 
 void PowerUp::UpdateBounds(Rectangle playerBounds)
@@ -152,7 +195,7 @@ void PowerUp::ResetUseTime()
     case TEMPORARY_INFINITE_BOOST:
         effectiveUseTime = TEMPORARY_INFINITE_BOOST_TIME;
         break;
-    case FIRE_RATE_UPGRADE:
+    case SHOOT_COOLDOWN_UPGRADE:
         break;
     case LIFE:
         break;
@@ -171,8 +214,8 @@ const char *PowerUp::GetPowerUpName(PowerUpType type)
         return "TEMPORARY_SHIELD";
     case TEMPORARY_INFINITE_BOOST:
         return "TEMPORARY_INFINITE_BOOST";
-    case FIRE_RATE_UPGRADE:
-        return "FIRE_RATE_UPGRADE";
+    case SHOOT_COOLDOWN_UPGRADE:
+        return "SHOOT_COOLDOWN_UPGRADE";
     case BULLET_SPEED_UPGRADE:
         return "BULLET_SPEED_UPGRADE";
     case BULLET_SPREAD_UPGRADE:

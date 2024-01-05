@@ -21,7 +21,7 @@ const std::map<SpriteTextureID, const char *> spriteTexturesPathsMap = {
     {POWERUP_SHIELD_ITEM_SPRITE, "resources/powerups/shield_item.png"},
     {POWERUP_SHIELD_SPRITE, "resources/powerups/shield.png"},
     {POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE, "resources/powerups/temporary_shield_item.png"},
-    {POWERUP_FIRE_RATE_UPGRADE_ITEM_SPRITE, "resources/powerups/fire_rate_upgrade_item.png"},
+    {POWERUP_SHOOT_COOLDOWN_UPGRADE_ITEM_SPRITE, "resources/powerups/shoot_cooldown_upgrade_item.png"},
     {POWERUP_BULLET_SPREAD_UPGRADE_ITEM_SPRITE, "resources/powerups/bullet_spread_upgrade_item.png"},
     {POWERUP_EXTRA_BULLET_UPGRADE_ITEM_SPRITE, "resources/powerups/extra_bullet_upgrade_item.png"},
     {POWERUP_BULLET_SPEED_UPGRADE_ITEM_SPRITE, "resources/powerups/bullet_speed_upgrade_item.png"},
@@ -43,7 +43,9 @@ const std::map<SoundID, const char *> soundsPathsMap = {
     {EXPLOSION_SOUND, "resources/sounds/explosion.wav"},
     {SHIP_EXPLOSION_SOUND, "resources/sounds/ship_explosion.wav"},
     {ENEMY_EXPLOSION_SOUND, "resources/sounds/enemy_explosion.wav"},
+    {POWERUP_SPAWN_SOUND, "resources/sounds/powerup_spawn.wav"},
     {POWERUP_PICKUP_SOUND, "resources/sounds/powerup_pickup.wav"},
+    {POWERUP_CANT_PICKUP_SOUND, "resources/sounds/powerup_cant_pickup.wav"},
 };
 
 std::vector<Texture2D> ResourceManager::spriteTextures;

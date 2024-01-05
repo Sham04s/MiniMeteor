@@ -11,7 +11,7 @@ PlayerPowerups::PlayerPowerups(Player *player, CenteredPosition position)
     powerupTextures[SHIELD] = ResourceManager::GetSpriteTexture(POWERUP_SHIELD_ITEM_SPRITE);
     powerupTextures[TEMPORARY_SHIELD] = ResourceManager::GetSpriteTexture(POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE);
     powerupTextures[TEMPORARY_INFINITE_BOOST] = ResourceManager::GetSpriteTexture(POWERUP_TEMPORARY_INFINITE_BOOST_ITEM_SPRITE);
-    powerupTextures[FIRE_RATE_UPGRADE] = ResourceManager::GetSpriteTexture(POWERUP_FIRE_RATE_UPGRADE_ITEM_SPRITE);
+    powerupTextures[SHOOT_COOLDOWN_UPGRADE] = ResourceManager::GetSpriteTexture(POWERUP_SHOOT_COOLDOWN_UPGRADE_ITEM_SPRITE);
     powerupTextures[BULLET_SPEED_UPGRADE] = ResourceManager::GetSpriteTexture(POWERUP_BULLET_SPEED_UPGRADE_ITEM_SPRITE);
     powerupTextures[BULLET_SPREAD_UPGRADE] = ResourceManager::GetSpriteTexture(POWERUP_BULLET_SPREAD_UPGRADE_ITEM_SPRITE);
     powerupTextures[EXTRA_BULLET_UPGRADE] = ResourceManager::GetSpriteTexture(POWERUP_EXTRA_BULLET_UPGRADE_ITEM_SPRITE);
@@ -117,23 +117,25 @@ void PlayerPowerups::Draw()
     Color tint = Fade(WHITE, 0.2f + 0.8f * fminf(distanceToPlayer / FADE_DISTANCE_THRESHOLD, 1.0f));
 
     for (size_t i = 0; i < NUM_POWER_UP_TYPES; i++)
-    {   
-        PowerUp *powerup = player->GetPowerup((PowerUpType)i);
-        if (powerup == nullptr)
+    {
+        PowerUpType type = (PowerUpType)i;
+        size_t count = player->GetPowerupCount(type);
+
+        if (count == 0)
         {
             continue;
         }
         
-        size_t count = player->GetPowerupCount((PowerUpType)i);
-        powerupTexture = powerupTextures[(PowerUpType)i];
+        count += type == EXTRA_BULLET_UPGRADE;
+        powerupTexture = powerupTextures[type];
 
         const char *multiplierText = "";
-        float multiplier = player->GetPowerupMultiplier(powerup->GetType());
-        if (fmodf(multiplier, 1.0f) != 0.0f)
+        float multiplier = player->GetPowerupMultiplier(type);
+        if (fmodf(multiplier, 1.0f) != 0.0f) // is float
         {
             multiplierText = TextFormat("x%0.1f", multiplier);
         }
-        else if (count > 1)
+        else // is int
         {
             multiplierText = TextFormat("x%ld", count);
         }

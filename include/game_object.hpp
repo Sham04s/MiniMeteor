@@ -15,7 +15,7 @@
 enum GameObjectType
 {
     PLAYER,                /**< Player object */
-    BASIC_ENEMY,           /**< Basic enemy object */
+    ENEMY,                 /**< Enemy object */
     BULLET,                /**< Bullet object */
     ENEMY_BULLET,          /**< Enemy bullet object */
     ASTEROID,              /**< Asteroid object */
