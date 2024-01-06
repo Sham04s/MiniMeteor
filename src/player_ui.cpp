@@ -35,7 +35,16 @@ void PlayerUI::Update()
 void PlayerUI::Draw()
 {
     UIObject::Draw();
-    DrawRectangleLinesEx(directionalShipMeterBounds, 1, WHITE);
+
+    float alpha = 1.0f;
+    Vector2 playerPos = GetWorldToScreen2D(player->GetOrigin(), player->GetCamera());
+    float distanceToPlayer = Vector2Distance(playerPos, {directionalShipMeterBounds.x + directionalShipMeterBounds.width / 2, directionalShipMeterBounds.y + directionalShipMeterBounds.height / 2});
+    if (distanceToPlayer < 100)
+    {
+        alpha = fmaxf(0.0f, distanceToPlayer / 100);
+    }
+
+    DrawRectangleLinesEx(directionalShipMeterBounds, 1, Fade(WHITE, alpha));
     const int padding = 2;
 
     Rectangle iconBounds = {directionalShipMeterBounds.x - DIRECTIONAL_SHIP_ICON_SIZE - padding,
@@ -47,14 +56,14 @@ void PlayerUI::Draw()
     directionalShipMeter.width = directionalShipMeter.width * player->GetDirectionalShipMeter() / DIRECTIONAL_SHIP_METER_MAX;
     directionalShipMeter.x = directionalShipMeterBounds.x + directionalShipMeterBounds.width - directionalShipMeter.width - padding;
 
-    DrawTexturePro(*directionalShipIcon, {0, 0, (float)directionalShipIcon->width, (float)directionalShipIcon->height}, iconBounds, {0, 0}, 0, WHITE);
-    DrawRectangleRec(directionalShipMeter, WHITE);
-
+    DrawTexturePro(*directionalShipIcon, {0, 0, (float)directionalShipIcon->width, (float)directionalShipIcon->height}, iconBounds, {0, 0}, 0, Fade(WHITE, alpha));
+    DrawRectangleRec(directionalShipMeter, Fade(WHITE, alpha));
 }
 
 void PlayerUI::DrawDebug()
 {
     UIObject::DrawDebug();
+    DrawRectangleLinesEx(directionalShipMeterBounds, 1, RED);
 }
 
 void PlayerUI::Resize(Vector2 prevScreenSize)

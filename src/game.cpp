@@ -6,6 +6,7 @@
 
 #include "game.hpp"
 #include "game_ui.hpp"
+#include "raylib_logo.hpp"
 
 #include "resource_manager.hpp"
 #include "score_registry.hpp"
@@ -28,13 +29,11 @@ bool HIDE_SPRITES = false;
 
 GameState gameState;
 
-// TODO: add raylib logo when first loading
 // TODO: add credits screen (kenney.nl, raylib, openfonts?)
-// TODO: adjust difficulty settings
 
 float oneSecondTimer = 0.0f;
 
-void InitGame()
+bool InitGame()
 {
     SetExitKey(KEY_NULL);
     gameState.fps = 60;
@@ -56,10 +55,12 @@ void InitGame()
     if (!ResourceManager::LoadResources())
     {
         TraceLog(LOG_ERROR, "Failed to load resources!\n");
+        ExitGame();
+        return false;
     }
 
-    gameState.previousScreen = MAIN_MENU;
-    gameState.currentScreen = MAIN_MENU;
+    gameState.previousScreen = LOADING;
+    gameState.currentScreen = LOADING;
     gameState.powerupSpawned = false;
 
     gameState.asteroidsCount = 0;
@@ -68,7 +69,9 @@ void InitGame()
     gameState.player = new Player();
 
     CreateUIElements(gameState.player);
-    CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY); // create asteroids at main menu
+    CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES); // create asteroids at main menu
+
+    return true;
 }
 
 void UpdateDifficultySettings(Difficulty diff)
@@ -80,7 +83,7 @@ void UpdateDifficultySettings(Difficulty diff)
     diffSettings->maxEnemies = powf(2, diff + 1);                                                     // 2, 4, 8
     diffSettings->asteroidsSpawnChance = 0.25f + (float)(gameState.diffSettings.difficulty) * 0.25f;  // 0.25, 0.5, 0.75
     diffSettings->enemiesSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty + 1) * 0.1f;  // 0.2, 0.3, 0.4
-    diffSettings->powerupSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty) * 0.15f;    // 0.2 0.35, 0.5
+    diffSettings->powerupSpawnChance = 0.15f + (float)(gameState.diffSettings.difficulty) * 0.2f;     // 0.15, 0.35, 0.55
     diffSettings->asteroidSpeedMultiplier = 1.0f + (float)(gameState.diffSettings.difficulty) * 0.5f; // 1.0, 1.5, 2.0
     diffSettings->scoreMultiplier = powf(1.2f, gameState.diffSettings.difficulty);
 
@@ -93,14 +96,14 @@ void UpdateDifficultySettings(Difficulty diff)
     enemiesAttr->probOfShootingToPlayer = 0.35f + (float)(gameState.diffSettings.difficulty) * 0.25f; // 0.35, 0.6, 0.85
 }
 
-void CreateNewGame(size_t numAsteroids, size_t numEnemies, Difficulty difficulty)
+void CreateNewGame(size_t numAsteroids, size_t numEnemies)
 {
 
     gameState.asteroidsCount = 0;
     gameState.enemiesCount = 0;
     gameState.powerupSpawned = false;
 
-    UpdateDifficultySettings(difficulty);
+    UpdateDifficultySettings(EASY); // difficulty starts at easy and is increased as the player scores more points
 
     ResetScoreRegistry();
 
@@ -179,7 +182,7 @@ void ChangeScreen(ScreenID screen)
     if (screen == MAIN_MENU)
     {
         gameState.player->Hide();
-        CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY);
+        CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES);
     }
     if (gameState.previousScreen == MAIN_MENU && screen == GAME)
     {
@@ -297,7 +300,7 @@ void ResumeGame()
 
 void RestartGame()
 {
-    CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY);
+    CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES);
     ChangeScreen(GAME);
 }
 
@@ -306,7 +309,7 @@ void DrawFrame()
     BeginDrawing();
     ClearBackground(BACKGROUND_COLOR);
 
-    if (gameState.currentScreen != EXITING)
+    if (gameState.currentScreen != EXITING && gameState.currentScreen != LOADING)
     {
         // draw background centered
         DrawTexture(*gameState.spaceBackground, (int)(GetScreenWidth() - gameState.spaceBackground->width) / 2, (int)(GetScreenHeight() - gameState.spaceBackground->height) / 2, WHITE);
@@ -322,14 +325,13 @@ void DrawFrame()
         EndMode2D();
     }
 
-    if (gameState.currentScreen != GAME)
+    if (gameState.currentScreen != GAME && gameState.currentScreen != LOADING)
     {
         DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.25f));
     }
 
     if (gameState.screens[gameState.currentScreen] != nullptr)
     {
-
         gameState.screens[gameState.currentScreen]->Draw();
     }
 
@@ -345,6 +347,11 @@ PowerUpType powerupToSpawn = LIFE;
 
 void DrawDebug()
 {
+    if (gameState.currentScreen == LOADING)
+    {
+        gameState.screens[LOADING]->DrawDebug();
+        return;
+    }
     if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
         BeginMode2D(gameState.player->GetCamera());
@@ -391,7 +398,7 @@ void HandleInput()
 {
     if (IsKeyPressed(KEY_R))
     {
-        CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES, EASY);
+        CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES);
     }
     if (IsKeyPressed(KEY_L))
     {
@@ -756,11 +763,11 @@ void UpdateGame()
 
             // this score is scaled relative to frame time
             AddScore(TIME_ALIVE, 1.0f);
-            if (GetTotalScore() >= 60000 && gameState.diffSettings.difficulty == EASY)
+            if (GetTotalScore() >= 50000 && gameState.diffSettings.difficulty == EASY)
             {
                 UpdateDifficultySettings(MEDIUM);
             }
-            else if (GetTotalScore() >= 120000 && gameState.diffSettings.difficulty == MEDIUM)
+            else if (GetTotalScore() >= 100000 && gameState.diffSettings.difficulty == MEDIUM)
             {
                 UpdateDifficultySettings(HARD);
             }
@@ -786,6 +793,13 @@ void UpdateGame()
         return;
     }
     gameState.screens[gameState.currentScreen]->Update();
+    if (gameState.currentScreen == LOADING)
+    {
+        if (((RaylibLogo *)gameState.screens[LOADING])->IsDone())
+        {
+            ChangeScreen(MAIN_MENU);
+        }
+    }
 
     static Vector2 prevWindowSize = gameState.windowSize;
     if (IsWindowResized())

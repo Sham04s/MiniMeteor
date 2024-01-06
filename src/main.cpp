@@ -26,20 +26,21 @@ typedef void (*CoreFunc)(void);
 typedef bool (*CoreFuncBool)(void);
 
 HINSTANCE GameDLL = nullptr;
-CoreFunc InitGame = nullptr;
+CoreFuncBool InitGame = nullptr;
 CoreFuncBool GameLoop = nullptr;
 CoreFunc ExitGame = nullptr;
 
 // for notifiying that the dll has been reloaded
 float notifyShowTime = 0; // in seconds
 
-bool lastLoadSuccess = false;
+bool lastDllLoadSuccess = false;
 long lastCoreCompileTime = 0;
 float elapsedTimeSinceLastCheck = 0;
 
 const char *dllName = "core.dll";
 const char *tempDllName = "temp_core.dll";
 
+// creates a copy of the dll so that way the original can be overwritten
 void CreateTempDLL()
 {
     std::ifstream src(dllName, std::ios::binary);
@@ -70,45 +71,51 @@ void InitRaylib()
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "MiniMeteor");
 }
-void LoadGame()
+
+// returns true if the game was initialized successfully, false otherwise
+bool LoadGame()
 {
+
+    // ------------------------------ HOT RELOAD CODE ------------------------------
 #ifdef WINDOWS_HOT_RELOAD
-    lastLoadSuccess = false;
+    lastDllLoadSuccess = false;
     CreateTempDLL();
+
     GameDLL = LoadLibraryA(tempDllName);
     if (!GameDLL)
     {
         TraceLog(LOG_ERROR, "Failed to load DLL\n");
-        return;
+        return false;
     }
 
-    InitGame = (CoreFunc)GetProcAddress(GameDLL, "InitGame");
+    InitGame = (CoreFuncBool)GetProcAddress(GameDLL, "InitGame");
     if (!InitGame)
     {
         TraceLog(LOG_ERROR, "Failed to load InitGame\n");
-        return;
+        return false;
     }
-    GameLoop = reinterpret_cast<CoreFuncBool>(GetProcAddress(GameDLL, "GameLoop"));
+    GameLoop = (CoreFuncBool)(GetProcAddress(GameDLL, "GameLoop"));
     if (!GameLoop)
     {
         TraceLog(LOG_ERROR, "Failed to load GameLoop\n");
-        return;
+        return false;
     }
     ExitGame = (CoreFunc)GetProcAddress(GameDLL, "ExitGame");
     if (!ExitGame)
     {
         TraceLog(LOG_ERROR, "Failed to load ExitGame\n");
-        return;
+        return false;
     }
     // game dll loaded successfully
     notifyShowTime = 2.0f;
-    lastLoadSuccess = true;
+    lastDllLoadSuccess = true;
     SetWindowSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     SetWindowPosition(GetMonitorWidth(0) / 2 - DEFAULT_WIDTH / 2, GetMonitorHeight(0) / 2 - DEFAULT_HEIGHT / 2);
 
+    // -----------------------------------------------------------------------------
 #endif // WINDOWS_HOT_RELOAD
 
-    InitGame();
+    return InitGame();
 }
 
 void UnloadGame()
@@ -118,6 +125,7 @@ void UnloadGame()
     UNLOAD_GAME_DLL
 #endif // WINDOWS_HOT_RELOAD
 }
+
 void ExitRaylib()
 {
 #ifdef WINDOWS_HOT_RELOAD
@@ -126,6 +134,7 @@ void ExitRaylib()
     CloseWindow();
 }
 
+// wrapper for emscripten_set_main_loop
 void ExecuteGameLoop()
 {
     GameLoop();
@@ -134,26 +143,40 @@ void ExecuteGameLoop()
 int main()
 {
     InitRaylib();
-    LoadGame();
+    if (!LoadGame())
+    {
+        TraceLog(LOG_ERROR, "Game cannot be initialized\n");
+        ExitRaylib();
+        return 1;
+    }
+
 #ifdef PLATFORM_WEB
     emscripten_set_main_loop(ExecuteGameLoop, 0, 1);
 #else
+
+// ------------------------------ HOT RELOAD CODE ------------------------------
 #ifdef WINDOWS_HOT_RELOAD
-    if (!lastLoadSuccess)
+    if (!lastDllLoadSuccess)
     {
-        TraceLog(LOG_ERROR, "Failed to load game\n");
+        TraceLog(LOG_ERROR, "Failed to load game dll\n");
         ExitRaylib();
         return 1;
     }
     lastCoreCompileTime = GetFileModTime(dllName);
 #endif // DEBUG
+    // -----------------------------------------------------------------------------
+
     while (!WindowShouldClose())
     {
         if (!GameLoop())
         {
             break;
         }
+
+// ------------------------------ HOT RELOAD CODE ------------------------------
 #ifdef WINDOWS_HOT_RELOAD
+
+        // draw a notification that the dll has been reloaded
         if (notifyShowTime > 0)
         {
             int textWidth = MeasureText("Reloaded!", 20);
@@ -161,6 +184,7 @@ int main()
             notifyShowTime -= GetFrameTime();
         }
 
+        // check if the dll has been modified
         elapsedTimeSinceLastCheck += GetFrameTime();
         if (elapsedTimeSinceLastCheck > 1.0f)
         {
@@ -174,21 +198,28 @@ int main()
                 lastCoreCompileTime = newLastCompileTime;
             }
         }
+
+        // reload the game dll if F5 is pressed
         if (IsKeyPressed(KEY_F5))
         {
             UnloadGame();
             LoadGame();
         }
-        if (!lastLoadSuccess)
+
+        // exits raylib if cannot reload the game dll
+        if (!lastDllLoadSuccess)
         {
             TraceLog(LOG_ERROR, "Failed to reload game\n");
             ExitRaylib();
             return 1;
         }
 
+// -----------------------------------------------------------------------------
 #endif // WINDOWS_HOT_RELOAD
     }
+
 #endif // PLATFORM_WEB
+
     UnloadGame();
     ExitRaylib();
     return 0;

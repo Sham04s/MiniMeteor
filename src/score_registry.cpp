@@ -32,6 +32,7 @@ std::map<ScoreType, const char *> scoreNames = {
 
 std::map<ScoreType, float> scoreRegistry;
 
+float maxScore = 0;
 float totalScore = 0;
 
 void InitScoreRegistry()
@@ -54,6 +55,7 @@ void AddScore(ScoreType type, float multiplier)
 
     scoreRegistry[type] += 1.0f * multiplier;
     totalScore += scoreValues[type] * multiplier;
+    maxScore = totalScore > maxScore ? totalScore : maxScore;
 }
 
 int GetRawScore(ScoreType type)

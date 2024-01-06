@@ -20,6 +20,9 @@ Player::Player(Vector2 origin) : Character(origin)
     this->thrustSound = ResourceManager::CreateSoundAlias(THRUST_SOUND);
     this->explosionSound = ResourceManager::CreateSoundAlias(SHIP_EXPLOSION_SOUND);
 
+    this->changeToDirShipSound = ResourceManager::GetSound(CHANGE_TO_DIR_SHIP_SOUND);
+    this->changeToShipSound = ResourceManager::GetSound(CHANGE_TO_NORMAL_SHIP_SOUND);
+
     Reset();
     Hide();
 }
@@ -634,6 +637,15 @@ void Player::ToggleDirectionalShip()
     if (!directionalShip && directionalShipMeter <= 0.0f)
     {
         return;
+    }
+
+    if (directionalShip)
+    {
+        PlaySound(*changeToShipSound);
+    }
+    else
+    {
+        PlaySound(*changeToDirShipSound);
     }
     changingShip = true;
 }

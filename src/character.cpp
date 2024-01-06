@@ -180,22 +180,6 @@ void Character::Update()
         Translate({0, (float)worldBox.height + CHARACTER_SIZE / 2});
     }
 
-    // if (origin.x > GetScreenWidth() + CHARACTER_SIZE / 4)
-    // {
-    //     Translate({-(float)GetScreenWidth() - CHARACTER_SIZE / 2, 0});
-    // }
-    // else if (origin.x < -CHARACTER_SIZE / 4)
-    // {
-    //     Translate({(float)GetScreenWidth() + CHARACTER_SIZE / 2, 0});
-    // }
-    // if (origin.y > GetScreenHeight() + CHARACTER_SIZE / 4)
-    // {
-    //     Translate({0, -(float)GetScreenHeight() - CHARACTER_SIZE / 2});
-    // }
-    // else if (origin.y < -CHARACTER_SIZE / 4)
-    // {
-    //     Translate({0, (float)GetScreenHeight() + CHARACTER_SIZE / 2});
-    // }
 }
 
 void Character::Draw()

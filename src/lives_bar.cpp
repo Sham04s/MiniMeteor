@@ -18,18 +18,27 @@ void LivesBar::Draw()
 {
     Rectangle lifeBounds = {centeredBounds.x + lifeSize * (MAX_LIVES - 1), centeredBounds.y, lifeSize, lifeSize};
 
+    float alpha = 1.0f;
+    Vector2 playerPos = GetWorldToScreen2D(player->GetOrigin(), player->GetCamera());
+    float distanceToPlayer = Vector2Distance(playerPos, {lifeBounds.x + lifeBounds.width / 2, lifeBounds.y + lifeBounds.height / 2});
+
+    if (distanceToPlayer < 100)
+    {
+        alpha = fmaxf(0.0f, distanceToPlayer / 100);
+    }
+
     for (int i = 0; i < player->GetLives() - 1; i++)
     {
-        DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, WHITE);
+        DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, Fade(WHITE, alpha));
         lifeBounds.x -= lifeSize;
     }
     if (player->HasPowerup(SHIELD))
     {
-        DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, BLUE);
+        DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, Fade(BLUE, alpha));
     }
     else
     {
-        DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, WHITE);
+        DrawTexturePro(*lifeTexture, {0, 0, (float)lifeTexture->width, (float)lifeTexture->height}, lifeBounds, {0}, 0, Fade(WHITE, alpha));
     }
 }
 

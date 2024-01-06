@@ -1,10 +1,14 @@
 #include "game_ui.hpp"
+
+#include <stdio.h>
+
 #include "game.hpp"
 #include "utils.hpp"
 #include "resource_manager.hpp"
+
+#include "raylib_logo.hpp"
 #include "player_ui.hpp"
 #include "score_summary.hpp"
-#include <stdio.h>
 #include "label.hpp"
 
 char fpsButtonText[20];
@@ -193,7 +197,7 @@ UIObject *CreateExitUI()
 
 void CreateUIElements(Player *player)
 {
-
+    gameState.screens[LOADING] = new RaylibLogo();
     gameState.screens[GAME] = CreateGameUI(player);
     gameState.screens[GAME_OVER] = CreateGameOverMenu();
     gameState.screens[MAIN_MENU] = CreateMainMenu();

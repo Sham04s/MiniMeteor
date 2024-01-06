@@ -42,6 +42,8 @@ const std::map<SoundID, const char *> soundsPathsMap = {
     {ENEMY_THRUST_SOUND, "resources/sounds/enemy_thrust.wav"},
     {EXPLOSION_SOUND, "resources/sounds/explosion.wav"},
     {SHIP_EXPLOSION_SOUND, "resources/sounds/ship_explosion.wav"},
+    {CHANGE_TO_DIR_SHIP_SOUND, "resources/sounds/change_to_dir_ship.wav"},
+    {CHANGE_TO_NORMAL_SHIP_SOUND, "resources/sounds/change_to_normal_ship.wav"},
     {ENEMY_EXPLOSION_SOUND, "resources/sounds/enemy_explosion.wav"},
     {POWERUP_SPAWN_SOUND, "resources/sounds/powerup_spawn.wav"},
     {POWERUP_PICKUP_SOUND, "resources/sounds/powerup_pickup.wav"},
@@ -96,12 +98,9 @@ bool ResourceManager::LoadResources()
     {
         if (!FileExists(soundsPathsMap.at((SoundID)i)))
         {
-            sounds.push_back({{0}});
+            return false;
         }
-        else
-        {
-            sounds.push_back(LoadSound(soundsPathsMap.at((SoundID)i)));
-        }
+        sounds.push_back(LoadSound(soundsPathsMap.at((SoundID)i)));
     }
 
     const char *charactersToLoad = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ ∞";
@@ -173,7 +172,7 @@ Rectangle ResourceManager::GetSpriteSrcRect(SpriteTextureID id, unsigned int fra
 
     int row = frame / columns;
     int column = frame % columns;
-    
+
     return {(float)(frameWidth * column), (float)(frameHeight * row), (float)frameWidth, (float)frameHeight};
 }
 

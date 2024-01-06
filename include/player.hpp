@@ -47,6 +47,8 @@ private:
     size_t powerupsCount[NUM_POWER_UP_TYPES];
 
     Texture2D *crosshair;
+    Sound *changeToDirShipSound;
+    Sound *changeToShipSound;
 
 protected:
     void SetDefaultHitBox();

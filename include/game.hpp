@@ -10,10 +10,32 @@
 #define CORE_API
 #endif // WINDOWS_HOT_RELOAD
 
-CORE_API void InitGame();
+/**
+ * @brief Initializes the game
+ *
+ * @return true if the game was initialized successfully, false otherwise
+ *
+ */
+CORE_API bool InitGame();
+
+/**
+ * @brief Main game loop
+ *
+ * @return true if the game loop should continue, false otherwise
+ *
+ */
 CORE_API bool GameLoop();
+
+/**
+ * @brief Unload resources and exit the game
+ *
+ */
 CORE_API void ExitGame();
 
+/**
+ * @brief The game current screen
+ *
+ */
 enum ScreenID
 {
     GAME,
@@ -21,6 +43,7 @@ enum ScreenID
     MAIN_MENU,
     PAUSE_MENU,
     OPTIONS,
+    LOADING,
     EXITING,
     NUM_SCREENS
 };
@@ -33,6 +56,10 @@ enum Difficulty
     NUM_DIFFICULTIES
 };
 
+/**
+ * @brief The game difficulty settings (number of max asteroids, enemies, spawn chances, enemies attributes, etc)
+ *
+ */
 typedef struct DifficultySettings
 {
     Difficulty difficulty;
@@ -66,19 +93,24 @@ typedef struct GameState
 
 extern GameState gameState;
 
-void CreateNewGame(size_t numAsteroids, size_t numEnemies, Difficulty difficulty);
+// creates a new game with the given number of asteroids and enemies
+void CreateNewGame(size_t numAsteroids, size_t numEnemies);
+
 void PauseGame();
 void ResumeGame();
 void RestartGame();
-void DrawFrame();
-void DrawDebug();
-void ChangeScreen(ScreenID screen);
-void PreviousScreen();
-void ToggleGameFullscreen();
-void ResizeCallback(Vector2 prevWindowSize);
-void ChangeFPS();
+
 void TryToSpawnObject(GameObjectType type);
 void UpdateGame();
+void DrawFrame();
+void DrawDebug();
+
+void ChangeScreen(ScreenID screen);
+void PreviousScreen();
+
+void ToggleGameFullscreen();
+void ResizeCallback(Vector2 prevWindowSize);
+void ChangeFPS(); // rotates between 15, 30, 60, 120 and unlimited in PLATFORM_DESKTOP
 
 // blue variants
 #define PRIMARY_COLOR GetColor(0x3c9dd7ff)
@@ -97,6 +129,8 @@ void UpdateGame();
 #define SECONDARY_COLOR_2_BRIGTH GetColor(0x8ce9b4ff)
 #define SECONDARY_COLOR_2_DAR GetColor(0x00e162ff)
 #define SECONDARY_COLOR_2_DARKER GetColor(0x00893bff)
+
+// background color
 #define BACKGROUND_COLOR GetColor(0x242424ff)
 
 #endif // __GAME_H__
