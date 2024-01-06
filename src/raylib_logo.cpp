@@ -165,23 +165,33 @@ void RaylibLogo::DrawDebug()
 void RaylibLogo::Resize(Vector2 prevScreenSize)
 {
     UIObject::Resize(prevScreenSize);
-    float scale = (GetScreenWidth() - prevScreenSize.x < GetScreenHeight() - prevScreenSize.y)
-                      ? (float)GetScreenWidth() / prevScreenSize.x
-                      : (float)GetScreenHeight() / prevScreenSize.y;
+
+    float scale = GetScreenHeight() / prevScreenSize.y;
 
     logoSize = logoSize * scale;
     fontSize = fontSize * scale;
+    raylibFontSize = raylibFontSize * scale;
     lineThickness = lineThickness * scale;
 
     logoRec = {(float)GetScreenWidth() / 2 - logoSize / 2, (float)GetScreenHeight() / 2 - logoSize / 2, logoSize, logoSize};
-    topRec = {logoRec.x, logoRec.y, 0, 0};
-    leftRec = {logoRec.x, logoRec.y, 0, 0};
-    rightRec = {logoRec.x + logoRec.width - lineThickness, logoRec.y, 0, 0};
-    bottomRec = {logoRec.x, logoRec.y + logoRec.height - lineThickness, 0, 0};
+    if (state == 0) // starting animation
+    {
+        topRec = {logoRec.x, logoRec.y, 0, 0};
+        leftRec = {logoRec.x, logoRec.y, 0, 0};
+        bottomRec = {logoRec.x, logoRec.y + logoRec.height - lineThickness, 0, 0};
+        rightRec = {logoRec.x + logoRec.width - lineThickness, logoRec.y, 0, 0};
+    }
+    else // is animating
+    {
+        topRec = {logoRec.x, logoRec.y, topRec.width * scale, topRec.height * scale};
+        leftRec = {logoRec.x, logoRec.y, leftRec.width * scale, leftRec.height * scale};
+        bottomRec = {logoRec.x, logoRec.y + logoRec.height - lineThickness, bottomRec.width * scale, bottomRec.height * scale};
+        rightRec = {logoRec.x + logoRec.width - lineThickness, logoRec.y, rightRec.width * scale, rightRec.height * scale};
+    }
 
     madeWithPos = {logoRec.x, logoRec.y - fontSize};
-    // const int raylibTextWidth = MeasureText("raylib", (int)50);
-    raylibPos = {(float)GetScreenWidth() / 2 - 44, (float)GetScreenHeight() / 2 + 48};
+    raylibPos = {logoRec.x + logoRec.width - lineThickness * 2 - MeasureText("raylib", raylibFontSize),
+                 logoRec.y + logoRec.height - 2.5f * lineThickness - raylibFontSize};
 }
 
 void RaylibLogo::Reset()

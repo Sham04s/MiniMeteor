@@ -30,6 +30,10 @@ bool HIDE_SPRITES = false;
 GameState gameState;
 
 // TODO: add credits screen (kenney.nl, raylib, openfonts?)
+// TODO: organize code files
+// TODO: add ui object that helps with controls
+// TODO: add how to play screen
+// TODO: improve comments
 
 float oneSecondTimer = 0.0f;
 
