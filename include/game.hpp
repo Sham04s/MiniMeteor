@@ -43,6 +43,7 @@ enum ScreenID
     MAIN_MENU,
     PAUSE_MENU,
     OPTIONS,
+    CONTROLS,
     LOADING,
     EXITING,
     NUM_SCREENS
@@ -83,6 +84,7 @@ typedef struct GameState
     UIObject *screens[NUM_SCREENS];
     int fps;
     bool fullscreen;
+    bool hasStartedGame;
     Vector2 originalWindowSize;
     Vector2 windowSize;
     bool powerupSpawned;

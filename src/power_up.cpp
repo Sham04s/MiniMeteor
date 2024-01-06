@@ -167,7 +167,7 @@ void PowerUp::PickUp()
 
 void PowerUp::AnimateCantPickup()
 {
-    if (shaking || pickedUp || GetTime() - lastShakeTime < POWER_UP_SHAKE_TIME * 10)
+    if (shaking || pickedUp || GetTime() - lastShakeTime < POWER_UP_SHAKE_TIME * 6)
     {
         return;
     }

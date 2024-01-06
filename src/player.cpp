@@ -285,9 +285,12 @@ void Player::HandleInput()
         accelDir = {0, 0};
         if (wasdMask)
         {
-            state |= ACCELERATING;
             accelDir.x = (bool)(wasdMask & 1) - (bool)(wasdMask & 4); // 1 if D, -1 if A, 0 otherwise
             accelDir.y = (bool)(wasdMask & 2) - (bool)(wasdMask & 8); // 1 if S, -1 if W, 0 otherwise
+        }
+        if (accelDir.x != 0 || accelDir.y != 0)
+        {
+            state |= ACCELERATING;
         }
         else
         {

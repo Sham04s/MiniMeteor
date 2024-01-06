@@ -30,6 +30,23 @@ void RaylibLogo::Update()
     if (done)
         return;
 
+    if (state < 5 && (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ESCAPE) ||
+                      IsKeyPressed(KEY_ENTER) || IsMouseButtonPressed(MOUSE_LEFT_BUTTON)))
+    {
+        state = 5;
+        logoAnimationTimer = 0;
+        topRec.width = logoRec.width;
+        topRec.height = lineThickness;
+        leftRec.width = lineThickness;
+        leftRec.height = logoRec.height;
+        bottomRec.width = logoRec.width;
+        bottomRec.height = lineThickness;
+        rightRec.width = lineThickness;
+        rightRec.height = logoRec.height;
+        madeWithRecLetterCount = 9;
+        raylibRecLetterCount = 6;
+    }
+
     logoAnimationTimer += GetFrameTime();
     if (state == 0) // top-left corner blinking
     {

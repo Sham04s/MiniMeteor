@@ -35,7 +35,7 @@ void Label::Resize(Vector2 prevScreenSize)
     fontSize = (fontSize * (GetScreenHeight() / prevScreenSize.y));
 
     // calculate text bounds
-    Vector2 textSize = MeasureTextEx(GetFontDefault(), text, fontSize, 1);
+    Vector2 textSize = MeasureTextEx(*ResourceManager::GetFont(), text, fontSize, 1);
     float x = 0, y = 0;
     switch (hAlignment)
     {

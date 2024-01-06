@@ -33,6 +33,7 @@ const std::map<UITextureID, const char *> uiTexturesPathsMap = {
     {BUTTON_SECONDARY_TEXTURE, "resources/ui/secondary_button.png"},
     {LIFE_TEXTURE, "resources/ui/life.png"},
     {DIRECTIONAL_SHIP_TEXTURE, "resources/ui/directional_ship.png"},
+    {CONTROLS_TEXTURE, "resources/ui/controls.png"},
 };
 
 const std::map<SoundID, const char *> soundsPathsMap = {

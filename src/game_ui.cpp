@@ -10,6 +10,8 @@
 #include "player_ui.hpp"
 #include "score_summary.hpp"
 #include "label.hpp"
+#include "controls.hpp"
+#include "menu.hpp"
 
 char fpsButtonText[20];
 
@@ -19,9 +21,12 @@ UIObject *CreateMainMenu()
     Label *title = new Label({0, (float)GetScreenHeight() / 8, (float)GetScreenWidth(), (float)GetScreenHeight() / 4}, "MiniMeteor", WHITE, ALIGN_CENTER, ALIGN_CENTER, 64, nullptr);
 
     // main menu buttons
-    const int mainMenuButtonCount = 3;
+    const int mainMenuButtonCount = 4;
     Button *playButton = new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                     { ChangeScreen(GAME); });
+
+    Button *controlsButton = new Button(Vector2{0, 0}, nullptr, "Controls", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                                       { ChangeScreen(CONTROLS); });
 
     Button *optionsButton = new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                        { ChangeScreen(OPTIONS); });
@@ -29,7 +34,7 @@ UIObject *CreateMainMenu()
     Button *quitButton = new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                     { ChangeScreen(EXITING); });
 
-    Button *mainMenuButtons[mainMenuButtonCount] = {playButton, optionsButton, quitButton};
+    Button *mainMenuButtons[mainMenuButtonCount] = {playButton, controlsButton, optionsButton, quitButton};
 
     // main menu
     Rectangle mainMenuButtonRec = CreateCenteredButtonRec(mainMenuButtons, mainMenuButtonCount);
@@ -43,8 +48,7 @@ UIObject *CreateMainMenu()
         mainMenuContainer->AddChild(b);
     }
 
-    UIObject *mainMenu = new UIObject({0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()},
-                                      nullptr, ResourceManager::GetDefaultTexture());
+    UIObject *mainMenu = new Menu("");
 
     mainMenu->AddChild(title);
     mainMenu->AddChild(mainMenuContainer);
@@ -62,7 +66,7 @@ UIObject *CreateGameUI(Player *player)
 UIObject *CreatePauseMenu()
 {
     // pause menu buttons
-    const int pauseButtonCount = 5;
+    const int pauseButtonCount = 6;
     Button *pauseButtons[pauseButtonCount] = {
         new Button(Vector2{0, 0}, nullptr, "Resume", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { ResumeGame(); }),
@@ -70,6 +74,8 @@ UIObject *CreatePauseMenu()
                    { RestartGame(); }),
         new Button(Vector2{0, 0}, nullptr, "Main Menu", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { ChangeScreen(MAIN_MENU); }),
+        new Button(Vector2{0, 0}, nullptr, "Controls", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                   { ChangeScreen(CONTROLS); }),
         new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { ChangeScreen(OPTIONS); }),
         new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
@@ -77,15 +83,18 @@ UIObject *CreatePauseMenu()
     };
 
     // pause menu
-    UIObject *pauseMenu = new UIObject(CreateCenteredButtonRec(pauseButtons, pauseButtonCount), nullptr, ResourceManager::GetDefaultTexture());
+    UIObject *pauseMenuButtons = new UIObject(CreateCenteredButtonRec(pauseButtons, pauseButtonCount), nullptr, ResourceManager::GetDefaultTexture());
 
     Button *b;
     for (int i = 0; i < pauseButtonCount; i++)
     {
         b = pauseButtons[i];
         b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
-        pauseMenu->AddChild(b);
+        pauseMenuButtons->AddChild(b);
     }
+
+    UIObject *pauseMenu = new Menu("Paused");
+    pauseMenu->AddChild(pauseMenuButtons);
 
     return pauseMenu;
 }
@@ -111,7 +120,7 @@ UIObject *CreateGameOverMenu()
     scoreSummary->SetRelBounds(scoreSummaryRec);
 
     // game over
-    UIObject *gameOver = new UIObject(Rectangle{0, 0, 0, 0}, nullptr, ResourceManager::GetDefaultTexture());
+    UIObject *gameOver = new Menu("Game Over");
     gameOver->AddChild(scoreSummary);
 
     Button *b;
@@ -176,7 +185,7 @@ UIObject *CreateOptionsMenu()
 
     Rectangle optionButtonRec = CreateCenteredButtonRec(buttons, optionButtonCount);
 
-    UIObject *options = new UIObject(optionButtonRec, nullptr, ResourceManager::GetDefaultTexture());
+    UIObject *optionsMenuButtons = new UIObject(optionButtonRec, nullptr, ResourceManager::GetDefaultTexture());
 
     Button *b;
 
@@ -184,10 +193,13 @@ UIObject *CreateOptionsMenu()
     {
         b = buttons[i];
         b->SetRelPos({0, (float)i * (b->GetHeight() + b->GetPadding() * 2)});
-        options->AddChild(b);
+        optionsMenuButtons->AddChild(b);
     }
 
-    return options;
+    UIObject *optionsMenu = new Menu("Options");
+    optionsMenu->AddChild(optionsMenuButtons);
+
+    return optionsMenu;
 }
 
 UIObject *CreateExitUI()
@@ -202,6 +214,7 @@ void CreateUIElements(Player *player)
     gameState.screens[GAME_OVER] = CreateGameOverMenu();
     gameState.screens[MAIN_MENU] = CreateMainMenu();
     gameState.screens[PAUSE_MENU] = CreatePauseMenu();
+    gameState.screens[CONTROLS] = new Controls();
     gameState.screens[OPTIONS] = CreateOptionsMenu();
     gameState.screens[EXITING] = CreateExitUI();
 }

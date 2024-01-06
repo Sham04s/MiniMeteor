@@ -48,6 +48,7 @@ bool InitGame()
     gameState.fullscreen = false;
     gameState.windowSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
     gameState.originalWindowSize = gameState.windowSize;
+    gameState.hasStartedGame = false;
 
 #ifdef _DEBUG
     SetTraceLogLevel(LOG_ALL);
@@ -73,7 +74,7 @@ bool InitGame()
     gameState.player = new Player();
 
     CreateUIElements(gameState.player);
-    CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES); // create asteroids at main menu
+    CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES);
 
     return true;
 }
@@ -183,13 +184,16 @@ void ChangeScreen(ScreenID screen)
         gameState.screens[gameState.currentScreen]->Update();
     }
 
-    if (screen == MAIN_MENU)
+    if (screen == MAIN_MENU && gameState.hasStartedGame)
     {
+        gameState.hasStartedGame = false;
+        gameState.previousScreen = MAIN_MENU;
         gameState.player->Hide();
         CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES);
     }
-    if (gameState.previousScreen == MAIN_MENU && screen == GAME)
+    if (screen == GAME && !gameState.hasStartedGame)
     {
+        gameState.hasStartedGame = true;
         gameState.player->Show();
     }
 
@@ -215,17 +219,9 @@ void ChangeScreen(ScreenID screen)
 
 void PreviousScreen()
 {
-    if (gameState.currentScreen == OPTIONS)
+    if (gameState.currentScreen >= 3 && gameState.currentScreen)
     {
-        if (gameState.previousScreen == PAUSE_MENU)
-        {
-            gameState.currentScreen = PAUSE_MENU;
-        }
-        else if (gameState.previousScreen == MAIN_MENU)
-        {
-            gameState.currentScreen = MAIN_MENU;
-        }
-        gameState.previousScreen = OPTIONS;
+        ChangeScreen(gameState.previousScreen);
     }
 }
 
@@ -329,11 +325,6 @@ void DrawFrame()
         EndMode2D();
     }
 
-    if (gameState.currentScreen != GAME && gameState.currentScreen != LOADING)
-    {
-        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.25f));
-    }
-
     if (gameState.screens[gameState.currentScreen] != nullptr)
     {
         gameState.screens[gameState.currentScreen]->Draw();
@@ -400,15 +391,6 @@ void DrawDebug()
 
 void HandleInput()
 {
-    if (IsKeyPressed(KEY_R))
-    {
-        CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES);
-    }
-    if (IsKeyPressed(KEY_L))
-    {
-        UpdateDifficultySettings((Difficulty)((gameState.diffSettings.difficulty + 1) % NUM_DIFFICULTIES));
-    }
-
     if (IsKeyPressed(KEY_F11))
     {
         ToggleGameFullscreen();
@@ -432,6 +414,7 @@ void HandleInput()
 
 #ifdef _DEBUG
 #ifdef PLATFORM_DESKTOP
+
     if (IsKeyPressed(KEY_F3))
     {
         SHOW_DEBUG = !SHOW_DEBUG;
@@ -442,6 +425,16 @@ void HandleInput()
         SHOW_DEBUG = !SHOW_DEBUG;
     }
 #endif // PLATFORM_DESKTOP
+
+    if (IsKeyPressed(KEY_R))
+    {
+        CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES);
+    }
+    if (IsKeyPressed(KEY_L))
+    {
+        UpdateDifficultySettings((Difficulty)((gameState.diffSettings.difficulty + 1) % NUM_DIFFICULTIES));
+    }
+
     if (IsKeyDown(KEY_LEFT_SHIFT))
     {
         if (IsKeyPressed(KEY_ZERO))
@@ -752,8 +745,7 @@ void TryToSpawnObject(GameObjectType type)
 
 void UpdateGame()
 {
-    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER ||
-        gameState.currentScreen == MAIN_MENU || (gameState.currentScreen == OPTIONS && gameState.previousScreen == MAIN_MENU))
+    if (gameState.currentScreen != PAUSE_MENU && !(gameState.previousScreen == PAUSE_MENU && gameState.currentScreen != GAME))
     {
         UpdateGameObjects();
 
