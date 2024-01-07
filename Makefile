@@ -154,13 +154,22 @@ all: $(EXECUTABLE) $(CORE_LIB)
 $(EXECUTABLE): $(MAIN_OBJS)
 	mkdir -p $(PROJECT_BUILD_DIR)
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
+	@echo ""
+	@echo "Copying resources folder and building executable..."
+	@echo "---------------------------------------------------"
 	mkdir -p $(PROJECT_BUILD_DIR)/resources
 	cp -r resources/* $(PROJECT_BUILD_DIR)/resources
 endif
 	$(CXX) -o $(EXECUTABLE) $(MAIN_OBJS) $(LDFLAGS) $(LDLIBS)
+	@echo ""
+	@echo "Done!"
+	@echo ""
 
 # Rule to build core as a shared library (dll)
 $(PROJECT_BUILD_DIR)/core.dll: $(CORE_OBJS)
+	@echo ""
+	@echo "Building core as a shared library..."
+	@echo "------------------------------------"
 	$(CXX) -shared -o $(PROJECT_BUILD_DIR)/core.dll $^ $(LDFLAGS) -l:raylib.dll
 
 # Rule to build object files
@@ -169,6 +178,9 @@ $(PROJECT_BUILD_DIR)/core.dll: $(CORE_OBJS)
 
 # Copy resources folder (only for desktop platforms)
 res:
+	@echo ""
+	@echo "Copying resources folder..."
+	@echo "---------------------------"
 	mkdir -p $(PROJECT_BUILD_DIR)/resources
 	cp -r resources/* $(PROJECT_BUILD_DIR)/resources
 
@@ -196,6 +208,8 @@ options:
 
 # Clean rule
 clean:
+	@echo "Removing generated files..."
+	@echo "---------------------------"
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 ifeq ($(PLATFORM_OS),WINDOWS)
 	rm -f $(EXECUTABLE) $(PROJECT_BUILD_DIR)/core.dll
@@ -206,4 +220,7 @@ ifeq ($(PLATFORM),PLATFORM_WEB)
 	rm -f $(EXECUTABLE) $(PROJECT_BUILD_DIR)/*.js $(PROJECT_BUILD_DIR)/*.wasm $(PROJECT_BUILD_DIR)/*.data
 endif
 	rm -rf $(PROJECT_BUILD_DIR)
-	rm src/*.o
+	@echo ""
+	@echo "Removing compiled object files..."
+	@echo "---------------------------------"
+	rm -f $(MAIN_OBJS) $(CORE_OBJS)

@@ -208,7 +208,10 @@ void ChangeScreen(ScreenID screen)
     }
     else
     {
-        SetMasterVolume(0);
+        if (screen != GAME_OVER)
+        {
+            SetMasterVolume(0);
+        }
 
 #ifndef _DEBUG
         EnableCursor();
@@ -772,8 +775,7 @@ void UpdateGame()
         // game over
         if (gameState.player->IsDead() && gameState.player->GetLives() <= 0)
         {
-            gameState.previousScreen = gameState.currentScreen;
-            gameState.currentScreen = GAME_OVER;
+            ChangeScreen(GAME_OVER);
         }
 
         // reset oneSecondTimer
