@@ -114,6 +114,8 @@ void ToggleGameFullscreen();
 void ResizeCallback(Vector2 prevWindowSize);
 void ChangeFPS(); // rotates between 15, 30, 60, 120 and unlimited in PLATFORM_DESKTOP
 
+// TODO: remove unused colors
+
 // blue variants
 #define PRIMARY_COLOR GetColor(0x3c9dd7ff)
 #define PRIMARY_COLOR_BRIGHT GetColor(0x8dc3e3ff)

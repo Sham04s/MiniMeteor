@@ -32,7 +32,7 @@ std::map<ScoreType, const char *> scoreNames = {
 
 std::map<ScoreType, float> scoreRegistry;
 
-float maxScore = 0;
+float highScore = 0;
 float totalScore = 0;
 
 void InitScoreRegistry()
@@ -50,16 +50,18 @@ void AddScore(ScoreType type, float multiplier)
     {
         scoreRegistry[TIME_ALIVE] += 1.0f * GetFrameTime() * multiplier;
         totalScore += scoreValues[type] * GetFrameTime() * multiplier;
-        return;
+    }
+    else
+    {
+        scoreRegistry[type] += 1.0f * multiplier;
+        totalScore += scoreValues[type] * multiplier;
     }
 
-    scoreRegistry[type] += 1.0f * multiplier;
-    totalScore += scoreValues[type] * multiplier;
-    maxScore = totalScore > maxScore ? totalScore : maxScore;
+    highScore = totalScore > highScore ? totalScore : highScore;
 }
 
 int GetRawScore(ScoreType type)
-{   
+{
     return scoreRegistry[type];
 }
 
@@ -73,9 +75,28 @@ int GetTotalScore()
     return totalScore;
 }
 
+int GetHighScore()
+{
+    return highScore;
+}
+
 const char *GetScoreName(ScoreType type)
 {
     return scoreNames[type];
+}
+
+const char *GetGenericScoreName(ScoreType type)
+{
+    if (type < TIME_ALIVE)
+        return "Powerups Collected";
+    if (type == TIME_ALIVE)
+        return "Seconds Alive";
+    if (type == BASIC_ENEMY_KILLED)
+        return "Enemies Killed";
+    if (type == SMALL_ASTEROID_DESTROYED || type == LARGE_ASTEROID_DESTROYED)
+        return "Asteroids Destroyed";
+
+    return "Unknown Score Type";
 }
 
 void ResetScoreRegistry()

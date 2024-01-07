@@ -613,7 +613,7 @@ void Player::Reset()
 {
     // Reset all variables to default values
     Respawn();
-    this->lives = PLAYER_INITIAL_LIVES;
+    this->lives = 1; // TODO: change this
     this->directionalShipMeter = DIRECTIONAL_SHIP_METER_MAX / 3;
     this->directionalShip = false;
     this->changingShip = false;

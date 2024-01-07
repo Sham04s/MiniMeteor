@@ -27,7 +27,9 @@ void AddScore(ScoreType type, float multiplier);
 int GetRawScore(ScoreType type);
 int GetScore(ScoreType type);
 int GetTotalScore();
+int GetHighScore();
 const char *GetScoreName(ScoreType type);
+const char *GetGenericScoreName(ScoreType type);
 void ResetScoreRegistry();
 
 #endif // __SCORE_REGISTRY_H__

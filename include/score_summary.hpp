@@ -4,14 +4,16 @@
 #include "ui_object.hpp"
 #include "score_registry.hpp"
 
-#define MIN_SCORE_FONT_SIZE 10
+#define SCORE_FONT_SIZE 24
 #define SCORE_PADDING 4
 
 class ScoreSummary : public UIObject
 {
 private:
-    char *textLines[NUM_SCORE_TYPES + 1] = {};
-    int fontSize;
+    char *scoresText[6];
+    float fontSize;
+
+    Rectangle scoresRec;
 
 public:
     ScoreSummary(Rectangle relBounds, UIObject *parent = nullptr);
@@ -20,6 +22,8 @@ public:
     void Update();
     void Draw();
     void DrawDebug();
+
+    void Resize(Vector2 prevScreenSize);
 };
 
 #endif // __SCORE_SUMMARY_H__

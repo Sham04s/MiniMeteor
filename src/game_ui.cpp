@@ -26,7 +26,7 @@ UIObject *CreateMainMenu()
                                     { ChangeScreen(GAME); });
 
     Button *controlsButton = new Button(Vector2{0, 0}, nullptr, "Controls", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                                       { ChangeScreen(CONTROLS); });
+                                        { ChangeScreen(CONTROLS); });
 
     Button *optionsButton = new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                        { ChangeScreen(OPTIONS); });
@@ -115,7 +115,9 @@ UIObject *CreateGameOverMenu()
     UIObject *buttons = new UIObject(gameOverButtonRec, nullptr, ResourceManager::GetDefaultTexture());
 
     // game over score summary
-    Rectangle scoreSummaryRec = {gameOverButtonRec.x - gameOverButtonRec.height * 1.5f, gameOverButtonRec.y - gameOverButtonRec.height * 6, gameOverButtonRec.width * 2, gameOverButtonRec.height * 6};
+    Rectangle scoreSummaryRec = {gameOverButtonRec.x + gameOverButtonRec.width / 2 - gameOverButtonRec.width * (1.5f / 2.0f),
+                                 gameOverButtonRec.y - gameOverButtonRec.height * 4,
+                                 gameOverButtonRec.width * 1.5f, gameOverButtonRec.height * 4};
     UIObject *scoreSummary = new ScoreSummary(scoreSummaryRec, nullptr);
     scoreSummary->SetRelBounds(scoreSummaryRec);
 
@@ -180,7 +182,7 @@ UIObject *CreateOptionsMenu()
     {
         sprintf(fpsButtonText, "FPS: %d", gameState.fps);
     }
- 
+
     Button *changeFPSButton = new Button(Vector2{0, 0}, nullptr, fpsButtonText, BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
     Button *backButton = new Button(Vector2{0, 0}, nullptr, "Back", BUTTON_PRIMARY, BUTTON_MEDIUM, nullptr);
 
