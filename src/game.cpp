@@ -16,13 +16,16 @@
 #include "power_up.hpp"
 #include "utils.hpp"
 
+// -------------- Debug Flags --------------
 #ifdef _DEBUG
 bool SHOW_DEBUG = true;
 #else
 bool SHOW_DEBUG = false;
 #endif // _DEBUG
-
 bool HIDE_SPRITES = false;
+// -----------------------------------------
+
+#define BACKGROUND_COLOR GetColor(0x242424ff)
 
 #define INITIAL_ASTEROIDS 5
 #define INITIAL_ENEMIES 1
