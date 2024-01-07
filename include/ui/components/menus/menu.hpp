@@ -4,24 +4,23 @@
 #include "ui/components/common/ui_object.hpp"
 #include "ui/components/common/label.hpp"
 
-
 /**
  * @brief Generic menu class
- * 
+ *
  */
 class Menu : public UIObject
 {
     Label *title;
-    
-    public:
-        Menu(const char *title);
-        ~Menu();
 
-        void Update();
-        void Draw();
-        void DrawDebug();
+public:
+    Menu(const char *title);
+    ~Menu();
 
-        void Resize(Vector2 prevScreenSize);
+    void Update();
+    void Draw();
+    void DrawDebug();
+
+    void Resize(Vector2 prevScreenSize);
 };
 
 #endif // __MENU_H__

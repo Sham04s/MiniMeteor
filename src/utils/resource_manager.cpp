@@ -104,7 +104,8 @@ bool ResourceManager::LoadResources()
         sounds.push_back(LoadSound(soundsPathsMap.at((SoundID)i)));
     }
 
-    const char *charactersToLoad = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ ∞";
+    const char *charactersToLoad =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ ∞©";
     int count = 0;
     int *codePoints = LoadCodepoints(charactersToLoad, &count);
     font = LoadFontEx("resources/common/SyneMono-Regular.ttf", 128, codePoints, count);

@@ -6,6 +6,8 @@
 #include <vector>
 #include <algorithm>
 
+#define DEFAULT_FONT_SIZE 30
+
 class UIObject
 {
 protected:

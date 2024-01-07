@@ -44,6 +44,7 @@ enum ScreenID
     PAUSE_MENU,
     OPTIONS,
     CONTROLS,
+    CREDITS,
     LOADING,
     EXITING,
     NUM_SCREENS

@@ -6,10 +6,11 @@
 #include "ui/components/hud/lives_bar.hpp"
 
 UIObject *CreateMainMenu();
-UIObject *CreateGameUI(Player *player);
+UIObject *CreatePlayerHUD(Player *player);
 UIObject *CreatePauseMenu();
 UIObject *CreateGameOverMenu();
 UIObject *CreateControlsMenu();
+UIObject *CreateCreditsMenu();
 UIObject *CreateOptionsMenu();
 UIObject *CreateExitUI();
 void CreateUIElements(Player *player);

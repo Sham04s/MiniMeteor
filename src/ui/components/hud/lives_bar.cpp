@@ -45,6 +45,7 @@ void LivesBar::Draw()
 void LivesBar::DrawDebug()
 {
     UIObject::DrawDebug();
+    DrawRectangleLinesEx(centeredBounds, 1, GREEN);
 }
 
 void LivesBar::Resize(Vector2 prevScreenSize)

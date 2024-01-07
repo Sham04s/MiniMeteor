@@ -7,7 +7,6 @@
 #include "ui/components/hud/player_powerups.hpp"
 #include "ui/components/common/label.hpp"
 
-#define SCORE_FONT_SIZE 30
 #define DIRECTIONAL_SHIP_ICON_SIZE 24
 
 class PlayerUI : public UIObject
@@ -20,6 +19,7 @@ private:
     char scoreText[32];
     Rectangle directionalShipMeterBounds;
     Texture2D *directionalShipIcon;
+    Rectangle directionalShipIconBounds;
 
 public:
     PlayerUI(Player *player);
@@ -28,6 +28,7 @@ public:
     void Update();
     void Draw();
     void DrawDebug();
+    
     void Resize(Vector2 prevScreenSize);
 };
 

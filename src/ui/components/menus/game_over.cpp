@@ -1,5 +1,6 @@
 #include "ui/components/menus/game_over.hpp"
 #include "game/game.hpp"
+
 #include <stdio.h>
 
 GameOver::GameOver(Rectangle relBounds, UIObject *parent) : UIObject(relBounds, parent, nullptr)

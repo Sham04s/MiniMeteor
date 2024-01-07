@@ -12,6 +12,7 @@
 #include "ui/components/common/label.hpp"
 #include "ui/components/menus/controls.hpp"
 #include "ui/components/menus/menu.hpp"
+#include "ui/components/menus/credits.hpp"
 
 char fpsButtonText[20];
 
@@ -21,7 +22,7 @@ UIObject *CreateMainMenu()
     Label *title = new Label({0, (float)GetScreenHeight() / 8, (float)GetScreenWidth(), (float)GetScreenHeight() / 4}, "MiniMeteor", WHITE, ALIGN_CENTER, ALIGN_CENTER, 64, nullptr);
 
     // main menu buttons
-    const int mainMenuButtonCount = 4;
+    const int mainMenuButtonCount = 5;
     Button *playButton = new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                     { ChangeScreen(GAME); });
 
@@ -31,10 +32,13 @@ UIObject *CreateMainMenu()
     Button *optionsButton = new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                        { ChangeScreen(OPTIONS); });
 
+    Button *creditsButton = new Button(Vector2{0, 0}, nullptr, "Credits", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                                       { ChangeScreen(CREDITS); });
+
     Button *quitButton = new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                     { ChangeScreen(EXITING); });
 
-    Button *mainMenuButtons[mainMenuButtonCount] = {playButton, controlsButton, optionsButton, quitButton};
+    Button *mainMenuButtons[mainMenuButtonCount] = {playButton, controlsButton, optionsButton, creditsButton, quitButton};
 
     // main menu
     Rectangle mainMenuButtonRec = CreateCenteredButtonRec(mainMenuButtons, mainMenuButtonCount);
@@ -56,7 +60,7 @@ UIObject *CreateMainMenu()
     return mainMenu;
 }
 
-UIObject *CreateGameUI(Player *player)
+UIObject *CreatePlayerHUD(Player *player)
 {
     // in-game ui
     UIObject *game = new PlayerUI(player);
@@ -172,6 +176,23 @@ UIObject *CreateControlsMenu()
     return controlsMenu;
 }
 
+UIObject *CreateCreditsMenu()
+{
+    Button *backButton = new Button(Vector2{0, 0}, nullptr, "Back", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                                    { PreviousScreen(); });
+
+    Rectangle creditsRec = CreateCenteredButtonRec(&backButton, 1);
+    creditsRec.y = GetScreenHeight() - backButton->GetHeight() - backButton->GetPadding() * 2;
+
+    UIObject *creditsMenuButtons = new UIObject(creditsRec, nullptr, ResourceManager::GetDefaultTexture());
+    creditsMenuButtons->AddChild(backButton);
+
+    Credits *creditsMenu = new Credits();
+    creditsMenu->AddChild(creditsMenuButtons);
+
+    return creditsMenu;
+}
+
 UIObject *CreateOptionsMenu()
 {
     if (gameState.fps == 0)
@@ -229,11 +250,12 @@ UIObject *CreateExitUI()
 void CreateUIElements(Player *player)
 {
     gameState.screens[LOADING] = new RaylibLogo();
-    gameState.screens[GAME] = CreateGameUI(player);
+    gameState.screens[GAME] = CreatePlayerHUD(player);
     gameState.screens[GAME_OVER] = CreateGameOverMenu();
     gameState.screens[MAIN_MENU] = CreateMainMenu();
     gameState.screens[PAUSE_MENU] = CreatePauseMenu();
     gameState.screens[CONTROLS] = CreateControlsMenu();
+    gameState.screens[CREDITS] = CreateCreditsMenu();
     gameState.screens[OPTIONS] = CreateOptionsMenu();
     gameState.screens[EXITING] = CreateExitUI();
 }

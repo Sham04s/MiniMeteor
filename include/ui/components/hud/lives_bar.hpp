@@ -21,6 +21,8 @@ public:
 
     void Draw();
     void DrawDebug();
+
     void Resize(Vector2 prevScreenSize);
+    Rectangle GetCenteredBounds() { return centeredBounds; };
 };
 #endif // __LIVES_BAR_H__
