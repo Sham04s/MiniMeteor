@@ -2,65 +2,30 @@
 #include <math.h>
 #include <string>
 
-Shooter::Shooter(Vector2 origin, Player *player) : Character(origin)
+Shooter::Shooter(Player *player, EnemyAttributes attributes)
+    : Enemy(player, attributes)
 {
-    this->state = IDLE;
     this->lookingForPlayer = false;
     this->lastTryToShootTime = 0;
-    this->probOfShootingToPlayer = 0.5f; // 50% every ENEMY_TRY_TO_SHOOT_COOLDOWN seconds
-    this->player = player;
-    this->type = ENEMY;
     this->accelerateStartTime = 0;
     this->accelerateTime = INFINITY;
     this->rotateStartTime = 0;
     this->rotateTime = INFINITY;
-
-    // nerf enemy
-    this->turnSpeed = CHARACTER_TURN_SPEED / 3;
-    this->maxSpeed = CHARACTER_MAX_SPEED / 3;
-    this->acceleration = CHARACTER_ACCELERATION / 3;
-    this->deceleration = CHARACTER_DECELERATION / 3;
     this->lookingAtPointAngleThreshold = 3.0f; // degrees
-    this->lives = 1;
 
     this->texture = ResourceManager::GetSpriteTexture(ENEMY_SHOOTER_SPRITES);
-    this->shootSound = ResourceManager::CreateSoundAlias(ENEMY_BULLET_SOUND);
-    this->thrustSound = ResourceManager::CreateSoundAlias(ENEMY_THRUST_SOUND);
-    this->explosionSound = ResourceManager::CreateSoundAlias(ENEMY_EXPLOSION_SOUND);
 
     SetDefaultHitBox();
-
-    Rotate(GetRandomValue(0, 360));
-    this->velocity = Vector2Scale(forwardDir, GetRandomValue(20, CHARACTER_SIZE));
-}
-
-Shooter::Shooter(Vector2 origin, Player *player, EnemyAttributes attributes)
-    : Shooter(origin, player)
-{
-    const float frMultiplier = attributes.fireRateMultiplier <= 0.0f ? 0.001f : attributes.fireRateMultiplier;
-    
-    this->velocity = Vector2Scale(this->velocity, attributes.velocityMultiplier);
-    this->turnSpeed *= attributes.precisionMultiplier;
-    this->shootCooldown /= frMultiplier;
-    this->bulletsSpeed *= attributes.bulletSpeedMultiplier;
-    this->lookingAtPointAngleThreshold /= attributes.precisionMultiplier;
 }
 
 Shooter::~Shooter()
 {
-    Kill();
 }
 
 void Shooter::Update()
 {
-    Character::Update();
-
-    // if is not alive, do nothing else
-    if (!this->IsAlive())
-    {
-        return;
-    }
-
+    Enemy::Update();
+    
     TryToShootAtPlayer();
 
     // if enemy is looking for player, rotate towards player
@@ -106,8 +71,8 @@ void Shooter::Update()
         {
             state |= ACCELERATING;
             accelerateTime = ((float)GetRandomValue(0, 100) / 100.0f) *
-                                 (ENEMY_ACCELERATE_MAX_TIME - ENEMY_ACCELERATE_MIN_TIME) +
-                             ENEMY_ACCELERATE_MIN_TIME;
+                                 (SHOOTER_ACCELERATE_MAX_TIME - SHOOTER_ACCELERATE_MIN_TIME) +
+                             SHOOTER_ACCELERATE_MIN_TIME;
             accelerateStartTime = GetTime();
         }
     }
@@ -130,8 +95,8 @@ void Shooter::Update()
         {
             state |= GetRandomValue(0, 1) ? TURNING_LEFT : TURNING_RIGHT;
             rotateTime = ((float)GetRandomValue(0, 100) / 100.0f) *
-                             (ENEMY_ROTATE_MAX_TIME - ENEMY_ROTATE_MIN_TIME) +
-                         ENEMY_ROTATE_MIN_TIME;
+                             (SHOOTER_ROTATE_MAX_TIME - SHOOTER_ROTATE_MIN_TIME) +
+                         SHOOTER_ROTATE_MIN_TIME;
             rotateStartTime = GetTime();
         }
     }
@@ -149,24 +114,7 @@ void Shooter::Update()
 
 void Shooter::DrawDebug()
 {
-    Character::DrawDebug();
-
-    // draw enemy information below bounds
-    static const char *stateStrings[] = {"IDLE", "ACCELERATING", "TURNING_LEFT", "TURNING_RIGHT", "DYING", "DEAD"};
-
-    std::string stateString;
-    for (int i = 0; i < 6; i++)
-    {
-        if (state & (1 << i))
-        {
-            stateString += stateStrings[i];
-            stateString += " ";
-        }
-    }
-
-    DrawText(TextFormat("State: %s", stateString.c_str()), origin.x - CHARACTER_SIZE / 2, origin.y + CHARACTER_SIZE / 2 + 10, 10, WHITE);
-    DrawText(TextFormat("Looking for player: %s", lookingForPlayer ? "true" : "false"), origin.x - CHARACTER_SIZE / 2, origin.y + CHARACTER_SIZE / 2 + 20, 10, lookingForPlayer ? GREEN : RED);
-    DrawText(TextFormat("Turn speed: %f", turnSpeed), origin.x - CHARACTER_SIZE / 2, origin.y + CHARACTER_SIZE / 2 + 30, 10, WHITE);
+    Enemy::DrawDebug();
     if (lookingForPlayer)
     {
         DrawLineEx(origin, player->GetOrigin(), 2, RED);
@@ -212,12 +160,12 @@ void Shooter::ShootAtPlayer()
 
 void Shooter::TryToShootAtPlayer()
 {
-    if (!this->IsAlive() || player->IsDead() || lookingForPlayer || !player->HasMoved() || GetTime() - lastTryToShootTime < ENEMY_TRY_TO_SHOOT_COOLDOWN)
+    if (!this->IsAlive() || player->IsDead() || lookingForPlayer || !player->HasMoved() || GetTime() - lastTryToShootTime < ENEMY_SHOOT_COOLDOWN)
     {
         return;
     }
 
-    if (GetRandomValue(0, 100) < probOfShootingToPlayer * 100)
+    if (GetRandomValue(0, 100) < probOfShooting * 100)
     {
         ShootAtPlayer();
     }
@@ -243,6 +191,6 @@ void Shooter::SetDefaultHitBox()
     this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}};
     for (size_t i = 0; i < hitbox.size(); i++)
     {
-        hitbox[i] = Vector2Add(Vector2Scale(hitbox[i], CHARACTER_SIZE / 2), origin);
+        hitbox[i] = Vector2Add(Vector2Scale(Vector2Rotate(hitbox[i], rotation * DEG2RAD), CHARACTER_SIZE / 2), origin);
     }
 }

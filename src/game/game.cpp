@@ -94,7 +94,7 @@ void UpdateDifficultySettings(Difficulty diff)
     enemiesAttr->precisionMultiplier = 0.5f + (float)(gameState.diffSettings.difficulty) * 0.25f;     // 0.5, 0.75, 1.0
     enemiesAttr->fireRateMultiplier = 0.5f + (float)(gameState.diffSettings.difficulty) * 0.25f;      // 0.5, 0.75, 1.0
     enemiesAttr->bulletSpeedMultiplier = 0.9f + (float)(gameState.diffSettings.difficulty) * 0.2f;    // 0.9, 1.1, 1.3
-    enemiesAttr->probOfShootingToPlayer = 0.35f + (float)(gameState.diffSettings.difficulty) * 0.25f; // 0.35, 0.6, 0.85
+    enemiesAttr->probOfShooting = 0.35f + (float)(gameState.diffSettings.difficulty) * 0.25f; // 0.35, 0.6, 0.85
 }
 
 void CreateNewGame(size_t numAsteroids, size_t numEnemies)
@@ -135,33 +135,14 @@ void CreateNewGame(size_t numAsteroids, size_t numEnemies)
     // create new game objects
     for (size_t i = 0; i < numAsteroids + numEnemies; i++)
     {
-        // generate random position exluding the gameState.player's position and other objects positions
-        Vector2 pos;
-        bool insidePlayer;
-        bool insideGameObject;
-        do
-        {
-            pos = {(float)GetRandomValue(0, GetScreenWidth()), (float)GetRandomValue(0, GetScreenHeight())};
-            insidePlayer = Vector2Distance(pos, gameState.player->GetOrigin()) < 100;
-            insideGameObject = false;
-            for (size_t j = 0; j < gameState.gameObjects.size(); j++)
-            {
-                if (Vector2Distance(pos, gameState.gameObjects[j]->GetOrigin()) < 100)
-                {
-                    insideGameObject = true;
-                    break;
-                }
-            }
-        } while (insidePlayer || insideGameObject);
-
         if (i < numAsteroids)
         {
-            gameState.gameObjects.push_back(new Asteroid(pos, gameState.diffSettings.asteroidSpeedMultiplier));
+            gameState.gameObjects.push_back(new Asteroid(gameState.diffSettings.asteroidSpeedMultiplier));
             gameState.asteroidsCount++;
         }
         else
         {
-            gameState.gameObjects.push_back(new Shooter(pos, gameState.player, gameState.diffSettings.enemiesAttributes));
+            gameState.gameObjects.push_back(new Shooter(gameState.player, gameState.diffSettings.enemiesAttributes));
             gameState.enemiesCount++;
         }
     }
@@ -463,7 +444,7 @@ void HandleInput()
     // spawn an enemy
     if (IsKeyPressed(KEY_C))
     {
-        gameState.gameObjects.push_back(new Shooter(RandomVecOutsideScreen(100), gameState.player, gameState.diffSettings.enemiesAttributes));
+        gameState.gameObjects.push_back(new Shooter(gameState.player, gameState.diffSettings.enemiesAttributes));
         gameState.enemiesCount++;
     }
     // spawn the selected powerup in the mouse position
