@@ -62,7 +62,7 @@ void DeleteTempDLL()
 
 #else
 
-#include "game.hpp"
+#include "game/game.hpp"
 
 #endif // WINDOWS_HOT_RELOAD
 

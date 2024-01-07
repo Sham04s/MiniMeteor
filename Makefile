@@ -1,9 +1,11 @@
+rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+
 # Inputs
 RAYLIB_PATH 				?= ../raylib
 BUILD_MODE 					?= RELEASE
 HOT_RELOAD 					?= FALSE
 MAIN_SRC_FILES 				?= src/main.cpp
-CORE_SRC_FILES 				?= $(filter-out $(MAIN_SRC_FILES), $(wildcard src/*.cpp))
+CORE_SRC_FILES 				?= $(filter-out $(MAIN_SRC_FILES), $(call rwildcard, src, *.cpp))
 PLATFORM 					?= PLATFORM_DESKTOP
 PROJECT_BUILD_DIR 			?= ./build
 PROJECT_NAME 				?= MiniMeteor
@@ -12,8 +14,9 @@ PROJECT_NAME 				?= MiniMeteor
 BUILD_WEB_ASYNCIFY    		?= FALSE
 BUILD_WEB_SHELL       		?= src/minshell.html
 BUILD_WEB_HEAP_SIZE   		?= 128MB
-BUILD_WEB_RESOURCES   		?= TRUE
-BUILD_WEB_RESOURCES_PATH  	?= resources
+
+BUILD_WEB_RESOURCES   		:= TRUE
+BUILD_WEB_RESOURCES_PATH  	:= resources
 
 CORE_OBJS := $(CORE_SRC_FILES:.cpp=.o)
 MAIN_OBJS := $(MAIN_SRC_FILES:.cpp=.o)
@@ -168,6 +171,28 @@ $(PROJECT_BUILD_DIR)/core.dll: $(CORE_OBJS)
 res:
 	mkdir -p $(PROJECT_BUILD_DIR)/resources
 	cp -r resources/* $(PROJECT_BUILD_DIR)/resources
+
+help:
+	@echo "Targets:"
+	@echo "    all (default)  - Build release executable"
+	@echo "    clean          - Clean everything"
+	@echo "    res            - Copy resources folder (only for desktop platforms)"
+	@echo "    help           - Show this info"
+	@echo "    options        - Show build options"
+
+options:
+	@echo "Build options:"
+	@echo "   PLATFORM            - PLATFORM_DESKTOP, PLATFORM_WEB (default: PLATFORM_DESKTOP)"
+	@echo "   BUILD_MODE          - RELEASE, DEBUG (default: RELEASE)"
+	@echo "   HOT_RELOAD          - TRUE, FALSE (only for windows, default: FALSE)"
+	@echo "   MAIN_SRC_FILES      - Main source files (default: src/main.cpp)"
+	@echo "   CORE_SRC_FILES      - Core source files (defaults to all .cpp files in src/ except main.cpp)"
+	@echo "   PROJECT_BUILD_DIR   - Build directory (default: ./build)"
+	@echo "   PROJECT_NAME        - Executable name (default: MiniMeteor)"
+	@echo "   RAYLIB_PATH         - Raylib directory (default: ../raylib)"
+	@echo "   BUILD_WEB_ASYNCIFY  - TRUE, FALSE (only for web, default: FALSE)"
+	@echo "   BUILD_WEB_SHELL     - Shell html file (only for web, default: src/minshell.html)"
+	@echo "   BUILD_WEB_HEAP_SIZE - Heap size (only for web, default: 128MB)"
 
 # Clean rule
 clean:
