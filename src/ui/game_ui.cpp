@@ -8,7 +8,7 @@
 
 #include "ui/components/menus/raylib_logo.hpp"
 #include "ui/components/hud/player_ui.hpp"
-#include "ui/components/menus/score_summary.hpp"
+#include "ui/components/menus/game_over.hpp"
 #include "ui/components/common/label.hpp"
 #include "ui/components/menus/controls.hpp"
 #include "ui/components/menus/menu.hpp"
@@ -118,7 +118,7 @@ UIObject *CreateGameOverMenu()
     Rectangle scoreSummaryRec = {gameOverButtonRec.x + gameOverButtonRec.width / 2 - gameOverButtonRec.width * (1.5f / 2.0f),
                                  gameOverButtonRec.y - gameOverButtonRec.height * 4,
                                  gameOverButtonRec.width * 1.5f, gameOverButtonRec.height * 4};
-    UIObject *scoreSummary = new ScoreSummary(scoreSummaryRec, nullptr);
+    UIObject *scoreSummary = new GameOver(scoreSummaryRec, nullptr);
     scoreSummary->SetRelBounds(scoreSummaryRec);
 
     // game over

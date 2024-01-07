@@ -7,9 +7,7 @@
 #define SCORE_SUMMARY_FONT_SIZE 24
 #define SCORE_PADDING 4
 
-// TODO: change to GameOver
-
-class ScoreSummary : public UIObject
+class GameOver : public UIObject
 {
 private:
     char *scoresText[6];
@@ -18,8 +16,8 @@ private:
     Rectangle scoresRec;
 
 public:
-    ScoreSummary(Rectangle relBounds, UIObject *parent = nullptr);
-    ~ScoreSummary();
+    GameOver(Rectangle relBounds, UIObject *parent = nullptr);
+    ~GameOver();
 
     void Update();
     void Draw();

@@ -3,8 +3,6 @@
 
 #include <map>
 
-// TODO: make a consumable item class and make powerups inherit from it
-
 const std::map<PowerUpType, SpriteTextureID> powerUpSpriteItemMap = {
     {SHIELD, POWERUP_SHIELD_ITEM_SPRITE},
     {TEMPORARY_SHIELD, POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE},

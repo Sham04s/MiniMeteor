@@ -1,8 +1,8 @@
-#include "ui/components/menus/score_summary.hpp"
+#include "ui/components/menus/game_over.hpp"
 #include "game/game.hpp"
 #include <stdio.h>
 
-ScoreSummary::ScoreSummary(Rectangle relBounds, UIObject *parent) : UIObject(relBounds, parent, nullptr)
+GameOver::GameOver(Rectangle relBounds, UIObject *parent) : UIObject(relBounds, parent, nullptr)
 {
     fontSize = SCORE_SUMMARY_FONT_SIZE;
 
@@ -23,7 +23,7 @@ ScoreSummary::ScoreSummary(Rectangle relBounds, UIObject *parent) : UIObject(rel
     scoresRec = {bounds.x, bounds.y, 0, 0};
 }
 
-ScoreSummary::~ScoreSummary()
+GameOver::~GameOver()
 {
     for (int i = 0; i < 5; i++)
     {
@@ -31,7 +31,7 @@ ScoreSummary::~ScoreSummary()
     }
 }
 
-void ScoreSummary::Update()
+void GameOver::Update()
 {
     if (gameState.currentScreen != GAME_OVER)
     {
@@ -79,7 +79,7 @@ void ScoreSummary::Update()
 
 }
 
-void ScoreSummary::Draw()
+void GameOver::Draw()
 {
     // 0 - high score
     // 1 - seconds alive
@@ -112,13 +112,13 @@ void ScoreSummary::Draw()
    
 }
 
-void ScoreSummary::DrawDebug()
+void GameOver::DrawDebug()
 {
     UIObject::DrawDebug();
     DrawRectangleLinesEx(scoresRec, 1, RED);
 }
 
-void ScoreSummary::Resize(Vector2 prevScreenSize)
+void GameOver::Resize(Vector2 prevScreenSize)
 {
     UIObject::Resize(prevScreenSize);
     fontSize = fontSize * ((float)GetScreenHeight() / prevScreenSize.y);

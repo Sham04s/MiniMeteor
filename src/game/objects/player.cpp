@@ -613,7 +613,7 @@ void Player::Reset()
 {
     // Reset all variables to default values
     Respawn();
-    this->lives = 1; // TODO: change this
+    this->lives = PLAYER_INITIAL_LIVES;
     this->directionalShipMeter = DIRECTIONAL_SHIP_METER_MAX / 3;
     this->directionalShip = false;
     this->changingShip = false;
@@ -760,9 +760,6 @@ void Player::SetDefaultHitBox()
 
 void Player::SetDirectionalShipHitBox()
 {
-    // TODO: change this
-
-    // this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
     this->hitbox = {
         {-0.25f, -0.4f},
         {0.25f, -0.4f},

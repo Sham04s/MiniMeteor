@@ -191,7 +191,7 @@ Rectangle ResourceManager::GetUISrcRect(UITextureID id, unsigned int frame)
         int frameHeight = uiTextures[id].height / totalFrames;
         return {0, (float)(frameHeight * frame), (float)frameWidth, (float)frameHeight};
     }
-    return {0, 0, 0, 0}; // TODO: change this!
+    return {0, 0, (float)uiTextures[id].width, (float)uiTextures[id].height};
 }
 
 Sound *ResourceManager::GetSound(SoundID id)
