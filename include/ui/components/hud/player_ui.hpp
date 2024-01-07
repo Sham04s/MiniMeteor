@@ -9,6 +9,9 @@
 
 #define DIRECTIONAL_SHIP_ICON_SIZE 24
 
+/**
+ * @brief A UIObject that displays the player's lives, score, and powerups
+ */
 class PlayerUI : public UIObject
 {
 private:

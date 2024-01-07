@@ -5,8 +5,7 @@
 #include "ui/components/common/label.hpp"
 
 /**
- * @brief Generic menu class
- *
+ * @brief Generic menu class that displays a title and dims the background
  */
 class Menu : public UIObject
 {

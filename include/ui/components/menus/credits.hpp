@@ -15,6 +15,9 @@
 
 #define CREDITS_LINE_PADDING 32
 
+/**
+ * @brief A Menu that displays the credits for the game
+ */
 class Credits : public Menu
 {
 private:

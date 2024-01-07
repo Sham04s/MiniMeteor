@@ -3,6 +3,7 @@
 
 #include <map>
 
+// ------------------------- Powerups item sprites -------------------------
 const std::map<PowerUpType, SpriteTextureID> powerUpSpriteItemMap = {
     {SHIELD, POWERUP_SHIELD_ITEM_SPRITE},
     {TEMPORARY_SHIELD, POWERUP_TEMPORARY_SHIELD_ITEM_SPRITE},
@@ -13,6 +14,7 @@ const std::map<PowerUpType, SpriteTextureID> powerUpSpriteItemMap = {
     {TEMPORARY_INFINITE_BOOST, POWERUP_TEMPORARY_INFINITE_BOOST_ITEM_SPRITE},
     {LIFE, POWERUP_LIFE_ITEM_SPRITE},
 };
+// -------------------------------------------------------------------------
 
 PowerUp::PowerUp(Vector2 origin, PowerUpType type) : GameObject()
 {
@@ -80,7 +82,7 @@ void PowerUp::Draw()
     Color colorTint = WHITE;
     Rectangle dst = {origin.x, origin.y, bounds.width, bounds.height};
 
-    if (timeToLive > POWER_UP_BLINK_TIME) // is still good
+    if (timeToLive > POWER_UP_BLINK_TIME) // is showing normally
     {
         float alpha = 0.75f + 0.25f * sinf(2 * PI * (timeToLive / POWER_UP_PULSE_PERIOD));
         colorTint = Fade(WHITE, alpha);
@@ -163,7 +165,7 @@ void PowerUp::PickUp()
     ResetUseTime();
 }
 
-void PowerUp::AnimateCantPickup()
+void PowerUp::Shake()
 {
     if (shaking || pickedUp || GetTime() - lastShakeTime < POWER_UP_SHAKE_TIME * 6)
     {

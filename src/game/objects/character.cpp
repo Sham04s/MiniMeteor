@@ -190,8 +190,7 @@ void Character::Draw()
         bullets[i].Draw();
     }
 
-    // then draw player
-
+    // then draw character
     if (state & DEAD)
     {
         return;

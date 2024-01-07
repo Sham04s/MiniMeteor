@@ -9,7 +9,7 @@
 #define FADE_DISTANCE_THRESHOLD 200.0f
 #define MULTIPLIER_FONT_SIZE 16
 
-enum CenteredPosition
+enum SidePosition
 {
     TOP,
     BOTTOM,
@@ -18,15 +18,33 @@ enum CenteredPosition
     NUM_POSITIONS
 };
 
+/**
+ * @brief A UIObject that displays the powerups the player currently has
+ */
 class PlayerPowerups : public UIObject
 {
     private: 
         Player *player;
-        CenteredPosition position;
-        Texture2D *powerupTextures[NUM_POWER_UP_TYPES];        
+
+        /**
+         * @brief The side of the screen the powerups are displayed on
+         */
+        SidePosition position;
+
+        /**
+         * @brief The textures for each powerup type
+         */
+        Texture2D *powerupTextures[NUM_POWER_UP_TYPES];
     
     public:
-        PlayerPowerups(Player *player, CenteredPosition position = LEFT);
+        /**
+         * @brief Construct a new PlayerPowerups object with a relative position and size
+         * 
+         * @param relBounds The relative bounds of the PlayerPowerups
+         * @param player The player
+         * @param position The side of the screen the powerups are displayed on (default: LEFT)
+         */
+        PlayerPowerups(Player *player, SidePosition position = LEFT);
         ~PlayerPowerups();
 
         void Update();

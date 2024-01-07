@@ -32,16 +32,42 @@ private:
 
 public:
     /**
+     * @brief Constructs an Asteroid object with the given variant. This generates a random size,
+     * rotation, velocity, and angular velocity for the asteroid.
+     * @param variant The variant of the asteroid.
+     */
+    Asteroid(float velocityMultiplier) : Asteroid((AsteroidVariant)GetRandomValue(0, 1), velocityMultiplier) {}
+    
+    /**
      * @brief Constructs an Asteroid object with the given origin. This generates a random variant, size,
      * rotation, velocity, and angular velocity for the asteroid.
      * @param origin The origin position of the asteroid.
      */
     Asteroid(Vector2 origin) : Asteroid(origin, GetRandomValue(0, 1) == 0 ? SMALL : LARGE, 1) {}
 
+    /**
+     * @brief Constructs an Asteroid object with the given origin and velocity multiplier. This generates a random variant,
+     * size, rotation, velocity, and angular velocity for the asteroid.
+     * @param origin The origin position of the asteroid.
+     * @param velocityMultiplier The multiplier to apply to the velocity of the asteroid.
+     */
     Asteroid(Vector2 origin, float velocityMultiplier) : Asteroid(origin, GetRandomValue(0, 1) == 0 ? SMALL : LARGE, velocityMultiplier) {}
 
+    /**
+     * @brief Constructs an Asteroid object with the given variant and velocity multiplier. This generates a random size,
+     * rotation, velocity, and angular velocity for the asteroid.
+     * @param variant The variant of the asteroid.
+     * @param velocityMultiplier The multiplier to apply to the velocity of the asteroid.
+     */
     Asteroid(AsteroidVariant variant, float velocityMultiplier);
 
+    /**
+     * @brief Constructs an Asteroid object with the given origin, variant, and velocity multiplier. This generates a random size,
+     * rotation, velocity, and angular velocity for the asteroid.
+     * @param origin The origin position of the asteroid.
+     * @param variant The variant of the asteroid.
+     * @param velocityMultiplier The multiplier to apply to the velocity of the asteroid.
+     */
     Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultiplier);
 
     /**

@@ -24,12 +24,48 @@ enum ScoreType{
 
 void InitScoreRegistry();
 void AddScore(ScoreType type, float multiplier);
+
+/**
+ * @brief Gets the raw score stored in the registry for the given ScoreType
+ * (without any calculations applied)
+ * 
+ * @param type The ScoreType to get the raw score for
+ * @return int The raw score for the given ScoreType
+ */
 int GetRawScore(ScoreType type);
+
+/**
+ * @brief Gets the score for the given ScoreType
+ * 
+ * @param type The ScoreType to get the score for
+ * @return int The score for the given ScoreType
+ */
 int GetScore(ScoreType type);
+
 int GetTotalScore();
 int GetHighScore();
+
+/**
+ * @brief Gets the name of the given ScoreType
+ * 
+ * @param type The ScoreType to get the name for
+ * @return const char* The name of the given ScoreType 
+ */
 const char *GetScoreName(ScoreType type);
+
+/**
+ * @brief Gets the generic name of the given ScoreType
+ * (PowerUp, Enemies, Time, etc.)
+ * 
+ * @param type The ScoreType to get the generic name for
+ * @return const char* The generic name of the given ScoreType 
+ */
 const char *GetGenericScoreName(ScoreType type);
+
+/**
+ * @brief Resets the score registry but keeps the high score intact
+ * 
+ */
 void ResetScoreRegistry();
 
 #endif // __SCORE_REGISTRY_H__

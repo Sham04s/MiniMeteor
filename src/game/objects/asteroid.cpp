@@ -8,6 +8,7 @@
 
 #include "map"
 
+// ------------------ Asteroids hitboxes ------------------
 const Vector2 large[] = {
     {0.000f, -0.378f},
     {0.250f, -0.252f},
@@ -59,6 +60,8 @@ const Vector2 *asteroid_shapes[] = {
     sqr_small,
 };
 
+// --------------------------------------------------------
+
 Asteroid::Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultiplier) : GameObject({0}, 0, {0, -1}, {}, ASTEROID)
 {
     this->velocity = {(float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100)};
@@ -94,18 +97,6 @@ Asteroid::Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultip
         this->hitbox.push_back(Vector2Add(origin, Vector2Scale(Vector2Rotate(asteroid_shapes[shape][i], rotation * DEG2RAD), size)));
     }
 
-    // // create hitbox as a regular polygon with 8 sides
-    // const int sides = 8;
-    // const float radius = variant == LARGE ? size / 3 : size / 4;
-    // const float angleIncrement = 2 * PI / sides;
-
-    // for (int i = 0; i < sides; i++)
-    // {
-    //     float angle = i * angleIncrement;
-    //     float x = radius * cos(angle);
-    //     float y = radius * sin(angle);
-    //     this->hitbox.push_back(Vector2Add(origin, {x, y}));
-    // }
 }
 
 Asteroid::Asteroid(AsteroidVariant variant, float velocityMultiplier)
@@ -159,23 +150,6 @@ void Asteroid::Update()
         Translate({0, worldBox.height + size});
     }
 
-    // if (origin.x > GetScreenWidth() + size / 2)
-    // {
-    //     Translate({-GetScreenWidth() - size, 0});
-    // }
-    // else if (origin.x < -size / 2)
-    // {
-    //     Translate({GetScreenWidth() + size, 0});
-    // }
-    // if (origin.y > GetScreenHeight() + size / 2)
-    // {
-    //     Translate({0, -GetScreenHeight() - size});
-    // }
-    // else if (origin.y < -size / 2)
-    // {
-    //     Translate({0, GetScreenHeight() + size});
-    // }
-
     // Play explosion sound if asteroid is exploding
     if (state == EXPLODING && !IsSoundPlaying(explosionSound))
     {
@@ -219,7 +193,7 @@ void Asteroid::Destroy()
     if (state == FLOATING)
     {
         this->state = EXPLODING;
-        this->hitbox = {}; // remove hitbox to prevent collisions
+        this->hitbox.clear(); // remove hitbox to prevent collisions
         this->lastExplosionTime = GetTime();
     }
 }

@@ -5,12 +5,13 @@
 
 #include "game/objects/character.hpp"
 #include "game/objects/player.hpp"
+#include "utils/utils.hpp"
 
-#define ENEMY_ACCELERATE_MIN_TIME 1.0f // seconds
-#define ENEMY_ACCELERATE_MAX_TIME 2.5f // seconds
-#define ENEMY_ROTATE_MIN_TIME 0.5f     // seconds
-#define ENEMY_ROTATE_MAX_TIME 1.5f     // seconds
-#define ENEMY_TRY_TO_SHOOT_COOLDOWN 2.0f      // seconds
+#define ENEMY_ACCELERATE_MIN_TIME 1.0f   // seconds
+#define ENEMY_ACCELERATE_MAX_TIME 2.5f   // seconds
+#define ENEMY_ROTATE_MIN_TIME 0.5f       // seconds
+#define ENEMY_ROTATE_MAX_TIME 1.5f       // seconds
+#define ENEMY_TRY_TO_SHOOT_COOLDOWN 2.0f // seconds
 
 enum EnemyState
 {
@@ -45,11 +46,13 @@ private:
 
 protected:
     void SetDefaultHitBox();
-    
+
 public:
+    BasicEnemy(Player *player, EnemyAttributes attributes)
+        : BasicEnemy(RandomVecOutsideScreen(CHARACTER_SIZE), player, attributes){};
     BasicEnemy(Vector2 origin, Player *player);
-    BasicEnemy(Vector2 origin,  Player *player, EnemyAttributes attributes);
-    ~BasicEnemy();    
+    BasicEnemy(Vector2 origin, Player *player, EnemyAttributes attributes);
+    ~BasicEnemy();
 
     void Update();
     void DrawDebug();

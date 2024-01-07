@@ -19,18 +19,22 @@
 #define BOOST_BAR_FADE_TIME 0.5f                             // seconds
 #define MAX_UPGRADES_PER_TYPE 5
 
-#define SHOOT_COOLDOWN_MULTIPLIER 0.79f
-#define BULLETS_PER_SHOT_MULTIPLIER 1.2f
-#define BULLETS_SPEED_MULTIPLIER 1.2f
-#define BULLETS_SPREAD_MULTIPLIER 0.82f
-
 class Player : public Character
 {
 private:
+    /**
+     * @brief The initial origin of the player.
+     * This is used to reset the player to its initial position.
+     */
     Vector2 initialOrigin;
+
+    /**
+     * @brief Camera used to view the world.
+     */
     Camera2D camera;
+
     bool invincible;
-    bool hasMoved;
+    bool hasMoved; // used to disable invincibility when the player moves or shoots
 
     bool usingBoost;
     float boostTime;
@@ -41,17 +45,36 @@ private:
     bool directionalShip;
     float directionalShipMeter;
 
+    // used to not draw the player sprite
     bool hidden;
 
+    /**
+     * @brief Stores the powerups the player has collected.
+     */
     std::vector<PowerUp *> powerups;
+
+    /**
+     * @brief Tracks the number of powerups the player has for each type.
+     */
     size_t powerupsCount[NUM_POWER_UP_TYPES];
 
+    // crosshair texture when the player is a directional ship
     Texture2D *crosshair;
+
     Sound *changeToDirShipSound;
     Sound *changeToShipSound;
 
 protected:
+    /**
+     * @brief Sets the default hitbox for the player.
+     * The hitbox is a triangle that fits the player sprite.
+     */
     void SetDefaultHitBox();
+
+    /**
+     * @brief Sets the hitbox for the player when it is a directional ship.
+     * The hitbox is polygon that fits the player sprite.
+     */
     void SetDirectionalShipHitBox();
 
 public:
@@ -75,24 +98,62 @@ public:
     bool CanBeKilled();
     bool CanBeHit();
     bool HasMoved();
+
+    Camera2D GetCamera() { return camera; }
+
+    /**
+     * @brief Updates the 2D camera to point at origin.
+     * Useful for window resizing.
+     */
+    void UpdateCamera();
+    
+    /**
+     * @brief Kills the player removing a life and one powerup of each type.
+     *
+     * @return true if the player is killed, false otherwise.
+     */
     bool Kill();
-    void Show();
+    /**
+     * @brief Resets player state to initial state.
+     */
     void Respawn();
-    void Hide();
+    /**
+     * @brief Completely resets the player with its lives, powerups, bullets, and state.
+     */
     void Reset();
+
+    void Show() { hidden = false; }
+    void Hide() { hidden = true; }
+
     void ToggleDirectionalShip();
     void IncreaseDirectionalShipMeter(ScoreType scoreType);
 
+    /**
+     * @brief Gets the source rectangle of the player's texture based on it's current state.
+     * 
+     * @return The source rectangle of the player's texture.
+     */
     Rectangle GetFrameRec();
 
     std::vector<PowerUp *> GetPowerups() { return powerups; }
-    float GetPowerupMultiplier(PowerUpType type);
-    size_t GetPowerupCount(PowerUpType type) { return powerupsCount[type]; }
-    Camera2D GetCamera() { return camera; }
-    float GetDirectionalShipMeter() { return directionalShipMeter; }
-    void UpdateCamera();
 
-    void SetLives(int lives) { this->lives = lives; }
+    /**
+     * @brief Gets the multiplier for the given powerup type.
+     * This is calculated inside the method.
+     * 
+     * @param type The powerup type. (see PowerUpType)
+     * @return The multiplier for the given powerup type.
+     */
+    float GetPowerupMultiplier(PowerUpType type);
+
+    /**
+     * @brief Gets the number of powerups the player has for the given type.
+     * 
+     * @param type The powerup type. (see PowerUpType)
+     * @return The number of powerups the player has for the given type.
+     */
+    size_t GetPowerupCount(PowerUpType type) { return powerupsCount[type]; }
+    float GetDirectionalShipMeter() { return directionalShipMeter; }  
 };
 
 #endif // __PLAYER_H__

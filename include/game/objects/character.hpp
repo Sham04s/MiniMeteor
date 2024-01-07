@@ -31,16 +31,31 @@ enum CharacterState
     DEAD = 1 << 5,          // 100000 in binary
 };
 
+/**
+ * @brief The Character class is the base class for all characters in the game.
+ * It handles the movement, shooting, and collision (these methods can be overriden)
+ */
 class Character : public GameObject
 {
 protected:
     int lives;
+
+    /**
+     * @brief A bit mask of the current state of the character.
+     * See the CharacterState enum for more details.
+     */
     int state;
     std::vector<Bullet> bullets;
+
+    Vector2 accelDir;
+
     float lastShotTime;
     float lastDeathTime;
+    float timeAccelerating;
+    bool exploded;
+
+    // Character stats
     float maxSpeed;
-    Vector2 accelDir;
     float acceleration;
     float deceleration;
     float turnSpeed;
@@ -49,25 +64,48 @@ protected:
     float bulletsSpeed;
     float bulletsSpread;
 
+    // Sound Aliases
     Sound shootSound;
     Sound thrustSound;
-    float pitchAndVolumeScale;
     Sound explosionSound;
-    bool exploded;
-    float timeAccelerating;
 
+    float pitchAndVolumeScale;
+
+    /**
+     * @brief Set the Default Hit Box object. This is called in the constructor.
+     * This method can be overriden to set a custom hit box.
+     */
     virtual void SetDefaultHitBox();
 
 public:
+    /**
+     * @brief Construct a new Character object with the given origin.
+     *
+     * @param origin The origin position of the character.
+     */
     Character(Vector2 origin);
+
+    /**
+     * @brief Destroy the Character object unloading all Sound Aliases.
+     */
     virtual ~Character();
 
+    /**
+     * @brief Updates the state, movement, actions, sounds, and bullets of the character.
+     */
     virtual void Update();
+
+    /**
+     * @brief Draws the bullets and the character with it's current state.
+     */
     virtual void Draw();
     virtual void DrawDebug();
     virtual bool CheckCollision(GameObject *other, Vector2 *pushVector);
     virtual void HandleCollision(GameObject *other, Vector2 *pushVector);
     virtual void Shoot();
+    /**
+     * @brief Cleans the bullets that are out of bounds or destroyed.
+     */
     virtual void CleanBullets();
     virtual bool CanBeKilled();
     virtual bool CanBeHit();
@@ -79,8 +117,19 @@ public:
 
     void AddLife();
 
+    /**
+     * @brief Accelerates the character in the direction it is facing (accelDir).
+     *
+     * @param acceleration The acceleration to apply.
+     */
     virtual void Accelerate(float acceleration);
 
+    /**
+     * @brief Gets the source rectangle of the character's texture based on it's current state.
+     * This is used to get the correct frame in a sprite sheet.
+     * 
+     * @return The source rectangle of the character's texture.
+     */
     virtual Rectangle GetFrameRec();
 
     bool IsTurning() { return state & (TURNING_LEFT | TURNING_RIGHT); }
@@ -89,6 +138,13 @@ public:
     bool IsAlive() { return state & ~(DEAD | DYING); }
     bool CanShoot() { return GetTime() - lastShotTime > shootCooldown; }
     int GetLives() { return lives; }
+
+    /**
+     * @brief Get a pointer to the vector of bullets.
+     * This is used to handle collisions in the game loop.
+     * 
+     * @return A pointer to the vector of bullets.
+     */
     std::vector<Bullet> *GetBullets() { return &bullets; }
 };
 #endif // __CHARACTER_H__

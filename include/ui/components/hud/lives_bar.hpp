@@ -6,16 +6,27 @@
 
 #define MAX_LIVES 10
 
-// TODO: make this a player info ui object, or maybe create a player info ui object that contains this
+/**
+ * @brief A UIObject that displays the lives of the player
+ * 
+ */
 class LivesBar : public UIObject
 {
 private:
-    Texture2D *lifeTexture;
     Player *player;
+
     float lifeSize;
+
     Rectangle centeredBounds;
+    Texture2D *lifeTexture;
 
 public:
+    /**
+     * @brief Construct a new LivesBar object with a relative position and size
+     * 
+     * @param relBounds The relative bounds of the LivesBar
+     * @param player The player
+     */
     LivesBar(Rectangle bounds, Player *player);
     ~LivesBar();
 

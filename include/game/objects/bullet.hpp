@@ -29,8 +29,11 @@ public:
     void Draw();
     void DrawDebug();
     void HandleCollision(GameObject *other, Vector2 *pushVector);
-    void Destroy() { isAlive = false; }
 
+    /**
+     * @brief Destroys the bullet. (the bullet will be removed in the next update)
+     */
+    void Destroy() { isAlive = false; }
     bool IsOutOfBounds();
     bool IsPlayerBullet() { return isPlayerBullet; }
     bool IsAlive() { return isAlive; }

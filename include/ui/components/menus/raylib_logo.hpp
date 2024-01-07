@@ -17,7 +17,6 @@
 /**
  * @brief Raylib logo animation based on the one from the original raysan's example
  * (see https://github.com/raysan5/raylib/blob/master/examples/shapes/shapes_logo_raylib_anim.c)
- *
  */
 class RaylibLogo : public UIObject
 {

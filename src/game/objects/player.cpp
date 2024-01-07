@@ -261,9 +261,8 @@ void Player::DrawDebug()
     }
     Character::DrawDebug();
 
-    DrawText(TextFormat("Invincible: %s", invincible ? "true" : "false"), 10, 10, 20, invincible ? GREEN : RED);
-    DrawText(TextFormat("Has moved: %s", hasMoved ? "true" : "false"), 10, 30, 20, hasMoved ? GREEN : RED);
-    DrawText(TextFormat("hidden: %s", hidden ? "true" : "false"), 10, 50, 20, hidden ? GREEN : RED);
+    Vector2 belowPlayer = GetWorldToScreen2D({origin.x, origin.y + CHARACTER_SIZE + 10}, camera);
+    DrawText(TextFormat("Invincible: %s", invincible ? "true" : "false"), belowPlayer.x, belowPlayer.y, 20, invincible ? GREEN : RED);
 }
 
 void Player::HandleInput()
@@ -422,7 +421,7 @@ void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
         }
         else
         {
-            powerup->AnimateCantPickup();
+            powerup->Shake();
         }
         return;
     }
@@ -567,11 +566,6 @@ bool Player::Kill()
     return Character::Kill();
 }
 
-void Player::Show()
-{
-    this->hidden = false;
-}
-
 void Player::Respawn()
 {
     this->origin = this->initialOrigin;
@@ -602,11 +596,6 @@ void Player::Respawn()
     {
         RemovePowerup((PowerUpType)i);
     }
-}
-
-void Player::Hide()
-{
-    this->hidden = true;
 }
 
 void Player::Reset()

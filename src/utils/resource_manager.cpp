@@ -200,7 +200,6 @@ Sound *ResourceManager::GetSound(SoundID id)
     return &sounds[id];
 }
 
-// sound alias should be unloaded manually
 Sound ResourceManager::CreateSoundAlias(SoundID id)
 {
     if (id >= sounds.size())
@@ -208,11 +207,6 @@ Sound ResourceManager::CreateSoundAlias(SoundID id)
         return {{0}};
     }
     return LoadSoundAlias(sounds[id]);
-}
-
-Music *ResourceManager::GetMusicTrack(MusicID id)
-{
-    return &music[id];
 }
 
 Font *ResourceManager::GetFont()

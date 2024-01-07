@@ -1,8 +1,8 @@
 #include "ui/components/hud/player_powerups.hpp"
 #include "utils/resource_manager.hpp"
 
-PlayerPowerups::PlayerPowerups(Player *player, CenteredPosition position)
-    : UIObject()
+PlayerPowerups::PlayerPowerups(Player *player, SidePosition position)
+    : UIObject({0, 0, 0, 0}, nullptr, nullptr)
 {
     this->player = player;
     this->position = position;
@@ -39,6 +39,8 @@ void PlayerPowerups::Update()
             numPowerups++;
         }
     }
+
+    // update bounds if number of powerups changed
     if (prevNumPowerups == numPowerups)
     {
         return;
@@ -48,8 +50,6 @@ void PlayerPowerups::Update()
     // calculate bounds based on number of powerups and position
     Vector2 topLeft = {0, 0};
     Vector2 size = {0, 0};
-    Vector2 parentTopLeft = {parent == nullptr ? 0 : parent->GetBounds().x,
-                             parent == nullptr ? 0 : parent->GetBounds().y};
     Vector2 parentSize = {parent == nullptr ? GetScreenWidth() : parent->GetBounds().width,
                           parent == nullptr ? GetScreenHeight() : parent->GetBounds().height};
     switch (position)
@@ -82,29 +82,21 @@ void PlayerPowerups::Update()
         break;
     }
 
-    this->relBounds = {topLeft.x, topLeft.y, size.x, size.y};
-    if (this->parent != nullptr)
-    {
-        this->bounds.x = parentTopLeft.x + this->relBounds.x;
-        this->bounds.y = parentTopLeft.y + this->relBounds.y;
-        this->bounds.width = this->relBounds.width;
-        this->bounds.height = this->relBounds.height;
-    }
-    else
-    {
-        this->bounds = this->relBounds;
-    }
+    // update bounds
+    SetRelBounds({topLeft.x, topLeft.y, size.x, size.y});
 }
 
 void PlayerPowerups::Draw()
 {
     UIObject::Draw();
 
+    // initialize variables
     Rectangle dstRect = {bounds.x, bounds.y, ICONS_SIZE, ICONS_SIZE};
     Texture2D *powerupTexture = ResourceManager::GetInvalidTexture();
     Vector2 textPos = {dstRect.x + ICONS_SIZE + ICONS_SPACING, dstRect.y + ICONS_SIZE / 2};
 
-    Vector2 playerPos = GetWorldToScreen2D(player->GetOrigin(), player->GetCamera());
+    // calculate fade tint based on distance to player
+    const Vector2 playerPos = GetWorldToScreen2D(player->GetOrigin(), player->GetCamera());
     float distanceToPlayer;
     if (position == TOP || position == BOTTOM)
     {
@@ -116,6 +108,7 @@ void PlayerPowerups::Draw()
     }
     Color tint = Fade(WHITE, 0.2f + 0.8f * fminf(distanceToPlayer / FADE_DISTANCE_THRESHOLD, 1.0f));
 
+    // draw powerups
     for (size_t i = 0; i < NUM_POWER_UP_TYPES; i++)
     {
         PowerUpType type = (PowerUpType)i;
@@ -126,23 +119,28 @@ void PlayerPowerups::Draw()
             continue;
         }
         
+        // special case for extra bullet upgrade (bullets = 1 + extra bullets count)
         count += type == EXTRA_BULLET_UPGRADE;
-        powerupTexture = powerupTextures[type];
 
         const char *multiplierText = "";
         float multiplier = player->GetPowerupMultiplier(type);
         if (fmodf(multiplier, 1.0f) != 0.0f) // is float
         {
+            // draw multiplier as float
             multiplierText = TextFormat("x%0.1f", multiplier);
         }
         else // is int
         {
+            // draw multiplier as int
             multiplierText = TextFormat("x%ld", count);
         }
 
+        // draw powerup icon and multiplier
+        powerupTexture = powerupTextures[type];
         DrawTexturePro(*powerupTexture, {0, 0, (float)powerupTexture->width, (float)powerupTexture->height}, dstRect, {0, 0}, 0, tint);
         DrawTextEx(*ResourceManager::GetFont(), multiplierText, textPos, MULTIPLIER_FONT_SIZE, 0, tint);
 
+        // update positions
         if (position == TOP || position == BOTTOM)
         {
             dstRect.x += ICONS_SIZE + ICONS_SPACING;

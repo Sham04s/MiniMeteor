@@ -7,6 +7,9 @@
 #define SCORE_SUMMARY_FONT_SIZE 24
 #define SCORE_PADDING 4
 
+/**
+ * @brief A UIObject that displays the score summary at the end of the game
+ */
 class GameOver : public UIObject
 {
 private:

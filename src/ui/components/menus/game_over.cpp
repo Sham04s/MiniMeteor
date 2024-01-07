@@ -68,6 +68,7 @@ void GameOver::Update()
     scoresRec.width = 0;
     scoresRec.height = 0;
 
+    // calculate size of scores rectangle
     for (int i = 0; i < 6; i++)
     {
         Vector2 scoreTextSize = MeasureTextEx(*ResourceManager::GetFont(), scoresText[i], fontSize, 1);
@@ -89,12 +90,14 @@ void GameOver::Draw()
     // 4 - powerups collected
     // 5 - total score
     
+    // draw high score separately from normal scores
     Vector2 highScoreSize = MeasureTextEx(*ResourceManager::GetFont(), scoresText[0], fontSize * 1.2f, 1);
     Vector2 highScorePos = {bounds.x + bounds.width / 2 - highScoreSize.x / 2, bounds.y};
     
     DrawTextEx(*ResourceManager::GetFont(), scoresText[0], highScorePos, highScoreSize.y, 1, GetTotalScore() == GetHighScore() ? GOLD : WHITE);
     DrawLineEx({bounds.x, highScorePos.y - SCORE_PADDING}, {bounds.x + bounds.width, highScorePos.y - SCORE_PADDING}, 1, WHITE);
 
+    // draw normal scores
     scoresRec.y = highScorePos.y + highScoreSize.y * 2 + SCORE_PADDING;
     scoresRec.x = bounds.x + bounds.width / 2 - scoresRec.width / 2;
     Vector2 scoreTextPos = {scoresRec.x, scoresRec.y};
@@ -105,6 +108,7 @@ void GameOver::Draw()
         scoreTextPos.y += fontSize + SCORE_PADDING;
     }
 
+    // draw total score
     Vector2 totalScoreSize = MeasureTextEx(*ResourceManager::GetFont(), scoresText[5], fontSize * 1.2f, 1);
     Vector2 totalScorePos = {bounds.x + bounds.width / 2 - totalScoreSize.x / 2, scoreTextPos.y + totalScoreSize.y + SCORE_PADDING};
 
@@ -122,6 +126,8 @@ void GameOver::DrawDebug()
 void GameOver::Resize(Vector2 prevScreenSize)
 {
     UIObject::Resize(prevScreenSize);
+
+    // resize font size and scores rectangle
     fontSize = fontSize * ((float)GetScreenHeight() / prevScreenSize.y);
     scoresRec.width = scoresRec.width * ((float)GetScreenWidth() / prevScreenSize.x);
     scoresRec.height = scoresRec.height * ((float)GetScreenHeight() / prevScreenSize.y);

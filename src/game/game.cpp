@@ -31,9 +31,6 @@ bool SHOW_DEBUG = false;
 
 GameState gameState;
 
-// TODO: add credits screen (kenney.nl, openfonts?)
-// TODO: improve comments
-
 float oneSecondTimer = 0.0f;
 
 bool InitGame()
@@ -47,7 +44,7 @@ bool InitGame()
     gameState.fullscreen = false;
     gameState.windowSize = {(float)GetScreenWidth(), (float)GetScreenHeight()};
     gameState.originalWindowSize = gameState.windowSize;
-    gameState.hasStartedGame = false;
+    gameState.hasEnteredGame = false;
 
 #ifdef _DEBUG
     SetTraceLogLevel(LOG_ALL);
@@ -111,13 +108,14 @@ void CreateNewGame(size_t numAsteroids, size_t numEnemies)
 
     ResetScoreRegistry();
 
+    // unload previous background and create a new one
     if (gameState.spaceBackground != nullptr)
     {
         UnloadTexture(*gameState.spaceBackground);
     }
     gameState.spaceBackground = GenerateStarsBackground(4096, 4096, GetRandomValue(1000, 2000), 1, 2);
 
-    // reset gameState.player
+    // reset player
     if (gameState.player != nullptr)
     {
         gameState.player->Reset();
@@ -178,24 +176,30 @@ void ChangeScreen(ScreenID screen)
     gameState.previousScreen = gameState.currentScreen;
     gameState.currentScreen = screen;
 
+    // update the UIObject if not nullptr
     if (gameState.screens[gameState.currentScreen] != nullptr)
     {
         gameState.screens[gameState.currentScreen]->Update();
     }
 
-    if (screen == MAIN_MENU && gameState.hasStartedGame)
+    // create a new game if the player has started a new game and is returning to the main menu
+    if (screen == MAIN_MENU && gameState.hasEnteredGame)
     {
-        gameState.hasStartedGame = false;
+        gameState.hasEnteredGame = false;
         gameState.previousScreen = MAIN_MENU;
         gameState.player->Hide();
         CreateNewGame(INITIAL_ASTEROIDS, INITIAL_ENEMIES);
     }
-    if (screen == GAME && !gameState.hasStartedGame)
+
+    // show the player if the player has started a new game and is returning to the game
+    if (screen == GAME && !gameState.hasEnteredGame)
     {
-        gameState.hasStartedGame = true;
+        gameState.hasEnteredGame = true;
         gameState.player->Show();
     }
 
+    // sets the master volume to 0 if the screen is not the game or game over
+    // and also hides/lock and shows/unlock the cursor
     if (screen == GAME)
     {
         SetMasterVolume(1);
@@ -205,7 +209,7 @@ void ChangeScreen(ScreenID screen)
         HideCursor();
 #endif // !_DEBUG
     }
-    else
+    else if (gameState.previousScreen == GAME)
     {
         if (screen != GAME_OVER)
         {
@@ -340,6 +344,7 @@ void DrawFrame()
     EndDrawing();
 }
 
+// for debug purposes
 PowerUpType powerupToSpawn = LIFE;
 
 void DrawDebug()
@@ -551,7 +556,7 @@ void UpdateGameObjects()
 {
     const float scoreMultiplier = gameState.diffSettings.scoreMultiplier;
 
-    if (gameState.currentScreen == GAME)
+    if (gameState.currentScreen == GAME || gameState.currentScreen == GAME_OVER)
     {
         gameState.player->Update();
     }
@@ -564,7 +569,10 @@ void UpdateGameObjects()
             Asteroid *asteroid = (Asteroid *)gameState.gameObjects[i];
             if (asteroid->IsDestroyed())
             {
-                AddScore(asteroid->GetVariant() == LARGE ? LARGE_ASTEROID_DESTROYED : SMALL_ASTEROID_DESTROYED, scoreMultiplier);
+                if (gameState.player->GetLives() > 0)
+                {
+                    AddScore(asteroid->GetVariant() == LARGE ? LARGE_ASTEROID_DESTROYED : SMALL_ASTEROID_DESTROYED, scoreMultiplier);
+                }
                 delete asteroid;
                 gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
                 gameState.asteroidsCount--;
@@ -575,7 +583,10 @@ void UpdateGameObjects()
             BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
             if (enemy->IsDead() && enemy->GetBullets()->size() == 0)
             {
-                AddScore(BASIC_ENEMY_KILLED, scoreMultiplier);
+                if (gameState.player->GetLives() > 0)
+                {
+                    AddScore(BASIC_ENEMY_KILLED, scoreMultiplier);
+                }
                 delete enemy;
                 gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
                 gameState.enemiesCount--;
@@ -709,16 +720,15 @@ void TryToSpawnObject(GameObjectType type)
     switch (type)
     {
     case ASTEROID:
-        gameState.gameObjects.push_back(new Asteroid((AsteroidVariant)GetRandomValue(0, 1), gameState.diffSettings.asteroidSpeedMultiplier));
+        gameState.gameObjects.push_back(new Asteroid(gameState.diffSettings.asteroidSpeedMultiplier));
         gameState.asteroidsCount++;
         break;
     case ENEMY:
-        gameState.gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(CHARACTER_SIZE), gameState.player, gameState.diffSettings.enemiesAttributes));
+        gameState.gameObjects.push_back(new BasicEnemy(gameState.player, gameState.diffSettings.enemiesAttributes));
         gameState.enemiesCount++;
         break;
     case POWER_UP:
-        gameState.gameObjects.push_back(new PowerUp(RandomVecInsideScreen(POWER_UP_SIZE),
-                                                    (PowerUpType)GetRandomValue(0, NUM_POWER_UP_TYPES - 1)));
+        gameState.gameObjects.push_back(new PowerUp());
         gameState.powerupSpawned = true;
         break;
     default:
@@ -742,6 +752,8 @@ void UpdateGame()
 
             // this score is scaled relative to frame time
             AddScore(TIME_ALIVE, 1.0f);
+
+            // update difficulty settings if the player has scored enough points
             if (GetTotalScore() >= 50000 && gameState.diffSettings.difficulty == EASY)
             {
                 UpdateDifficultySettings(MEDIUM);
@@ -798,9 +810,11 @@ bool GameLoop()
     if (gameState.currentScreen == EXITING)
     {
 #ifdef PLATFORM_WEB
+        // reset game
         ExitGame();
         InitGame();
 #else
+        // exit game
         return false;
 #endif // PLATFORM_WEB
     }

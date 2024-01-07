@@ -33,18 +33,54 @@ enum ButtonSize
 class Button : public UIObject
 {
 private:
+    /**
+     * @brief Whether the button is pressed down or not
+     */
     bool pressed;
+
+    /**
+     * @brief Whether the mouse is hovering over the button or not
+     */
     bool hovered;
+
+    /**
+     * @brief Whether the button was pressed and released while the mouse was hovering over it
+     */
     bool clicked;
+    
     std::function<void()> onClickFunc;
+    
     ButtonVariant variant;
     ButtonSize size;
+
+    /**
+     * @brief The label that displays the text on the button
+     */
     Label *label;
 
     void SetParent(UIObject *parent);
 
 public:
+    /**
+     * @brief Construct a new Button object with a relative position and size
+     * 
+     * @param relBounds The relative bounds of the button
+     * @param parent The parent UIObject
+     * @param text The text to display on the button
+     * @param variant The variant of the button
+     * @param size The size of the button
+     */
     Button(Rectangle relBounds, UIObject *parent, const char *text, ButtonVariant variant, ButtonSize size);
+
+    /**
+     * @brief Construct a new Button object with a relative position and size
+     * 
+     * @param relPos The relative position of the button
+     * @param parent The parent UIObject
+     * @param text The text to display on the button
+     * @param variant The variant of the button
+     * @param size The size of the button
+     */
     Button(Vector2 relPos, UIObject *parent, const char *text, ButtonVariant variant, ButtonSize size, std::function<void()> onClickFunc);
     ~Button();
 
@@ -53,6 +89,11 @@ public:
     void DrawDebug();
     void Resize(Vector2 prevScreenSize);
 
+    /**
+     * @brief Set the OnClick function to be called when the button is clicked
+     * 
+     * @param func The function to call
+     */
     void OnClick(std::function<void()> func) { onClickFunc = func; }
 
     bool IsPressed() { return pressed; }

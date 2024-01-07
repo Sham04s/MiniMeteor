@@ -4,6 +4,9 @@
 #include "ui/components/menus/menu.hpp"
 #include "ui/components/common/label.hpp"
 
+/**
+ * @brief A Menu that displays the controls for the game
+ */
 class Controls : public Menu
 {
 private:

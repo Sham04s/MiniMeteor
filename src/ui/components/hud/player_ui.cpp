@@ -25,6 +25,7 @@ PlayerUI::PlayerUI(Player *player)
     AddChild(powerups);
     AddChild(scoreLabel);
 
+    // initialize score text
     sprintf(scoreText, "%08d", GetTotalScore());
 }
 
@@ -35,6 +36,8 @@ PlayerUI::~PlayerUI()
 void PlayerUI::Update()
 {
     UIObject::Update();
+
+    // update score text
     sprintf(scoreText, "%08d", GetTotalScore());
 }
 
@@ -42,6 +45,7 @@ void PlayerUI::Draw()
 {
     UIObject::Draw();
 
+    // calculate color alpha based on distance to player
     float alpha = 1.0f;
     Vector2 playerPos = GetWorldToScreen2D(player->GetOrigin(), player->GetCamera());
     float distanceToPlayer = Vector2Distance(playerPos, {directionalShipMeterBounds.x + directionalShipMeterBounds.width / 2, directionalShipMeterBounds.y + directionalShipMeterBounds.height / 2});
@@ -50,16 +54,23 @@ void PlayerUI::Draw()
         alpha = fmaxf(0.0f, distanceToPlayer / 100);
     }
 
-    DrawRectangleLinesEx(directionalShipMeterBounds, 1, Fade(WHITE, alpha));
+    // draw directional ship meter
     const int padding = 2;
+
     Rectangle directionalShipMeter = {directionalShipMeterBounds.x + padding, directionalShipMeterBounds.y + padding,
                                       directionalShipMeterBounds.width - padding * 2, directionalShipMeterBounds.height - padding * 2};
     directionalShipMeter.width = directionalShipMeter.width * player->GetDirectionalShipMeter() / DIRECTIONAL_SHIP_METER_MAX;
     directionalShipMeter.x = directionalShipMeterBounds.x + directionalShipMeterBounds.width - directionalShipMeter.width - padding;
 
+    // meter container
+    DrawRectangleLinesEx(directionalShipMeterBounds, 1, Fade(WHITE, alpha));
+
+    // meter
+    DrawRectangleRec(directionalShipMeter, Fade(WHITE, alpha));
+
+    // draw directional ship icon
     DrawTexturePro(*directionalShipIcon, {0, 0, (float)directionalShipIcon->width, (float)directionalShipIcon->height},
                    directionalShipIconBounds, {0, 0}, 0, Fade(WHITE, alpha));
-    DrawRectangleRec(directionalShipMeter, Fade(WHITE, alpha));
 }
 
 void PlayerUI::DrawDebug()
@@ -72,11 +83,14 @@ void PlayerUI::DrawDebug()
 void PlayerUI::Resize(Vector2 prevScreenSize)
 {
     UIObject::Resize(prevScreenSize);
+
+    // resize meter
     directionalShipMeterBounds.width *= GetScreenWidth() / prevScreenSize.x;
     directionalShipMeterBounds.height *= GetScreenHeight() / prevScreenSize.y;
     directionalShipMeterBounds.x = GetScreenWidth() - directionalShipMeterBounds.width;
     directionalShipMeterBounds.y = livesBar->GetCenteredBounds().y + livesBar->GetCenteredBounds().height + 10;
 
+    // resize meter icon
     directionalShipIconBounds.width *= GetScreenHeight() / prevScreenSize.y;
     directionalShipIconBounds.height *= GetScreenHeight() / prevScreenSize.y;
     directionalShipIconBounds.x = directionalShipMeterBounds.x - directionalShipIconBounds.width - 2;
