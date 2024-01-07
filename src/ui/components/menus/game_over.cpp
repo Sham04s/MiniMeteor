@@ -41,7 +41,7 @@ void GameOver::Update()
 
     int highScore = GetHighScore();
     int secondsAlive = GetRawScore(TIME_ALIVE);
-    int enemiesKilled = GetRawScore(BASIC_ENEMY_KILLED);
+    int enemiesKilled = GetRawScore(ENEMY_SHOOTER_KILLED);
     int smallAsteroidsDestroyed = GetRawScore(SMALL_ASTEROID_DESTROYED) + GetRawScore(LARGE_ASTEROID_DESTROYED);
     int powerupsCollected = 0;
 
@@ -60,7 +60,7 @@ void GameOver::Update()
     }
 
     sprintf(scoresText[1], "%s: %d", GetGenericScoreName(TIME_ALIVE), secondsAlive);
-    sprintf(scoresText[2], "%s: %d", GetGenericScoreName(BASIC_ENEMY_KILLED), enemiesKilled);
+    sprintf(scoresText[2], "%s: %d", GetGenericScoreName(ENEMY_SHOOTER_KILLED), enemiesKilled);
     sprintf(scoresText[3], "%s: %d", GetGenericScoreName(SMALL_ASTEROID_DESTROYED), smallAsteroidsDestroyed);
     sprintf(scoresText[4], "%s: %d", GetGenericScoreName(SHIELD_POWERUP_COLLECTED), powerupsCollected);
     sprintf(scoresText[5], "Total: %d", GetTotalScore());

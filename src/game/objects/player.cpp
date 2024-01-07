@@ -1,5 +1,5 @@
 #include "game/objects/player.hpp"
-#include "game/objects/enemy.hpp"
+#include "game/objects/shooter.hpp"
 
 #include <math.h>
 #include <string>
@@ -364,7 +364,7 @@ void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
     }
     if (other->GetType() == ENEMY)
     {
-        BasicEnemy *enemy = (BasicEnemy *)other;
+        Shooter *enemy = (Shooter *)other;
         Push(enemy, *pushVector);
         if (this->CanBeHit() && !this->HasPowerup(SHIELD))
         {
@@ -377,7 +377,7 @@ void Player::HandleCollision(GameObject *other, Vector2 *pushVector)
         if (this->CanBeKilled() || this->HasPowerup(SHIELD))
         {
             enemy->Kill();
-            IncreaseDirectionalShipMeter(BASIC_ENEMY_KILLED);
+            IncreaseDirectionalShipMeter(ENEMY_SHOOTER_KILLED);
         }
         return;
     }
@@ -437,7 +437,7 @@ void Player::HandleBulletCollision(Bullet *bullet, GameObject *other, Vector2 *p
     }
     if (other->GetType() == ENEMY)
     {
-        IncreaseDirectionalShipMeter(BASIC_ENEMY_KILLED);
+        IncreaseDirectionalShipMeter(ENEMY_SHOOTER_KILLED);
     }
 }
 
@@ -646,7 +646,7 @@ void Player::IncreaseDirectionalShipMeter(ScoreType scoreType)
 {
     switch (scoreType)
     {
-    case BASIC_ENEMY_KILLED:
+    case ENEMY_SHOOTER_KILLED:
         directionalShipMeter += 10.0f;
         break;
     case LARGE_ASTEROID_DESTROYED:

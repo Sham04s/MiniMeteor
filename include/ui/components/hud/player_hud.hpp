@@ -12,7 +12,7 @@
 /**
  * @brief A UIObject that displays the player's lives, score, and powerups
  */
-class PlayerUI : public UIObject
+class PlayerHUD : public UIObject
 {
 private:
     Player *player;
@@ -25,8 +25,8 @@ private:
     Rectangle directionalShipIconBounds;
 
 public:
-    PlayerUI(Player *player);
-    ~PlayerUI();
+    PlayerHUD(Player *player);
+    ~PlayerHUD();
 
     void Update();
     void Draw();

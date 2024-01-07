@@ -179,7 +179,6 @@ void Character::Update()
     {
         Translate({0, (float)worldBox.height + CHARACTER_SIZE / 2});
     }
-
 }
 
 void Character::Draw()
@@ -249,6 +248,12 @@ void Character::Accelerate(float acceleration)
 Rectangle Character::GetFrameRec()
 {
     return Rectangle{0, 0, (float)texture->width, (float)texture->height};
+}
+
+void Character::Rotate(float angle)
+{
+    GameObject::Rotate(angle);
+    accelDir = Vector2Rotate(accelDir, angle * DEG2RAD);
 }
 
 void Character::Shoot()

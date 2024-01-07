@@ -1,4 +1,4 @@
-#include "ui/components/hud/player_ui.hpp"
+#include "ui/components/hud/player_hud.hpp"
 
 #include "raylib.h"
 #include "utils/score_registry.hpp"
@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-PlayerUI::PlayerUI(Player *player)
+PlayerHUD::PlayerHUD(Player *player)
     : UIObject({0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()}, nullptr, nullptr), player(player)
 {
     this->player = player;
@@ -29,11 +29,11 @@ PlayerUI::PlayerUI(Player *player)
     sprintf(scoreText, "%08d", GetTotalScore());
 }
 
-PlayerUI::~PlayerUI()
+PlayerHUD::~PlayerHUD()
 {
 }
 
-void PlayerUI::Update()
+void PlayerHUD::Update()
 {
     UIObject::Update();
 
@@ -41,7 +41,7 @@ void PlayerUI::Update()
     sprintf(scoreText, "%08d", GetTotalScore());
 }
 
-void PlayerUI::Draw()
+void PlayerHUD::Draw()
 {
     UIObject::Draw();
 
@@ -73,14 +73,14 @@ void PlayerUI::Draw()
                    directionalShipIconBounds, {0, 0}, 0, Fade(WHITE, alpha));
 }
 
-void PlayerUI::DrawDebug()
+void PlayerHUD::DrawDebug()
 {
     UIObject::DrawDebug();
     DrawRectangleLinesEx(directionalShipMeterBounds, 1, RED);
     DrawRectangleLinesEx(directionalShipIconBounds, 1, RED);
 }
 
-void PlayerUI::Resize(Vector2 prevScreenSize)
+void PlayerHUD::Resize(Vector2 prevScreenSize)
 {
     UIObject::Resize(prevScreenSize);
 

@@ -31,7 +31,7 @@ typedef struct EnemyAttributes
     float probOfShootingToPlayer;
 } EnemySettings;
 
-class BasicEnemy : public Character
+class Shooter : public Character
 {
 private:
     bool lookingForPlayer;
@@ -48,11 +48,11 @@ protected:
     void SetDefaultHitBox();
 
 public:
-    BasicEnemy(Player *player, EnemyAttributes attributes)
-        : BasicEnemy(RandomVecOutsideScreen(CHARACTER_SIZE), player, attributes){};
-    BasicEnemy(Vector2 origin, Player *player);
-    BasicEnemy(Vector2 origin, Player *player, EnemyAttributes attributes);
-    ~BasicEnemy();
+    Shooter(Player *player, EnemyAttributes attributes)
+        : Shooter(RandomVecOutsideScreen(CHARACTER_SIZE), player, attributes){};
+    Shooter(Vector2 origin, Player *player);
+    Shooter(Vector2 origin, Player *player, EnemyAttributes attributes);
+    ~Shooter();
 
     void Update();
     void DrawDebug();

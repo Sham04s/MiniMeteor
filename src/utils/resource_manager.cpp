@@ -16,7 +16,7 @@ const std::map<SpriteTextureID, const char *> spriteTexturesPathsMap = {
     {CROSSHAIR_SPRITE, "resources/characters/player/crosshair.png"},
     {BULLET_SPRITE, "resources/characters/player/bullet.png"},
     {ENEMY_BULLET_SPRITE, "resources/characters/enemies/bullet.png"},
-    {ENEMY_BASIC_SPRITES, "resources/characters/enemies/basic_enemy.png"},
+    {ENEMY_SHOOTER_SPRITES, "resources/characters/enemies/shooter.png"},
     {POWERUP_LIFE_ITEM_SPRITE, "resources/powerups/life_item.png"},
     {POWERUP_SHIELD_ITEM_SPRITE, "resources/powerups/shield_item.png"},
     {POWERUP_SHIELD_SPRITE, "resources/powerups/shield.png"},
@@ -160,7 +160,7 @@ Rectangle ResourceManager::GetSpriteSrcRect(SpriteTextureID id, unsigned int fra
         columns = 3;
         break;
 
-    case ENEMY_BASIC_SPRITES:
+    case ENEMY_SHOOTER_SPRITES:
         rows = 1;
         columns = 3;
         break;

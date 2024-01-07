@@ -132,6 +132,8 @@ public:
      */
     virtual Rectangle GetFrameRec();
 
+    void Rotate(float angle);
+
     bool IsTurning() { return state & (TURNING_LEFT | TURNING_RIGHT); }
     bool IsDying() { return state & DYING; }
     bool IsDead() { return state & DEAD; }

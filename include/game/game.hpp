@@ -11,7 +11,7 @@
 #define __GAME_H__
 
 #include "ui/components/common/ui_object.hpp"
-#include "game/objects/enemy.hpp"
+#include "game/objects/shooter.hpp"
 
 #ifdef WINDOWS_HOT_RELOAD
 #define CORE_API extern "C" __declspec(dllexport)

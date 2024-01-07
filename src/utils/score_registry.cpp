@@ -2,7 +2,7 @@
 
 std::map<ScoreType, int> scoreValues = {
     {TIME_ALIVE, 100},
-    {BASIC_ENEMY_KILLED, 2000},
+    {ENEMY_SHOOTER_KILLED, 2000},
     {SMALL_ASTEROID_DESTROYED, 800},
     {LARGE_ASTEROID_DESTROYED, 1600},
     {LIFE_POWERUP_COLLECTED, 100},
@@ -17,7 +17,7 @@ std::map<ScoreType, int> scoreValues = {
 
 std::map<ScoreType, const char *> scoreNames = {
     {TIME_ALIVE, "Seconds Alive"},
-    {BASIC_ENEMY_KILLED, "Basic Enemies Killed"},
+    {ENEMY_SHOOTER_KILLED, "Basic Enemies Killed"},
     {SMALL_ASTEROID_DESTROYED, "Small Asteroids Destroyed"},
     {LARGE_ASTEROID_DESTROYED, "Large Asteroids Destroyed"},
     {LIFE_POWERUP_COLLECTED, "Lives Collected"},
@@ -91,7 +91,7 @@ const char *GetGenericScoreName(ScoreType type)
         return "Powerups Collected";
     if (type == TIME_ALIVE)
         return "Seconds Alive";
-    if (type == BASIC_ENEMY_KILLED)
+    if (type == ENEMY_SHOOTER_KILLED)
         return "Enemies Killed";
     if (type == SMALL_ASTEROID_DESTROYED || type == LARGE_ASTEROID_DESTROYED)
         return "Asteroids Destroyed";

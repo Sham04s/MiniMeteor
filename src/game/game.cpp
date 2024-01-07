@@ -12,7 +12,7 @@
 #include "utils/score_registry.hpp"
 #include "game/objects/player.hpp"
 #include "game/objects/asteroid.hpp"
-#include "game/objects/enemy.hpp"
+#include "game/objects/shooter.hpp"
 #include "game/objects/power_up.hpp"
 #include "utils/utils.hpp"
 
@@ -161,7 +161,7 @@ void CreateNewGame(size_t numAsteroids, size_t numEnemies)
         }
         else
         {
-            gameState.gameObjects.push_back(new BasicEnemy(pos, gameState.player, gameState.diffSettings.enemiesAttributes));
+            gameState.gameObjects.push_back(new Shooter(pos, gameState.player, gameState.diffSettings.enemiesAttributes));
             gameState.enemiesCount++;
         }
     }
@@ -463,7 +463,7 @@ void HandleInput()
     // spawn an enemy
     if (IsKeyPressed(KEY_C))
     {
-        gameState.gameObjects.push_back(new BasicEnemy(RandomVecOutsideScreen(100), gameState.player, gameState.diffSettings.enemiesAttributes));
+        gameState.gameObjects.push_back(new Shooter(RandomVecOutsideScreen(100), gameState.player, gameState.diffSettings.enemiesAttributes));
         gameState.enemiesCount++;
     }
     // spawn the selected powerup in the mouse position
@@ -580,12 +580,12 @@ void UpdateGameObjects()
         }
         else if (gameState.gameObjects[i]->GetType() == ENEMY)
         {
-            BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
+            Shooter *enemy = (Shooter *)gameState.gameObjects[i];
             if (enemy->IsDead() && enemy->GetBullets()->size() == 0)
             {
                 if (gameState.player->GetLives() > 0)
                 {
-                    AddScore(BASIC_ENEMY_KILLED, scoreMultiplier);
+                    AddScore(ENEMY_SHOOTER_KILLED, scoreMultiplier);
                 }
                 delete enemy;
                 gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
@@ -616,7 +616,7 @@ void UpdateGameObjects()
     {
         if (gameState.gameObjects[i]->GetType() == ENEMY)
         {
-            BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
+            Shooter *enemy = (Shooter *)gameState.gameObjects[i];
             enemy->CleanBullets();
         }
     }
@@ -668,7 +668,7 @@ void HandleCollisions()
         // enemy bullets
         if (gameState.gameObjects[i]->GetType() == ENEMY)
         {
-            BasicEnemy *enemy = (BasicEnemy *)gameState.gameObjects[i];
+            Shooter *enemy = (Shooter *)gameState.gameObjects[i];
             auto enemyBullets = enemy->GetBullets();
             for (size_t b = 0; b < enemyBullets->size(); b++)
             {
@@ -724,7 +724,7 @@ void TryToSpawnObject(GameObjectType type)
         gameState.asteroidsCount++;
         break;
     case ENEMY:
-        gameState.gameObjects.push_back(new BasicEnemy(gameState.player, gameState.diffSettings.enemiesAttributes));
+        gameState.gameObjects.push_back(new Shooter(gameState.player, gameState.diffSettings.enemiesAttributes));
         gameState.enemiesCount++;
         break;
     case POWER_UP:

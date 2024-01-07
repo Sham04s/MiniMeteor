@@ -7,7 +7,7 @@
 #include "utils/resource_manager.hpp"
 
 #include "ui/components/menus/raylib_logo.hpp"
-#include "ui/components/hud/player_ui.hpp"
+#include "ui/components/hud/player_hud.hpp"
 #include "ui/components/menus/game_over.hpp"
 #include "ui/components/common/label.hpp"
 #include "ui/components/menus/controls.hpp"
@@ -63,7 +63,7 @@ UIObject *CreateMainMenu()
 UIObject *CreatePlayerHUD(Player *player)
 {
     // in-game ui
-    UIObject *game = new PlayerUI(player);
+    UIObject *game = new PlayerHUD(player);
     return game;
 }
 

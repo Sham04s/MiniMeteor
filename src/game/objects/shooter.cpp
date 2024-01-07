@@ -1,8 +1,8 @@
-#include "game/objects/enemy.hpp"
+#include "game/objects/shooter.hpp"
 #include <math.h>
 #include <string>
 
-BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
+Shooter::Shooter(Vector2 origin, Player *player) : Character(origin)
 {
     this->state = IDLE;
     this->lookingForPlayer = false;
@@ -23,7 +23,7 @@ BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
     this->lookingAtPointAngleThreshold = 3.0f; // degrees
     this->lives = 1;
 
-    this->texture = ResourceManager::GetSpriteTexture(ENEMY_BASIC_SPRITES);
+    this->texture = ResourceManager::GetSpriteTexture(ENEMY_SHOOTER_SPRITES);
     this->shootSound = ResourceManager::CreateSoundAlias(ENEMY_BULLET_SOUND);
     this->thrustSound = ResourceManager::CreateSoundAlias(ENEMY_THRUST_SOUND);
     this->explosionSound = ResourceManager::CreateSoundAlias(ENEMY_EXPLOSION_SOUND);
@@ -34,8 +34,8 @@ BasicEnemy::BasicEnemy(Vector2 origin, Player *player) : Character(origin)
     this->velocity = Vector2Scale(forwardDir, GetRandomValue(20, CHARACTER_SIZE));
 }
 
-BasicEnemy::BasicEnemy(Vector2 origin, Player *player, EnemyAttributes attributes)
-    : BasicEnemy(origin, player)
+Shooter::Shooter(Vector2 origin, Player *player, EnemyAttributes attributes)
+    : Shooter(origin, player)
 {
     const float frMultiplier = attributes.fireRateMultiplier <= 0.0f ? 0.001f : attributes.fireRateMultiplier;
     
@@ -46,12 +46,12 @@ BasicEnemy::BasicEnemy(Vector2 origin, Player *player, EnemyAttributes attribute
     this->lookingAtPointAngleThreshold /= attributes.precisionMultiplier;
 }
 
-BasicEnemy::~BasicEnemy()
+Shooter::~Shooter()
 {
     Kill();
 }
 
-void BasicEnemy::Update()
+void Shooter::Update()
 {
     Character::Update();
 
@@ -147,7 +147,7 @@ void BasicEnemy::Update()
     }
 }
 
-void BasicEnemy::DrawDebug()
+void Shooter::DrawDebug()
 {
     Character::DrawDebug();
 
@@ -174,7 +174,7 @@ void BasicEnemy::DrawDebug()
     }
 }
 
-void BasicEnemy::HandleCollision(GameObject *other, Vector2 *pushVector)
+void Shooter::HandleCollision(GameObject *other, Vector2 *pushVector)
 {
     if (other->GetType() == BULLET)
     {
@@ -190,7 +190,7 @@ void BasicEnemy::HandleCollision(GameObject *other, Vector2 *pushVector)
     }
 }
 
-Rectangle BasicEnemy::GetFrameRec()
+Rectangle Shooter::GetFrameRec()
 {
     int frame = 0;
     if (state & ACCELERATING)
@@ -198,10 +198,10 @@ Rectangle BasicEnemy::GetFrameRec()
         frame = 1;
     }
 
-    return ResourceManager::GetSpriteSrcRect(ENEMY_BASIC_SPRITES, frame);
+    return ResourceManager::GetSpriteSrcRect(ENEMY_SHOOTER_SPRITES, frame);
 }
 
-void BasicEnemy::ShootAtPlayer()
+void Shooter::ShootAtPlayer()
 {
     if (lookingForPlayer)
     {
@@ -210,7 +210,7 @@ void BasicEnemy::ShootAtPlayer()
     lookingForPlayer = true;
 }
 
-void BasicEnemy::TryToShootAtPlayer()
+void Shooter::TryToShootAtPlayer()
 {
     if (!this->IsAlive() || player->IsDead() || lookingForPlayer || !player->HasMoved() || GetTime() - lastTryToShootTime < ENEMY_TRY_TO_SHOOT_COOLDOWN)
     {
@@ -224,7 +224,7 @@ void BasicEnemy::TryToShootAtPlayer()
     lastTryToShootTime = GetTime();
 }
 
-bool BasicEnemy::IsLookingAtPlayer()
+bool Shooter::IsLookingAtPlayer()
 {
     if (!lookingForPlayer)
     {
@@ -233,12 +233,12 @@ bool BasicEnemy::IsLookingAtPlayer()
     return IsLookingAt(player->GetOrigin());
 }
 
-bool BasicEnemy::IsLookingAt(Vector2 position)
+bool Shooter::IsLookingAt(Vector2 position)
 {
     return fabsf(Vector2Angle(forwardDir, Vector2Subtract(position, origin)) * RAD2DEG) < lookingAtPointAngleThreshold;
 }
 
-void BasicEnemy::SetDefaultHitBox()
+void Shooter::SetDefaultHitBox()
 {
     this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}};
     for (size_t i = 0; i < hitbox.size(); i++)
