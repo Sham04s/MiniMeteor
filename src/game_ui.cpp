@@ -153,6 +153,23 @@ void ChangeFPSButtonFunc(Button *button)
     button->SetText(fpsButtonText);
 }
 
+UIObject *CreateControlsMenu()
+{
+    Button *backButton = new Button(Vector2{0, 0}, nullptr, "Back", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
+                                    { PreviousScreen(); });
+
+    Rectangle controlsRec = CreateCenteredButtonRec(&backButton, 1);
+    controlsRec.y = GetScreenHeight() - backButton->GetHeight() - backButton->GetPadding() * 2;
+
+    UIObject *controlsMenuButtons = new UIObject(controlsRec, nullptr, ResourceManager::GetDefaultTexture());
+    controlsMenuButtons->AddChild(backButton);
+
+    Controls *controlsMenu = new Controls();
+    controlsMenu->AddChild(controlsMenuButtons);
+
+    return controlsMenu;
+}
+
 UIObject *CreateOptionsMenu()
 {
     if (gameState.fps == 0)
@@ -214,7 +231,7 @@ void CreateUIElements(Player *player)
     gameState.screens[GAME_OVER] = CreateGameOverMenu();
     gameState.screens[MAIN_MENU] = CreateMainMenu();
     gameState.screens[PAUSE_MENU] = CreatePauseMenu();
-    gameState.screens[CONTROLS] = new Controls();
+    gameState.screens[CONTROLS] = CreateControlsMenu();
     gameState.screens[OPTIONS] = CreateOptionsMenu();
     gameState.screens[EXITING] = CreateExitUI();
 }

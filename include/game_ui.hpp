@@ -9,6 +9,7 @@ UIObject *CreateMainMenu();
 UIObject *CreateGameUI(Player *player);
 UIObject *CreatePauseMenu();
 UIObject *CreateGameOverMenu();
+UIObject *CreateControlsMenu();
 UIObject *CreateOptionsMenu();
 UIObject *CreateExitUI();
 void CreateUIElements(Player *player);

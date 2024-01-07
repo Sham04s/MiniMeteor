@@ -7,6 +7,7 @@
 class Controls : public Menu
 {
 private:
+    Rectangle controlsImageRec;
     Texture2D *controlsImage;
     
 public:

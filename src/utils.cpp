@@ -148,3 +148,18 @@ Texture2D *GenerateStarsBackground(int width, int height, int numStars, int minR
     UnloadImage(spaceBackgroundImg);
     return new Texture2D(starsBackground);
 }
+
+Rectangle ResizeRectWithAspectRatio(Rectangle rect, float newWidth, float newHeight) {
+    float aspectRatio = rect.width / rect.height;
+    float targetAspectRatio = newWidth / newHeight;
+
+    if (aspectRatio > targetAspectRatio) {
+        rect.width = newWidth;
+        rect.height = newWidth / aspectRatio;
+    } else {
+        rect.width = newHeight * aspectRatio;
+        rect.height = newHeight;
+    }
+
+    return rect;
+}

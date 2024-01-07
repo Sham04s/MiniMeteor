@@ -13,5 +13,7 @@ bool Overlaps(Vector2 a, Vector2 b, float *overlap);
 Vector2 RandomVecOutsideScreen(float margin);
 Vector2 RandomVecInsideScreen(float margin);
 Texture2D *GenerateStarsBackground(int width, int height, int numStars, int minRadius, int maxRadius);
+Rectangle ResizeRectWithAspectRatio(Rectangle rect, float newWidth, float newHeight);
+
 
 #endif // __UTILS_H__
