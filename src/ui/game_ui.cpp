@@ -80,7 +80,7 @@ UIObject *CreatePlayerHUD(Player *player)
 UIObject *CreatePauseMenu()
 {
     // pause menu buttons
-    const int pauseButtonCount = 6;
+    const int pauseButtonCount = 5;
     Button *pauseButtons[pauseButtonCount] = {
         new Button(Vector2{0, 0}, nullptr, "Resume", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { ResumeGame(); }),
@@ -92,8 +92,6 @@ UIObject *CreatePauseMenu()
                    { ChangeScreen(CONTROLS); }),
         new Button(Vector2{0, 0}, nullptr, "Options", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                    { ChangeScreen(OPTIONS); }),
-        new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
-                   { ChangeScreen(EXITING); }),
     };
 
     // pause menu
