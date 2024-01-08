@@ -14,6 +14,7 @@
 #include "game/objects/asteroid.hpp"
 #include "game/objects/shooter.hpp"
 #include "game/objects/stalker.hpp"
+#include "game/objects/pulser.hpp"
 #include "game/objects/power_up.hpp"
 #include "utils/utils.hpp"
 
@@ -84,6 +85,7 @@ void UpdateDifficultySettings(Difficulty diff)
     diffSettings->maxAsteroids = powf(3, diff + 1);                                                   // 3, 9, 27
     diffSettings->maxShooters = powf(2, diff + 1);                                                    // 2, 4, 8
     diffSettings->maxStalkers = 1 + diff * 2;                                                         // 1, 3, 5
+    diffSettings->maxPulsers = fmaxf(diff * 2 - 1, 0);                                                // 0, 1, 3
     diffSettings->maxEnemies = diffSettings->maxShooters + diffSettings->maxStalkers;                 // 3, 7, 13
     diffSettings->asteroidsSpawnChance = 0.25f + (float)(gameState.diffSettings.difficulty) * 0.25f;  // 0.25, 0.5, 0.75
     diffSettings->enemiesSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty + 1) * 0.1f;  // 0.2, 0.3, 0.4
@@ -93,11 +95,12 @@ void UpdateDifficultySettings(Difficulty diff)
 
     EnemyAttributes *enemiesAttr = &gameState.diffSettings.enemiesAttributes;
 
-    enemiesAttr->velocityMultiplier = 0.8f + (float)(gameState.diffSettings.difficulty) * 0.6f;    // 0.8, 1.4, 2.0
-    enemiesAttr->precisionMultiplier = 0.5f + (float)(gameState.diffSettings.difficulty) * 0.25f;  // 0.5, 0.75, 1.0
-    enemiesAttr->fireRateMultiplier = 0.5f + (float)(gameState.diffSettings.difficulty) * 0.25f;   // 0.5, 0.75, 1.0
-    enemiesAttr->bulletSpeedMultiplier = 0.9f + (float)(gameState.diffSettings.difficulty) * 0.2f; // 0.9, 1.1, 1.3
-    enemiesAttr->probOfShooting = 0.35f + (float)(gameState.diffSettings.difficulty) * 0.25f;      // 0.35, 0.6, 0.85
+    enemiesAttr->velocityMultiplier = 0.8f + (float)(gameState.diffSettings.difficulty) * 0.6f;       // 0.8, 1.4, 2.0
+    enemiesAttr->precision = 0.5f + (float)(gameState.diffSettings.difficulty) * 0.25f;               // 0.5, 0.75, 1.0
+    enemiesAttr->fireRateMultiplier = 0.5f + (float)(gameState.diffSettings.difficulty) * 0.25f;      // 0.5, 0.75, 1.0
+    enemiesAttr->bulletSpeedMultiplier = 0.9f + (float)(gameState.diffSettings.difficulty) * 0.2f;    // 0.9, 1.1, 1.3
+    enemiesAttr->probOfShootingAtPlayer = 0.35f + (float)(gameState.diffSettings.difficulty) * 0.25f; // 0.35, 0.6, 0.85
+    enemiesAttr->bulletsPerShot = 8 + 8 * gameState.diffSettings.difficulty;                          // 8, 16, 24
 }
 
 void CreateNewGame(size_t numAsteroids, size_t numEnemies)
@@ -106,6 +109,7 @@ void CreateNewGame(size_t numAsteroids, size_t numEnemies)
     gameState.asteroidsCount = 0;
     gameState.shootersCount = 0;
     gameState.stalkersCount = 0;
+    gameState.pulsersCount = 0;
     gameState.powerupSpawned = false;
 
     UpdateDifficultySettings(EASY); // difficulty starts at easy and is increased as the player scores more points
@@ -448,8 +452,16 @@ void HandleInput()
     // spawn an enemy
     if (IsKeyPressed(KEY_C))
     {
-        gameState.gameObjects.push_back(new Stalker(gameState.player, gameState.diffSettings.enemiesAttributes));
-        gameState.shootersCount++;
+        if (IsKeyDown(KEY_LEFT_SHIFT))
+        {
+            gameState.gameObjects.push_back(new Pulser(gameState.player, gameState.diffSettings.enemiesAttributes));
+            gameState.pulsersCount++;
+        }
+        else
+        {
+            gameState.gameObjects.push_back(new Stalker(gameState.player, gameState.diffSettings.enemiesAttributes));
+            gameState.shootersCount++;
+        }
     }
     // spawn the selected powerup in the mouse position
     if (IsKeyPressed(KEY_V))
@@ -685,7 +697,7 @@ void TryToSpawnObject(GameObjectType type)
         break;
 
     case ENEMY:
-        spawnChance = gameState.shootersCount + gameState.stalkersCount == gameState.diffSettings.maxShooters
+        spawnChance = gameState.shootersCount + gameState.stalkersCount + gameState.pulsersCount == gameState.diffSettings.maxShooters
                           ? 0.0f
                           : gameState.diffSettings.enemiesSpawnChance;
         break;
@@ -710,17 +722,26 @@ void TryToSpawnObject(GameObjectType type)
         gameState.asteroidsCount++;
         break;
     case ENEMY:
-        if (GetRandomValue(0, 1) && gameState.stalkersCount < gameState.diffSettings.maxStalkers)
+    {
+
+        int enemyType = GetRandomValue(0, 2);
+        if (enemyType == 0 && gameState.stalkersCount < gameState.diffSettings.maxStalkers)
         {
             gameState.gameObjects.push_back(new Stalker(gameState.player, gameState.diffSettings.enemiesAttributes));
             gameState.stalkersCount++;
         }
-        else if (gameState.shootersCount < gameState.diffSettings.maxShooters)
+        else if (enemyType == 1 && gameState.shootersCount < gameState.diffSettings.maxShooters)
         {
             gameState.gameObjects.push_back(new Shooter(gameState.player, gameState.diffSettings.enemiesAttributes));
             gameState.shootersCount++;
+        }
+        else if (enemyType == 2 && gameState.pulsersCount < gameState.diffSettings.maxPulsers)
+        {
+            gameState.gameObjects.push_back(new Pulser(gameState.player, gameState.diffSettings.enemiesAttributes));
+            gameState.pulsersCount++;
         } // else don't spawn anything
         break;
+    }
     case POWER_UP:
         gameState.gameObjects.push_back(new PowerUp());
         gameState.powerupSpawned = true;

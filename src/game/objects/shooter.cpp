@@ -5,13 +5,13 @@
 Shooter::Shooter(Player *player, EnemyAttributes attributes)
     : Enemy(player, attributes)
 {
+    this->probOfShootingAtPlayer = attributes.probOfShootingAtPlayer;
     this->lookingForPlayer = false;
     this->lastTryToShootTime = 0;
     this->accelerateStartTime = 0;
     this->accelerateTime = INFINITY;
     this->rotateStartTime = 0;
     this->rotateTime = INFINITY;
-    this->lookingAtPointAngleThreshold = 3.0f; // degrees
 
     this->texture = ResourceManager::GetSpriteTexture(ENEMY_SHOOTER_SPRITES);
 
@@ -60,7 +60,7 @@ void Shooter::Update()
         }
     }
 
-    // if enemy is looking at player's last seen position, shoot and accelerate
+    // if enemy is looking at player's position, shoot and accelerate
     if (lookingForPlayer && IsLookingAt(player->GetOrigin()))
     {
         Shoot();
@@ -155,25 +155,11 @@ void Shooter::TryToShootAtPlayer()
         return;
     }
 
-    if (GetRandomValue(0, 100) < probOfShooting * 100)
+    if (GetRandomValue(0, 100) < probOfShootingAtPlayer * 100)
     {
         ShootAtPlayer();
     }
     lastTryToShootTime = GetTime();
-}
-
-bool Shooter::IsLookingAtPlayer()
-{
-    if (!lookingForPlayer)
-    {
-        return false;
-    }
-    return IsLookingAt(player->GetOrigin());
-}
-
-bool Shooter::IsLookingAt(Vector2 position)
-{
-    return fabsf(Vector2Angle(forwardDir, Vector2Subtract(position, origin)) * RAD2DEG) < lookingAtPointAngleThreshold;
 }
 
 void Shooter::SetDefaultHitBox()

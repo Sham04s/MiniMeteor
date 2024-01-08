@@ -49,7 +49,7 @@ protected:
 
     Vector2 accelDir;
 
-    float lastShotTime;
+    float lastShootTime;
     float lastDeathTime;
     float timeAccelerating;
     bool exploded;
@@ -62,7 +62,7 @@ protected:
     float shootCooldown;
     int bulletsPerShot;
     float bulletsSpeed;
-    float bulletsSpread;
+    float bulletsSpread; // the angle between bullets in a shot
 
     // Sound Aliases
     Sound shootSound;
@@ -138,7 +138,7 @@ public:
     bool IsDying() { return state & DYING; }
     bool IsDead() { return state & DEAD; }
     bool IsAlive() { return state & ~(DEAD | DYING); }
-    bool CanShoot() { return GetTime() - lastShotTime > shootCooldown; }
+    bool CanShoot() { return GetTime() - lastShootTime > shootCooldown; }
     int GetLives() { return lives; }
 
     /**

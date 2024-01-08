@@ -34,7 +34,7 @@ Player::~Player()
 void Player::Update()
 {
     // invincibility ends when player starts moving or shooting
-    if (invincible && ((state & ACCELERATING) || usingBoost || lastShotTime > 0.0f))
+    if (invincible && ((state & ACCELERATING) || usingBoost || lastShootTime > 0.0f))
     {
         invincible = false;
         hasMoved = true;
@@ -583,7 +583,7 @@ void Player::Respawn()
     this->angularVelocity = 0;
     this->state = IDLE;
     this->lastDeathTime = 0;
-    this->lastShotTime = 0;
+    this->lastShootTime = 0;
     this->shootCooldown = CHARACTER_SHOOT_COOLDOWN;
     this->bulletsPerShot = 1;
     this->bulletsSpeed = BULLET_SPEED;

@@ -39,6 +39,8 @@ void GameOver::Update()
         return;
     }
 
+    // TODO: update
+
     int highScore = GetHighScore();
     int secondsAlive = GetRawScore(TIME_ALIVE);
     int enemiesKilled = GetRawScore(ENEMY_SHOOTER_KILLED);

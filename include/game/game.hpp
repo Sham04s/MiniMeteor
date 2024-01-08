@@ -85,6 +85,7 @@ typedef struct DifficultySettings
     int maxShooters;
     int maxStalkers;
     int maxEnemies;
+    int maxPulsers;
     float powerupSpawnChance;
     float asteroidsSpawnChance;
     float enemiesSpawnChance;
@@ -114,6 +115,7 @@ typedef struct GameState
     int asteroidsCount;
     int shootersCount;
     int stalkersCount;
+    int pulsersCount;
     DifficultySettings diffSettings;
 } GameState;
 

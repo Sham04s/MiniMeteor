@@ -16,8 +16,8 @@ class Shooter : public Enemy
 {
 private:
     bool lookingForPlayer;
-    float lookingAtPointAngleThreshold;
 
+    float probOfShootingAtPlayer;
     float lastTryToShootTime;
 
     float accelerateStartTime;
@@ -41,7 +41,5 @@ public:
     void TryToShootAtPlayer();
 
     bool IsLookingForPlayer() { return lookingForPlayer; }
-    bool IsLookingAtPlayer();
-    bool IsLookingAt(Vector2 position);
 };
 #endif // __SHOOTER_H__

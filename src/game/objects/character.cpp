@@ -6,7 +6,7 @@ Character::Character(Vector2 origin)
     this->lives = CHARACTER_MAX_LIVES;
     this->state = IDLE;
     this->bullets = {};
-    this->lastShotTime = 0;
+    this->lastShootTime = 0;
     this->lastDeathTime = 0;
     this->maxSpeed = CHARACTER_MAX_SPEED;
     this->accelDir = forwardDir;
@@ -268,7 +268,7 @@ void Character::Shoot()
         bullets.push_back(Bullet(Vector2Add(this->origin, Vector2Scale(this->forwardDir, CHARACTER_SIZE / 4)),
                                  Vector2Rotate(bulletDir, -i * bulletsSpread * DEG2RAD), bulletsSpeed, this->type == PLAYER));
     }
-    lastShotTime = GetTime();
+    lastShootTime = GetTime();
     PlaySound(shootSound);
 }
 

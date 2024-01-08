@@ -5,6 +5,7 @@ Stalker::Stalker(Player *player, EnemyAttributes attributes)
 {
     this->texture = ResourceManager::GetSpriteTexture(ENEMY_STALKER_SPRITES);
     this->turnSpeed = 90;
+    SetSoundVolume(thrustSound, 0.0f); // disable thrust sound
     state |= ACCELERATING;
     state |= TURNING_LEFT;
 

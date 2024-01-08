@@ -10,18 +10,18 @@
 typedef struct EnemyAttributes
 {
     float velocityMultiplier;
-    float precisionMultiplier;
     float fireRateMultiplier;
     float bulletSpeedMultiplier;
-    float probOfShooting;
+    float precision;
+    float probOfShootingAtPlayer; // only for shooters
+    float bulletsPerShot; // only for pulsers
 } EnemySettings;
 
 class Enemy : public Character
 {
 protected:
     Player *player;
-    float shootPrecision;
-    float probOfShooting;
+    float precision;
     virtual void SetDefaultHitBox();
 
 public:
@@ -30,11 +30,14 @@ public:
     Enemy(Vector2 origin, Player *player, EnemyAttributes attributes);
     ~Enemy();
 
-    void Update();
-    void DrawDebug();
-    void HandleCollision(GameObject *other, Vector2 *pushVector);
+    virtual void Update();
+    virtual void DrawDebug();
 
+    virtual void HandleCollision(GameObject *other, Vector2 *pushVector);
     virtual Rectangle GetFrameRec();
+
+    bool IsLookingAtPlayer();
+    bool IsLookingAt(Vector2 position);
 };
 
 #endif // __ENEMY_H__

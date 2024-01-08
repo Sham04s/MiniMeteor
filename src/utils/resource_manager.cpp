@@ -18,6 +18,7 @@ const std::map<SpriteTextureID, const char *> spriteTexturesPathsMap = {
     {ENEMY_BULLET_SPRITE, "resources/characters/enemies/bullet.png"},
     {ENEMY_SHOOTER_SPRITES, "resources/characters/enemies/shooter.png"},
     {ENEMY_STALKER_SPRITES, "resources/characters/enemies/stalker.png"},
+    {ENEMY_PULSER_SPRITES, "resources/characters/enemies/pulser.png"},
     {POWERUP_LIFE_ITEM_SPRITE, "resources/powerups/life_item.png"},
     {POWERUP_SHIELD_ITEM_SPRITE, "resources/powerups/shield_item.png"},
     {POWERUP_SHIELD_SPRITE, "resources/powerups/shield.png"},

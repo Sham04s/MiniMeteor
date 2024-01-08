@@ -5,7 +5,6 @@ Enemy::Enemy(Vector2 origin, Player *player, EnemyAttributes attributes)
     : Character(origin)
 {
     this->state = IDLE;
-    this->probOfShooting = 0.5f; // 50% every ENEMY_SHOOT_COOLDOWN seconds
     this->player = player;
     this->type = ENEMY;
 
@@ -29,11 +28,10 @@ Enemy::Enemy(Vector2 origin, Player *player, EnemyAttributes attributes)
     const float frMultiplier = attributes.fireRateMultiplier <= 0.0f ? 0.001f : attributes.fireRateMultiplier;
 
     this->velocity = Vector2Scale(this->velocity, attributes.velocityMultiplier);
-    this->turnSpeed *= attributes.precisionMultiplier; // increase turn speed with precision
+    this->turnSpeed *= attributes.precision; // increase turn speed with precision
     this->shootCooldown /= frMultiplier;
     this->bulletsSpeed *= attributes.bulletSpeedMultiplier;
-    this->shootPrecision /= attributes.precisionMultiplier;
-    this->probOfShooting = attributes.probOfShooting;
+    this->precision /= attributes.precision;
 }
 
 Enemy::~Enemy()
@@ -90,4 +88,15 @@ void Enemy::HandleCollision(GameObject *other, Vector2 *pushVector)
 Rectangle Enemy::GetFrameRec()
 {
     return Character::GetFrameRec();
+}
+
+bool Enemy::IsLookingAtPlayer()
+{
+    return IsLookingAt(player->GetOrigin());
+}
+
+bool Enemy::IsLookingAt(Vector2 position)
+{
+    const float angleThreshold = 3.0f; // degrees
+    return fabsf(Vector2Angle(forwardDir, Vector2Subtract(position, origin)) * RAD2DEG) < angleThreshold / precision;
 }
