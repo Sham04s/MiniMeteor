@@ -1,11 +1,13 @@
 -----------------------------------
 
-## MiniMeteor
-
+<a href="url"><img src="resources/ui/icon.png" align="left"  height="40" width="40" ></a>
+# MiniMeteor
 
 ### Description
 
-MiniMeteor is a minimalist space shooter game inspired by the classic Asteroids. It’s an endless game with difficulty increasing according to the current score , where you need to destroy asteroids and enemies to score points.
+MiniMeteor is a minimalist space shooter game inspired by the classic Asteroids. It’s an endless game with difficulty increasing according to the current score , where you need to destroy asteroids and enemies to score points. 
+
+Originally made for the [Raylib Slo-Jam](https://itch.io/jam/raylib-slo-jam)
 
 ### Features
 
