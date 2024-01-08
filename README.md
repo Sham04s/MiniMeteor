@@ -21,7 +21,26 @@ Originally made for the [Raylib Slo-Jam](https://itch.io/jam/raylib-slo-jam)
 
  - itch.io Release: [MiniMeteor](https://sham04.itch.io/minimeteor)
 
+### How to build
+ You will need:
+ - Raylib game library. Get it from the [oficial repo](https://github.com/raysan5/raylib/).
+ - A c++ compiler and makefile tools.
+ - Emscripten SDK. (Optional if building for web)
 
+ And either set an environmental variable with the raylib's path or type it alongside make command
+ ```console
+    make RAYLIB_PATH=<path/to/raylib>
+ ```
+
+You can also type
+```console
+   make help
+```
+to get a more detailed information
+
+
+### Credits
 Game and UI visual assets were provided by Kenney and modified by me. Checkout Kenney's amazing website! [kenney.nl](kenney.nl)
+
 
 *Copyright (c) 2023-2024 Sham04s*
