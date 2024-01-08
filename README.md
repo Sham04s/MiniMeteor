@@ -21,10 +21,7 @@ Originally made for the [Raylib Slo-Jam](https://itch.io/jam/raylib-slo-jam)
 
  - itch.io Release: [MiniMeteor](https://sham04.itch.io/minimeteor)
 
-### License
 
-This game sources are licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.
+Game and UI visual assets were provided by Kenney and modified by me. Checkout Kenney's amazing website! [kenney.nl](kenney.nl)
 
-$(Additional Licenses)
-
-*Copyright (c) $(Year) $(User Name) ($(User Twitter/GitHub Name))*
+*Copyright (c) 2023-2024 Sham04s*
