@@ -41,11 +41,17 @@ void GameObject::DrawDebug()
     // draw bounding box
     DrawRectangleLinesEx(bounds, 1, RED);
 
+    size_t hitboxSize = hitbox.size();
+    if (hitbox.size() > 1)
+    {
+        hitboxSize--;
+    }
+
     // draw hitbox
-    for (size_t i = 0; i < hitbox.size(); i++)
+    for (size_t i = 0; i < hitboxSize; i++)
     {
         Vector2 point = {hitbox[i].x, hitbox[i].y};
-        Vector2 nextPoint = {hitbox[(i + 1) % hitbox.size()].x, hitbox[(i + 1) % hitbox.size()].y};
+        Vector2 nextPoint = {hitbox[(i + 1) % hitboxSize].x, hitbox[(i + 1) % hitboxSize].y};
         DrawCircleV(point, 2, GREEN);
         DrawLineV(point, nextPoint, GREEN);
     }

@@ -17,7 +17,7 @@ std::vector<Vector2> getAxes(std::vector<Vector2> hitbox)
 {
     std::vector<Vector2> axes = {};
 
-    for (size_t i = 0; i < hitbox.size(); i++)
+    for (size_t i = 0; i < hitbox.size() - 1; i++)
     {
         // get the current vertex
         Vector2 p1 = hitbox[i];
@@ -39,7 +39,7 @@ Vector2 Project(Vector2 axis, std::vector<Vector2> hitbox)
     float min = 0;
     float max = 0;
 
-    for (size_t i = 0; i < hitbox.size(); i++)
+    for (size_t i = 0; i < hitbox.size() - 1; i++)
     {
         float dotProduct = Vector2DotProduct(axis, hitbox[i]);
         if (i == 0 || dotProduct < min)

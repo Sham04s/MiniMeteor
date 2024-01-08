@@ -346,5 +346,6 @@ void Character::SetDefaultHitBox()
     hitbox = {{bounds.x, bounds.y},
               {bounds.x + bounds.width, bounds.y},
               {bounds.x + bounds.width, bounds.y + bounds.height},
-              {bounds.x, bounds.y + bounds.height}};
+              {bounds.x, bounds.y + bounds.height},
+              {bounds.x, bounds.y}}; // close the polygon
 }

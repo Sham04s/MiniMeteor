@@ -43,6 +43,7 @@ void Stalker::SetDefaultHitBox()
         {0.25f, -0.25f},
         {0.25f, 0.25f},
         {-0.25f, 0.25f},
+        {-0.25f, -0.25f},
     };
 
     for (size_t i = 0; i < hitbox.size(); i++)

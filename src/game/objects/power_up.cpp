@@ -20,7 +20,12 @@ PowerUp::PowerUp(Vector2 origin, PowerUpType type) : GameObject()
 {
     this->origin = origin;
     this->bounds = {origin.x - POWER_UP_SIZE / 2, origin.y - POWER_UP_SIZE / 2, POWER_UP_SIZE, POWER_UP_SIZE};
-    this->hitbox = {{bounds.x, bounds.y}, {bounds.x + bounds.width, bounds.y}, {bounds.x + bounds.width, bounds.y + bounds.height}, {bounds.x, bounds.y + bounds.height}};
+    this->hitbox = {{bounds.x, bounds.y},
+     {bounds.x + bounds.width, bounds.y}, 
+     {bounds.x + bounds.width, bounds.y + bounds.height}, 
+     {bounds.x, bounds.y + bounds.height},
+     {bounds.x, bounds.y}, // close the polygon
+     };
     this->powerupType = type;
     this->type = POWER_UP;
     this->pickedUp = false;

@@ -18,6 +18,7 @@ const Vector2 large[] = {
     {-0.250f, 0.250f},
     {-0.378f, 0.002f},
     {-0.253f, -0.250f},
+    {0.000f, -0.378f}, // close the polygon
 };
 
 const Vector2 small[] = {
@@ -29,6 +30,7 @@ const Vector2 small[] = {
     {-0.183f, 0.187f},
     {-0.253f, -0.003f},
     {-0.188f, -0.188f},
+    {0.002f, -0.245f}, // close the polygon
 };
 
 const Vector2 sqr_large[] = {
@@ -40,6 +42,7 @@ const Vector2 sqr_large[] = {
     {-0.378f, 0.123f},
     {-0.382f, 0.000f},
     {-0.123f, -0.375f},
+    {0.022f, -0.380f}, // close the polygon
 };
 
 const Vector2 sqr_small[] = {
@@ -51,6 +54,7 @@ const Vector2 sqr_small[] = {
     {-0.250f, 0.123f},
     {-0.253f, 0.002f},
     {-0.128f, -0.252f},
+    {-0.002f, -0.253f}, // close the polygon
 };
 
 const Vector2 *asteroid_shapes[] = {
@@ -92,11 +96,10 @@ Asteroid::Asteroid(Vector2 origin, AsteroidVariant variant, float velocityMultip
     //    normal/squared  large/small
     shape = 2 * (shape / 4) + shape % 2;
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 9; i++)
     {
         this->hitbox.push_back(Vector2Add(origin, Vector2Scale(Vector2Rotate(asteroid_shapes[shape][i], rotation * DEG2RAD), size)));
     }
-
 }
 
 Asteroid::Asteroid(AsteroidVariant variant, float velocityMultiplier)

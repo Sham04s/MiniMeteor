@@ -738,7 +738,7 @@ void Player::UpdateCamera()
 
 void Player::SetDefaultHitBox()
 {
-    this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}}; // up, right-down, left-down
+    this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}, {0.0f, -0.4f}}; // up, right-down, left-down, close polygon
 
     // scale to size -> rotate -> translate
     for (size_t i = 0; i < hitbox.size(); i++)
@@ -758,6 +758,7 @@ void Player::SetDirectionalShipHitBox()
         {-0.122f, 0.4f},
         {-0.4f, 0.25f},
         {-0.4f, -0.1f},
+        {-0.25f, -0.4f}, // close polygon
     };
 
     // scale to size -> rotate -> translate

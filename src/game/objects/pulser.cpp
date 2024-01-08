@@ -95,6 +95,7 @@ void Pulser::SetDefaultHitBox()
         {-0.15f, 0.38f},
         {-0.38f, 0.15f},
         {-0.38f, -0.15f},
+        {-0.15f, -0.38f}, // close the polygon
     };
 
     for (size_t i = 0; i < hitbox.size(); i++)

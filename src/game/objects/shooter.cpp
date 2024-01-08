@@ -164,7 +164,7 @@ void Shooter::TryToShootAtPlayer()
 
 void Shooter::SetDefaultHitBox()
 {
-    this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}};
+    this->hitbox = {{0.0f, -0.4f}, {0.4f, 0.35f}, {-0.4f, 0.35f}, {0.0f, -0.4f}};
     for (size_t i = 0; i < hitbox.size(); i++)
     {
         hitbox[i] = Vector2Add(Vector2Scale(Vector2Rotate(hitbox[i], rotation * DEG2RAD), CHARACTER_SIZE / 2), origin);
