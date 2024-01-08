@@ -1,5 +1,5 @@
 .vscode/
-build/
+build*
 Makefile.*
 *.code-workspace
 */*.o

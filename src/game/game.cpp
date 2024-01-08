@@ -60,6 +60,7 @@ bool InitGame()
         ExitGame();
         return false;
     }
+    SetWindowIcon(*ResourceManager::GetIcon());
 
     gameState.previousScreen = LOADING;
     gameState.currentScreen = LOADING;

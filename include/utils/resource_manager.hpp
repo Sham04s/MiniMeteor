@@ -72,10 +72,10 @@ enum SoundID
     NUM_SOUNDS
 };
 
-
 class ResourceManager
 {
 private:
+    static Image icon;
     static std::vector<Texture2D> spriteTextures;
     static std::vector<Texture2D> uiTextures;
     static std::vector<Sound> sounds;
@@ -95,18 +95,19 @@ private:
 public:
     /**
      * @brief Loads all the required resources
-     * 
+     *
      * @return true if all resources were loaded successfully, false otherwise
      */
     static bool LoadResources();
     static void UnloadResources();
 
+    static Image *GetIcon();
 
     static Texture2D *GetSpriteTexture(SpriteTextureID id);
 
     /**
      * @brief Returns the source rectangle for a sprite texture
-     * 
+     *
      * @param id the ID of the sprite texture
      * @param frame the frame of the sprite texture (from left to right and top to bottom)
      * @return Rectangle the source rectangle
@@ -116,7 +117,7 @@ public:
 
     /**
      * @brief Returns the source rectangle for a UI texture
-     * 
+     *
      * @param id the ID of the UI texture
      * @param frame the frame of the UI texture (from left to right and top to bottom)
      * @return Rectangle the source rectangle
@@ -125,7 +126,7 @@ public:
 
     /**
      * @brief Returns a pointer to a sound, this way the sound doesn't need to be unloaded manually
-     * 
+     *
      * @param id the ID of the sound
      * @return Sound* a pointer to the sound
      */
@@ -133,25 +134,24 @@ public:
 
     /**
      * @brief Creates a copy of a sound, this Sound should be unloaded manually with UnloadSoundAlias()
-     * 
+     *
      * @param id the ID of the sound
      * @return Sound a copy of the sound
      */
     static Sound CreateSoundAlias(SoundID id);
 
-
     static Font *GetFont();
 
     /**
      * @brief Returns the default texture (transparent)
-     * 
+     *
      * @return Texture* the default texture
      */
     static Texture *GetDefaultTexture();
 
     /**
      * @brief Returns the invalid texture (texture to use when a texture is not found)
-     * 
+     *
      * @return Texture* the invalid texture
      */
     static Texture *GetInvalidTexture();

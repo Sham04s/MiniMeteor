@@ -53,6 +53,7 @@ const std::map<SoundID, const char *> soundsPathsMap = {
     {POWERUP_CANT_PICKUP_SOUND, "resources/sounds/powerup_cant_pickup.wav"},
 };
 
+Image ResourceManager::icon;
 std::vector<Texture2D> ResourceManager::spriteTextures;
 std::vector<Texture2D> ResourceManager::uiTextures;
 std::vector<Sound> ResourceManager::sounds;
@@ -67,6 +68,8 @@ bool ResourceManager::LoadResources()
     {
         return false;
     }
+
+    icon = LoadImage("resources/ui/icon.png");
 
     // create invalid texture from image
     Image invalidTextureImage = GenImageColor(64, 64, BLACK);
@@ -142,6 +145,12 @@ void ResourceManager::UnloadResources()
     UnloadTexture(defaultTexture);
     UnloadTexture(invalidTexture);
     UnloadFont(font);
+    UnloadImage(icon);
+}
+
+Image *ResourceManager::GetIcon()
+{
+    return &icon;
 }
 
 Texture2D *ResourceManager::GetSpriteTexture(SpriteTextureID id)
