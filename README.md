@@ -2,6 +2,7 @@
 
 ## MiniMeteor
 
+![MiniMeteor](screenshots/bullets.png)
 
 ### Description
 
