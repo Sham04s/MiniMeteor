@@ -1,7 +1,7 @@
 #include "game/objects/stalker.hpp"
 
 Stalker::Stalker(Player *player, EnemyAttributes attributes)
-    : Enemy(player, attributes)
+    : Enemy(player, attributes, STALKER)
 {
     this->texture = ResourceManager::GetSpriteTexture(ENEMY_STALKER_SPRITES);
     this->turnSpeed = 90;

@@ -1,14 +1,14 @@
 #include "game/objects/pulser.hpp"
 
 Pulser::Pulser(Player *player, EnemyAttributes attributes)
-    : Enemy(player, attributes)
+    : Enemy(player, attributes, PULSER)
 {
     this->texture = ResourceManager::GetSpriteTexture(ENEMY_PULSER_SPRITES);
     this->turnSpeed = 360.0f / PULSER_SHOOT_COOLDOWN;
     this->bulletsPerShot = attributes.bulletsPerShot;
     this->bulletsSpread = 360.0f / bulletsPerShot;
     this->bulletsSpeed = attributes.bulletSpeedMultiplier * BULLET_SPEED / 2; // slow bullets
-    SetSoundVolume(thrustSound, 0.0f); // disable thrust sound
+    SetSoundVolume(thrustSound, 0.0f);                                        // disable thrust sound
     state |= ACCELERATING;
     state |= TURNING_RIGHT;
     this->lastChangeDirTime = 0.0f;
@@ -24,6 +24,12 @@ Pulser::~Pulser()
 void Pulser::Update()
 {
     Enemy::Update();
+
+    if (!IsAlive())
+    {
+        return;
+    }
+
     if (GetTime() - lastShootTime > PULSER_SHOOT_COOLDOWN)
     {
         Shoot();
@@ -80,12 +86,15 @@ Rectangle Pulser::GetFrameRec()
 void Pulser::SetDefaultHitBox()
 {
 
-    // TODO: check if this is the correct hitbox
     hitbox = {
-        {-0.25f, -0.25f},
-        {0.25f, -0.25f},
-        {0.25f, 0.25f},
-        {-0.25f, 0.25f},
+        {-0.16f, -0.38f},
+        {0.15f, -0.39f},
+        {0.38f, -0.15f},
+        {0.38f, 0.15f},
+        {0.15f, 0.38f},
+        {-0.15f, 0.38f},
+        {-0.38f, 0.15f},
+        {-0.38f, -0.15f},
     };
 
     for (size_t i = 0; i < hitbox.size(); i++)

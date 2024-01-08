@@ -17,17 +17,28 @@ typedef struct EnemyAttributes
     float bulletsPerShot; // only for pulsers
 } EnemySettings;
 
+enum EnemyType
+{
+    SHOOTER,
+    STALKER,
+    PULSER,
+    NUM_ENEMY_TYPES
+};
+
 class Enemy : public Character
 {
+private:
+    EnemyType enemyType;
+       
 protected:
     Player *player;
     float precision;
     virtual void SetDefaultHitBox();
 
 public:
-    Enemy(Player *player, EnemyAttributes attributes)
-        : Enemy(RandomVecOutsideScreen(CHARACTER_SIZE), player, attributes){};
-    Enemy(Vector2 origin, Player *player, EnemyAttributes attributes);
+    Enemy(Player *player, EnemyAttributes attributes, EnemyType type)
+        : Enemy(RandomVecOutsideScreen(CHARACTER_SIZE), player, attributes, type){};
+    Enemy(Vector2 origin, Player *player, EnemyAttributes attributes, EnemyType type);
     ~Enemy();
 
     virtual void Update();
@@ -38,6 +49,8 @@ public:
 
     bool IsLookingAtPlayer();
     bool IsLookingAt(Vector2 position);
+
+    EnemyType GetEnemyType() { return enemyType; };
 };
 
 #endif // __ENEMY_H__

@@ -39,11 +39,9 @@ void GameOver::Update()
         return;
     }
 
-    // TODO: update
-
     int highScore = GetHighScore();
     int secondsAlive = GetRawScore(TIME_ALIVE);
-    int enemiesKilled = GetRawScore(ENEMY_SHOOTER_KILLED);
+    int enemiesKilled = GetRawScore(ENEMY_SHOOTER_KILLED) + GetRawScore(ENEMY_STALKER_KILLED) + GetRawScore(ENEMY_PULSER_KILLED);
     int smallAsteroidsDestroyed = GetRawScore(SMALL_ASTEROID_DESTROYED) + GetRawScore(LARGE_ASTEROID_DESTROYED);
     int powerupsCollected = 0;
 

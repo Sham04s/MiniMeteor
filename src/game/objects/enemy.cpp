@@ -1,12 +1,13 @@
 #include "game/objects/enemy.hpp"
 #include <string>
 
-Enemy::Enemy(Vector2 origin, Player *player, EnemyAttributes attributes)
+Enemy::Enemy(Vector2 origin, Player *player, EnemyAttributes attributes, EnemyType type)
     : Character(origin)
 {
     this->state = IDLE;
     this->player = player;
     this->type = ENEMY;
+    this->enemyType = type;
 
     // nerf enemy
     this->turnSpeed = CHARACTER_TURN_SPEED / 3;
@@ -31,7 +32,7 @@ Enemy::Enemy(Vector2 origin, Player *player, EnemyAttributes attributes)
     this->turnSpeed *= attributes.precision; // increase turn speed with precision
     this->shootCooldown /= frMultiplier;
     this->bulletsSpeed *= attributes.bulletSpeedMultiplier;
-    this->precision /= attributes.precision;
+    this->precision = attributes.precision;
 }
 
 Enemy::~Enemy()
@@ -98,5 +99,6 @@ bool Enemy::IsLookingAtPlayer()
 bool Enemy::IsLookingAt(Vector2 position)
 {
     const float angleThreshold = 3.0f; // degrees
-    return fabsf(Vector2Angle(forwardDir, Vector2Subtract(position, origin)) * RAD2DEG) < angleThreshold / precision;
+    const float angle = fabsf(Vector2Angle(forwardDir, Vector2Subtract(position, origin)) * RAD2DEG);
+    return angle < angleThreshold / precision;
 }

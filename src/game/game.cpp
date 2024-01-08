@@ -582,7 +582,8 @@ void UpdateGameObjects()
             {
                 if (gameState.player->GetLives() > 0)
                 {
-                    AddScore(ENEMY_SHOOTER_KILLED, scoreMultiplier);
+                    // ScoreType enum enemies start at 11 with the same order as the EnemyType enum
+                    AddScore((ScoreType)((int)enemy->GetEnemyType() + 11), scoreMultiplier);
                 }
                 delete enemy;
                 gameState.gameObjects.erase(gameState.gameObjects.begin() + i);

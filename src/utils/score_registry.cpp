@@ -3,6 +3,8 @@
 std::map<ScoreType, int> scoreValues = {
     {TIME_ALIVE, 100},
     {ENEMY_SHOOTER_KILLED, 2000},
+    {ENEMY_STALKER_KILLED, 1500},
+    {ENEMY_PULSER_KILLED, 2800},
     {SMALL_ASTEROID_DESTROYED, 800},
     {LARGE_ASTEROID_DESTROYED, 1600},
     {LIFE_POWERUP_COLLECTED, 100},
@@ -19,6 +21,7 @@ std::map<ScoreType, const char *> scoreNames = {
     {TIME_ALIVE, "Seconds Alive"},
     {ENEMY_SHOOTER_KILLED, "Shooters Killed"},
     {ENEMY_STALKER_KILLED, "Stalkers Killed"},
+    {ENEMY_PULSER_KILLED, "Pulsers Killed"},
     {SMALL_ASTEROID_DESTROYED, "Small Asteroids Destroyed"},
     {LARGE_ASTEROID_DESTROYED, "Large Asteroids Destroyed"},
     {LIFE_POWERUP_COLLECTED, "Lives Collected"},

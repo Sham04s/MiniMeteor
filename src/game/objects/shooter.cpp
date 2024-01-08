@@ -3,7 +3,7 @@
 #include <string>
 
 Shooter::Shooter(Player *player, EnemyAttributes attributes)
-    : Enemy(player, attributes)
+    : Enemy(player, attributes, SHOOTER)
 {
     this->probOfShootingAtPlayer = attributes.probOfShootingAtPlayer;
     this->lookingForPlayer = false;
@@ -61,7 +61,7 @@ void Shooter::Update()
     }
 
     // if enemy is looking at player's position, shoot and accelerate
-    if (lookingForPlayer && IsLookingAt(player->GetOrigin()))
+    if (lookingForPlayer && IsLookingAtPlayer())
     {
         Shoot();
         state |= ACCELERATING;
