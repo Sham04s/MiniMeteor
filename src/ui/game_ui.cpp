@@ -22,7 +22,11 @@ UIObject *CreateMainMenu()
     Label *title = new Label({0, (float)GetScreenHeight() / 8, (float)GetScreenWidth(), (float)GetScreenHeight() / 4}, "MiniMeteor", WHITE, ALIGN_CENTER, ALIGN_CENTER, 64, nullptr);
 
     // main menu buttons
+#ifdef PLATFORM_WEB
+    const int mainMenuButtonCount = 4;
+#else
     const int mainMenuButtonCount = 5;
+#endif // PLATFORM_WEB
     Button *playButton = new Button(Vector2{0, 0}, nullptr, "Play", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                     { ChangeScreen(GAME); });
 
@@ -35,10 +39,16 @@ UIObject *CreateMainMenu()
     Button *creditsButton = new Button(Vector2{0, 0}, nullptr, "Credits", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                        { ChangeScreen(CREDITS); });
 
+#ifdef PLATFORM_WEB
+    Button *mainMenuButtons[mainMenuButtonCount] = {playButton, controlsButton, optionsButton, creditsButton};
+#else
+
     Button *quitButton = new Button(Vector2{0, 0}, nullptr, "Quit", BUTTON_PRIMARY, BUTTON_MEDIUM, []()
                                     { ChangeScreen(EXITING); });
 
     Button *mainMenuButtons[mainMenuButtonCount] = {playButton, controlsButton, optionsButton, creditsButton, quitButton};
+
+#endif // PLATFORM_WEB
 
     // main menu
     Rectangle mainMenuButtonRec = CreateCenteredButtonRec(mainMenuButtons, mainMenuButtonCount);
