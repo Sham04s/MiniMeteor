@@ -1,12 +1,3 @@
-// TODO: complete
-/***********************************************************************************************
- * 
- *      MiniMeteor - A simple game developed by [Your Name]
- *      Copyright (c) [Year]
- *      All rights reserved.
- * 
- **********************************************************************************************/
-
 #ifndef __GAME_H__
 #define __GAME_H__
 
