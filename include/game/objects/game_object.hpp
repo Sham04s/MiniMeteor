@@ -38,7 +38,7 @@ protected:
     Vector2 previousVelocity;      /**< Previous velocity of the object */
     Vector2 velocity;              /**< Velocity of the object */
     float previousAngularVelocity; /**< Previous angular velocity of the object */
-    float angularVelocity;         /**< Angular velocity of the object */
+    float angularVelocity;         /**< Angular velocity of the object degrees/s */
     GameObjectType type;           /**< Type of the object */
     Texture2D *texture;            /**< Texture of the object */
 

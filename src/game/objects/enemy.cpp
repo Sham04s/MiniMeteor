@@ -48,12 +48,6 @@ void Enemy::SetDefaultHitBox()
 void Enemy::Update()
 {
     Character::Update();
-
-    // if is not alive, do nothing else
-    if (!this->IsAlive())
-    {
-        return;
-    }
 }
 
 void Enemy::DrawDebug()
@@ -79,7 +73,18 @@ void Enemy::DrawDebug()
 
 void Enemy::HandleCollision(GameObject *other, Vector2 *pushVector)
 {
-    Character::HandleCollision(other, pushVector);
+    if (other->GetType() == BULLET)
+    {
+        if (((Bullet *)other)->IsPlayerBullet())
+        {
+            Kill();
+        }
+        return;
+    }
+    if (other->GetType() == ASTEROID || other->GetType() == ENEMY)
+    {
+        Push(other, *pushVector);
+    };
 }
 
 Rectangle Enemy::GetFrameRec()

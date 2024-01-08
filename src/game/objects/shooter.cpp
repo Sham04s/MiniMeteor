@@ -26,6 +26,12 @@ void Shooter::Update()
 {
     Enemy::Update();
     
+    // if is not alive, do nothing else
+    if (!this->IsAlive())
+    {
+        return;
+    }
+    
     TryToShootAtPlayer();
 
     // if enemy is looking for player, rotate towards player
@@ -119,22 +125,6 @@ void Shooter::DrawDebug()
     {
         DrawLineEx(origin, player->GetOrigin(), 2, RED);
         DrawText(TextFormat("Angle to player: %f", Vector2Angle(forwardDir, Vector2Subtract(player->GetOrigin(), origin)) * RAD2DEG), origin.x - CHARACTER_SIZE / 2, origin.y + CHARACTER_SIZE / 2 + 40, 10, WHITE);
-    }
-}
-
-void Shooter::HandleCollision(GameObject *other, Vector2 *pushVector)
-{
-    if (other->GetType() == BULLET)
-    {
-        if (((Bullet *)other)->IsPlayerBullet())
-        {
-            Kill();
-        }
-        return;
-    }
-    if (other->GetType() == ASTEROID || other->GetType() == ENEMY)
-    {
-        Push(other, *pushVector);
     }
 }
 

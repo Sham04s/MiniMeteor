@@ -35,7 +35,6 @@ public:
 
     void Update();
     void DrawDebug();
-    void HandleCollision(GameObject *other, Vector2 *pushVector);
     Rectangle GetFrameRec();
 
     void ShootAtPlayer();

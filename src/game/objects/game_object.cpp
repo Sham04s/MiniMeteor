@@ -57,8 +57,8 @@ void GameObject::DrawDebug()
     // draw velocity
     DrawLineEx(origin, Vector2Add(origin, Vector2Scale(velocity, 0.25f)), 2, GREEN);
 
-    Vector2 textPos = {bounds.x, bounds.y + bounds.height + 5};
-    DrawTextEx(*ResourceManager::GetFont(), TextFormat("pos: (%.2f, %.2f)", origin.x, origin.y), textPos, 16, 1, WHITE);
+    // Vector2 textPos = {bounds.x, bounds.y + bounds.height + 5};
+    // DrawTextEx(*ResourceManager::GetFont(), TextFormat("pos: (%.2f, %.2f)", origin.x, origin.y), textPos, 16, 1, WHITE);
 }
 
 void GameObject::HandleCollision(GameObject *other, Vector2 *pushVector)
