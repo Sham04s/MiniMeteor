@@ -33,8 +33,6 @@ bool SHOW_DEBUG = false;
 
 GameState gameState;
 
-float oneSecondTimer = 0.0f;
-
 bool InitGame()
 {
     SetExitKey(KEY_NULL);
@@ -65,6 +63,7 @@ bool InitGame()
     gameState.previousScreen = LOADING;
     gameState.currentScreen = LOADING;
     gameState.powerupSpawned = false;
+    gameState.spawnTimer = 0.0f;
 
     gameState.asteroidsCount = 0;
     gameState.shootersCount = 0;
@@ -82,11 +81,13 @@ void UpdateDifficultySettings(Difficulty diff)
     DifficultySettings *diffSettings = &gameState.diffSettings;
 
     diffSettings->difficulty = diff;
-    diffSettings->maxAsteroids = powf(3, diff + 1);                                                   // 3, 9, 27
-    diffSettings->maxShooters = powf(2, diff + 1);                                                    // 2, 4, 8
-    diffSettings->maxStalkers = 1 + diff * 2;                                                         // 1, 3, 5
-    diffSettings->maxPulsers = fmaxf(diff * 2 - 1, 0);                                                // 0, 1, 3
-    diffSettings->maxEnemies = diffSettings->maxShooters + diffSettings->maxStalkers;                 // 3, 7, 13
+    diffSettings->maxAsteroids = fminf(powf(3, diff + 1), 18);                        // 3, 9, 18
+    diffSettings->maxShooters = powf(2, diff + 1);                                    // 2, 4, 8
+    diffSettings->maxStalkers = 1 + diff * 2;                                         // 1, 3, 5
+    diffSettings->maxPulsers = fmaxf(diff * 2 - 1, 0);                                // 0, 1, 3
+    diffSettings->maxEnemies = diffSettings->maxShooters + diffSettings->maxStalkers; // 3, 7, 13
+
+    diffSettings->spawnRate = 1.0f - (float)diff * 0.12f;                                             // 1.0, 0.88, 0.76
     diffSettings->asteroidsSpawnChance = 0.25f + (float)(gameState.diffSettings.difficulty) * 0.25f;  // 0.25, 0.5, 0.75
     diffSettings->enemiesSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty + 1) * 0.1f;  // 0.2, 0.3, 0.4
     diffSettings->powerupSpawnChance = 0.15f + (float)(gameState.diffSettings.difficulty) * 0.2f;     // 0.15, 0.35, 0.55
@@ -368,6 +369,31 @@ void DrawDebug()
     }
 
     DrawText(TextFormat("Powerup to spawn: %s", PowerUp::GetPowerUpName(powerupToSpawn)), 400, GetScreenHeight() - 40, 20, WHITE);
+
+    DrawText(TextFormat("Asteroids: %d", gameState.asteroidsCount), 10, GetScreenHeight() - 40, 20, WHITE);
+    DrawText(TextFormat("Shooters: %d", gameState.shootersCount), 10, GetScreenHeight() - 60, 20, WHITE);
+    DrawText(TextFormat("Stalkers: %d", gameState.stalkersCount), 10, GetScreenHeight() - 80, 20, WHITE);
+    DrawText(TextFormat("Pulsers: %d", gameState.pulsersCount), 10, GetScreenHeight() - 100, 20, WHITE);
+
+    DrawText(TextFormat("Spawn timer: %.2f", gameState.spawnTimer), 10, GetScreenHeight() - 120, 20, WHITE);
+    DrawText(TextFormat("Spawn rate: %.2f", gameState.diffSettings.spawnRate), 10, GetScreenHeight() - 140, 20, WHITE);
+    DrawText(TextFormat("Asteroids spawn chance: %.2f", gameState.diffSettings.asteroidsSpawnChance), 10, GetScreenHeight() - 160, 20, WHITE);
+    DrawText(TextFormat("Enemies spawn chance: %.2f", gameState.diffSettings.enemiesSpawnChance), 10, GetScreenHeight() - 180, 20, WHITE);
+    DrawText(TextFormat("Powerup spawn chance: %.2f", gameState.diffSettings.powerupSpawnChance), 10, GetScreenHeight() - 200, 20, WHITE);
+    DrawText(TextFormat("Asteroid speed multiplier: %.2f", gameState.diffSettings.asteroidSpeedMultiplier), 10, GetScreenHeight() - 220, 20, WHITE);
+    DrawText(TextFormat("Score multiplier: %.2f", gameState.diffSettings.scoreMultiplier), 10, GetScreenHeight() - 240, 20, WHITE);
+    DrawText(TextFormat("Enemies velocity multiplier: %.2f", gameState.diffSettings.enemiesAttributes.velocityMultiplier), 10, GetScreenHeight() - 260, 20, WHITE);
+    DrawText(TextFormat("Enemies precision: %.2f", gameState.diffSettings.enemiesAttributes.precision), 10, GetScreenHeight() - 280, 20, WHITE);
+    DrawText(TextFormat("Enemies fire rate multiplier: %.2f", gameState.diffSettings.enemiesAttributes.fireRateMultiplier), 10, GetScreenHeight() - 300, 20, WHITE);
+    DrawText(TextFormat("Enemies bullet speed multiplier: %.2f", gameState.diffSettings.enemiesAttributes.bulletSpeedMultiplier), 10, GetScreenHeight() - 320, 20, WHITE);
+    DrawText(TextFormat("Enemies prob of shooting at player: %.2f", gameState.diffSettings.enemiesAttributes.probOfShootingAtPlayer), 10, GetScreenHeight() - 340, 20, WHITE);
+    DrawText(TextFormat("Enemies bullets per shot: %d", gameState.diffSettings.enemiesAttributes.bulletsPerShot), 10, GetScreenHeight() - 360, 20, WHITE);
+
+    DrawText(TextFormat("Max asteroids: %d", gameState.diffSettings.maxAsteroids), 10, GetScreenHeight() - 380, 20, WHITE);
+    DrawText(TextFormat("Max shooters: %d", gameState.diffSettings.maxShooters), 10, GetScreenHeight() - 400, 20, WHITE);
+    DrawText(TextFormat("Max stalkers: %d", gameState.diffSettings.maxStalkers), 10, GetScreenHeight() - 420, 20, WHITE);
+    DrawText(TextFormat("Max pulsers: %d", gameState.diffSettings.maxPulsers), 10, GetScreenHeight() - 440, 20, WHITE);
+    DrawText(TextFormat("Max enemies: %d", gameState.diffSettings.maxEnemies), 10, GetScreenHeight() - 460, 20, WHITE);
 }
 
 void HandleInput()
@@ -587,7 +613,18 @@ void UpdateGameObjects()
                 }
                 delete enemy;
                 gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
-                gameState.shootersCount--;
+                if (enemy->GetEnemyType() == SHOOTER)
+                {
+                    gameState.shootersCount--;
+                }
+                else if (enemy->GetEnemyType() == STALKER)
+                {
+                    gameState.stalkersCount--;
+                }
+                else if (enemy->GetEnemyType() == PULSER)
+                {
+                    gameState.pulsersCount--;
+                }
             }
         }
         else if (gameState.gameObjects[i]->GetType() == POWER_UP)
@@ -683,7 +720,7 @@ void HandleCollisions()
 
 void TryToSpawnObject(GameObjectType type)
 {
-    if (oneSecondTimer < 1.0f)
+    if (gameState.spawnTimer > 0.0f)
     {
         return;
     }
@@ -786,12 +823,12 @@ void UpdateGame()
             ChangeScreen(GAME_OVER);
         }
 
-        // reset oneSecondTimer
-        if (oneSecondTimer > 1.0f)
+        // reset spawnTimer
+        if (gameState.spawnTimer <= 0.0f)
         {
-            oneSecondTimer = 0.0f;
+            gameState.spawnTimer = gameState.diffSettings.spawnRate;
         }
-        oneSecondTimer += GetFrameTime();
+        gameState.spawnTimer -= GetFrameTime();
     }
 
     if (gameState.screens[gameState.currentScreen] == nullptr)
