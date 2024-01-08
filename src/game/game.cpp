@@ -18,6 +18,7 @@
 #include "game/objects/power_up.hpp"
 #include "utils/utils.hpp"
 
+
 // -------------- Debug Flags --------------
 #ifdef _DEBUG
 bool SHOW_DEBUG = true;
@@ -88,7 +89,7 @@ void UpdateDifficultySettings(Difficulty diff)
     diffSettings->maxEnemies = diffSettings->maxShooters + diffSettings->maxStalkers; // 3, 7, 13
 
     diffSettings->spawnRate = 1.0f - (float)diff * 0.12f;                                             // 1.0, 0.88, 0.76
-    diffSettings->asteroidsSpawnChance = 0.25f + (float)(gameState.diffSettings.difficulty) * 0.25f;  // 0.25, 0.5, 0.75
+    diffSettings->asteroidsSpawnChance = 0.35f + (float)(gameState.diffSettings.difficulty) * 0.15f;  // 0.35, 0.5, 0.65
     diffSettings->enemiesSpawnChance = 0.2f + (float)(gameState.diffSettings.difficulty + 1) * 0.1f;  // 0.2, 0.3, 0.4
     diffSettings->powerupSpawnChance = 0.15f + (float)(gameState.diffSettings.difficulty) * 0.2f;     // 0.15, 0.35, 0.55
     diffSettings->asteroidSpeedMultiplier = 1.0f + (float)(gameState.diffSettings.difficulty) * 0.5f; // 1.0, 1.5, 2.0
@@ -611,8 +612,6 @@ void UpdateGameObjects()
                     // ScoreType enum enemies start at 11 with the same order as the EnemyType enum
                     AddScore((ScoreType)((int)enemy->GetEnemyType() + 11), scoreMultiplier);
                 }
-                delete enemy;
-                gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
                 if (enemy->GetEnemyType() == SHOOTER)
                 {
                     gameState.shootersCount--;
@@ -625,6 +624,8 @@ void UpdateGameObjects()
                 {
                     gameState.pulsersCount--;
                 }
+                delete enemy;
+                gameState.gameObjects.erase(gameState.gameObjects.begin() + i);
             }
         }
         else if (gameState.gameObjects[i]->GetType() == POWER_UP)
@@ -735,7 +736,7 @@ void TryToSpawnObject(GameObjectType type)
         break;
 
     case ENEMY:
-        spawnChance = gameState.shootersCount + gameState.stalkersCount + gameState.pulsersCount == gameState.diffSettings.maxShooters
+        spawnChance = gameState.shootersCount + gameState.stalkersCount + gameState.pulsersCount == gameState.diffSettings.maxEnemies
                           ? 0.0f
                           : gameState.diffSettings.enemiesSpawnChance;
         break;
