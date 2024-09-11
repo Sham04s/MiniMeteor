@@ -40,7 +40,7 @@ to get a more detailed information
 
 
 ### Credits
-Game and UI visual assets were provided by Kenney and modified by me. Checkout Kenney's amazing website! [kenney.nl](kenney.nl)
+Game and UI visual assets were provided by Kenney and modified by me. Checkout Kenney's amazing website! [kenney.nl](https://kenney.nl)
 
 
 *Copyright (c) 2023-2024 Sham04s*
