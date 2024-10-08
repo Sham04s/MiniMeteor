@@ -42,6 +42,14 @@ jobs:
           ls -l
           cd ${{ env.PROJECT_NAME }}
           make PLATFORM=PLATFORM_DESKTOP
+          
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}
+          path: ${{ env.PROJECT_BUILD_DIR }}
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
 
   windows:
     runs-on: windows-latest
@@ -79,6 +87,14 @@ jobs:
         run: |
           cd ${{ env.PROJECT_NAME }}
           mingw32-make PLATFORM=PLATFORM_DESKTOP
+          
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}
+          path: ${{ env.PROJECT_BUILD_DIR }}
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
 
   webassembly:
     runs-on: ubuntu-latest
@@ -117,5 +133,13 @@ jobs:
         run: |
           ls emsdk-cache
           emcc -v
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}
+          path: ${{ env.PROJECT_BUILD_DIR }}
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
           cd ${{ env.PROJECT_NAME }}
           make PLATFORM=PLATFORM_WEB
